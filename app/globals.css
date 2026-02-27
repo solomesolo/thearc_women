@@ -1,26 +1,215 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Design tokens – Tailwind v4 @theme */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter, ui-sans-serif), system-ui, sans-serif;
+  /* Spacing */
+  --spacing-section-y-desktop: 6rem; /* 96px - 120px range, use 96 */
+  --spacing-section-y-mobile: 4rem; /* 64px - 80px range, use 64 */
+  --container-max: 80rem; /* 1280px */
+
+  /* Radius */
+  --radius-card: 1.5rem; /* 24px */
+  --radius-button: 0.875rem; /* 14px */
+
+  /* Colors */
+  --color-bg-base: #fafaf9;
+  --color-text-primary: #0c0c0c;
+  --color-text-secondary: #525252;
+  --color-border-hairline: #e5e5e5;
+  --color-surface: #f5f5f4;
+
+  /* Typography scale */
+  --text-h1-desktop: 3.5rem; /* 56-64: 56px */
+  --text-h1-mobile: 2.375rem; /* 38-44: 38px */
+  --text-h2-desktop: 2.5rem; /* 40-48: 40px */
+  --text-h2-mobile: 1.875rem; /* 30-34: 30px */
+  --text-body: 1rem; /* 16-18: 16px */
+  --text-small: 0.8125rem; /* 13-14: 13px */
+
+  /* Motion */
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --duration-slow: 650ms;
+  --ease-out-standard: cubic-bezier(0, 0, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: #fafaf9;
+  --foreground: #0c0c0c;
+  --color-surface: #f5f5f4;
+  /* Semantic colors (Mirror + global) */
+  --text-primary: #0c0c0c;
+  --text-secondary: #525252;
+  --accent: #0f766e;
+}
+
+@import "../styles/globals.css";
+
+/* Utility classes using tokens */
+.section-padding-y {
+  padding-top: var(--spacing-section-y-mobile);
+  padding-bottom: var(--spacing-section-y-mobile);
+}
+
+@media (min-width: 768px) {
+  .section-padding-y {
+    padding-top: var(--spacing-section-y-desktop);
+    padding-bottom: var(--spacing-section-y-desktop);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Journey section: hide horizontal scrollbar on Stage Index (mobile) */
+.journey-index {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.journey-index::-webkit-scrollbar {
+  display: none;
+}
+
+/* Journey: active stage = editorial chapter highlight (left accent, no box) */
+.journey-stage-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.journey-stage-btn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+.journey-stage-btn-active {
+  position: relative;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: color 600ms ease-out;
+}
+.journey-stage-btn-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0.6em;
+  background: rgba(12, 12, 12, 0.22);
+  border-radius: 0 1px 1px 0;
+}
+.journey-stage-btn-inactive {
+  color: var(--text-secondary);
+}
+.journey-stage-btn-inactive:hover {
+  color: rgba(12, 12, 12, 0.75);
+}
+
+/* One-time hint: first active label lifts from muted to primary over 600ms */
+.journey-stage-btn-hint {
+  color: var(--text-secondary) !important;
+  transition: color 600ms ease-out;
+}
+
+.container-wide {
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-wide {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.heading-1 {
+  font-size: var(--text-h1-mobile);
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .heading-1 {
+    font-size: var(--text-h1-desktop);
+  }
+}
+
+.heading-2 {
+  font-size: var(--text-h2-mobile);
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .heading-2 {
+    font-size: var(--text-h2-desktop);
+  }
+}
+
+.body-text {
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.body-text-muted {
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.small-text {
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Reframe section: subtle background drift (only when reduced-motion not set) */
+@keyframes reframe-bg-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(1%, 0.5%);
+  }
+}
+
+.animate-reframe-bg-drift {
+  animation: reframe-bg-drift 22s ease-in-out infinite;
+}
+
+/* Mirror section: visual anchor ambient drift (respect reduced-motion in JS) */
+@keyframes mirror-blob-drift {
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(3%, -2%);
+  }
+}
+
+.animate-mirror-blob-drift {
+  animation: mirror-blob-drift 9s ease-in-out infinite;
+}
+
+/* Reframe section: right-side visual anchor drift (8–14s, reduced-motion in JS) */
+@keyframes reframe-anchor-drift {
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.06) translate(2%, -1%);
+  }
+}
+
+.animate-reframe-anchor-drift {
+  animation: reframe-anchor-drift 11s ease-in-out infinite;
 }
