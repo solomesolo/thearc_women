@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Top-level article metadata
+model Article {
+  id             Int              @id @default(autoincrement())
+  slug           String           @unique
+  title          String
+  excerpt        String
+  pillar         String?
+  category       String?
+  evidenceLevel  String?
+  studyTypes     String?          // e.g. observational, randomized (comma or JSON)
+  consensusStatus String?
+  coverImageUrl  String?
+  lensMapping    String[]        @default([])  // tag slugs or IDs for "lens"
+  isPublished    Boolean          @default(false)
+  isArchived     Boolean          @default(false)
+  publishedAt    DateTime?
+  readingTimeMinutes Int?         // computed on save/publish from sections + excerpt
+
+  sections     ArticleSection[]
+  sources      ArticleSource[]
+  tagJoins     ArticleTagJoin[]
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+/// Individual structured sections (1–7) for an article
+model ArticleSection {
+  id        Int      @id @default(autoincrement())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+
+  /// 1–7 position in the article
+  sectionIndex Int
+  /// Optional label for the section in the UI
+  title        String?
+  /// Markdown / rich text content
+  body         String
+
+  /// Sections 6–7 gated by default in product experience
+  isGated      Boolean @default(false)
+  /// Preview text for gated sections (required when isGated)
+  preview      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId, sectionIndex])
+}
+
+/// Source / citation for an article (e.g., paper, guideline)
+model ArticleSource {
+  id        Int      @id @default(autoincrement())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+
+  label        String  // short label e.g. Lancet 2024 study
+  url          String?
+  evidenceNote String? // optional context on strength / limitations
+
+  createdAt DateTime @default(now())
+}
+
+/// Taxonomy types used for filtering
+enum TaxonomyType {
+  lifeStage
+  symptom
+  bodySystem
+  preventiveFocus
+  trending
+  biomarker
+  hormone
+  goal
+  rootCause
+  interventionType
+  evidenceLevel
+  contentAccess
+}
+
+/// A single taxonomy tag (e.g., \"Perimenopause\", \"Cortisol\", \"Sleep disruption\")
+model TaxonomyTag {
+  id    Int          @id @default(autoincrement())
+  slug  String       @unique
+  label String
+  type  TaxonomyType
+
+  articleJoins ArticleTagJoin[]
+}
+
+/// Join table between Article and TaxonomyTag
+model ArticleTagJoin {
+  article   Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+
+  tag       TaxonomyTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+/// MVP: subscription status by email (no full User table required for credentials auth)
+model Subscriber {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+/// Health survey + personalization profile (linked by email from session)
+model UserProfile {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  lifeStage      String?
+  cyclePattern   String?
+  goals          String[] @default([])  // PostgreSQL text[]
+  symptoms       String[] @default([])
+  riskFactors    String[] @default([])
+  trainingVolume String?
+  stressLevel    String?
+  generatedTags String[] @default([])  // rule-based from above
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+

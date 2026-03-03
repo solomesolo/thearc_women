@@ -5,7 +5,7 @@ import { MirrorSection } from "@/components/sections/MirrorSection";
 import { ReframeSection } from "@/components/sections/ReframeSection";
 import { ProductIntroSection } from "@/components/sections/ProductIntroSection";
 import { JourneySection } from "@/components/sections/JourneySection";
-import { KnowledgeSection } from "@/components/sections/KnowledgeSection";
+import { KnowledgeSection } from "@/components/home/KnowledgeSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { IdentitySection } from "@/components/sections/IdentitySection";
 import { DifferentiationSection } from "@/components/sections/DifferentiationSection";
@@ -16,12 +16,12 @@ export default function Home() {
     <main>
       <HeroSection />
       <DesignConceptSection />
-      <PersonalizationSection />
       <MirrorSection />
       <ReframeSection />
+      <PersonalizationSection />
+      <KnowledgeSection />
       <JourneySection />
       <ProductIntroSection />
-      <KnowledgeSection />
       <HowItWorksSection />
       <IdentitySection />
       <DifferentiationSection />

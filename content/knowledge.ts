@@ -185,9 +185,20 @@ const FOCUS_LENS_TO_CATEGORIES: Record<string, KnowledgeCategory[]> = {
     "Hormones",
     "Training & Recovery",
   ],
+  "Energy & Metabolic Load": [
+    "Energy & Performance",
+    "Mental Resilience",
+    "Training & Recovery",
+  ],
   "Performance & Recovery": ["Training & Recovery", "Energy & Performance"],
   "Hormonal Dynamics": ["Hormones"],
+  "Stress & Nervous System": ["Mental Resilience", "Training & Recovery"],
+  "Body Composition & Appetite Regulation": [
+    "Energy & Performance",
+    "Beauty & Skin",
+  ],
   "Preventive Risk & Screening Prep": ["Longevity", "Preventive Health"],
+  "Preventive Risk & Medical Memory": ["Longevity", "Preventive Health"],
   "Skin Signals & Metabolic Context": ["Beauty & Skin", "Supplements"],
 };
 

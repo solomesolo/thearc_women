@@ -9,8 +9,9 @@ import {
   KNOWLEDGE_ARTICLES,
   getArticlesForFocusLens,
 } from "@/content/knowledge";
-import { getPersonalizationOutput } from "@/lib/personalizationRules";
+import { getLensTitleFromInput } from "@/lib/startingLensEngine";
 import type { KnowledgeArticle } from "@/content/knowledge";
+import type { CycleContext, LifeStage, TrainingVolume, Wearable } from "@/lib/startingLensEngine/types";
 
 const PERSONALIZATION_STORAGE_KEY = "arc-personalization";
 const defaultContent = homepageContent.knowledge;
@@ -61,15 +62,30 @@ export function KnowledgeSection({
       const data = JSON.parse(raw) as {
         goals?: string[];
         signals?: string[];
+        symptoms?: string[];
+        changes?: string[];
+        cycleContext?: string | null;
+        lifeStage?: string | null;
+        trainingVolume?: string | null;
+        wearable?: string | null;
       };
       const goals = data.goals ?? [];
-      const signals = data.signals ?? [];
-      const hasSelection = goals.length > 0 || signals.length > 0;
+      const symptoms = data.symptoms ?? data.signals ?? [];
+      const changes = data.changes ?? [];
+      const hasSelection =
+        goals.length > 0 || symptoms.length > 0 || changes.length > 0;
       if (!hasSelection) return;
-      const output = getPersonalizationOutput(goals, signals);
-      if (output.startingLensTitle !== "Your physiology") {
-        setFocusLensTitle(output.startingLensTitle);
-      }
+      const input = {
+        goals,
+        symptoms,
+        changes,
+        cycleContext: data.cycleContext as CycleContext | undefined,
+        lifeStage: data.lifeStage as LifeStage | undefined,
+        trainingVolume: data.trainingVolume as TrainingVolume | undefined,
+        wearable: data.wearable as Wearable | undefined,
+      };
+      const lensTitle = getLensTitleFromInput(input);
+      setFocusLensTitle(lensTitle);
     } catch {
       // ignore
     }
