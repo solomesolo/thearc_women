@@ -42,8 +42,8 @@ export function DesignConceptSection({
             {headline}
           </p>
 
-          {/* Statistic */}
-          <p className="mt-3 text-balance text-[2.5rem] font-medium leading-[1.1] tracking-tight text-[var(--text-primary)] md:text-[2.75rem] lg:text-[3.5rem] xl:text-[4rem]">
+          {/* Statistic — larger than headline */}
+          <p className="mt-3 text-balance text-[3rem] font-medium leading-[1.05] tracking-tight text-[var(--text-primary)] md:text-[3.5rem] lg:text-[4.25rem] xl:text-[5rem]">
             {statValue}
           </p>
           <p className="mt-1.5 text-[0.9rem] leading-[1.6] text-[var(--text-secondary)] md:text-[0.95rem]">
