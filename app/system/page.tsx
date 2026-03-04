@@ -188,7 +188,7 @@ export default function SystemPage() {
               <div className="mt-4 md:mt-6">
                 <DataInterpretationDemo
                   narrative={systemPage.dataInterpretation.narrative}
-                  signalTypes={systemPage.dataInterpretation.signalTypes}
+                  signalTypes={systemPage.dataInterpretation.signalTypes as { id: "wearable" | "labs" | "symptoms" | "research"; label: string }[]}
                   interpretationData={systemPage.dataInterpretation.interpretationData}
                 />
               </div>

@@ -116,7 +116,10 @@ export default function AboutPage() {
               h1={aboutPage.hero.h1}
               lead={aboutPage.hero.lead}
               proofPills={aboutPage.hero.proofPills}
-              systemMap={aboutPage.hero.systemMap}
+              systemMap={{
+                ...aboutPage.hero.systemMap,
+                connections: aboutPage.hero.systemMap.connections as [string, string][],
+              }}
             />
           </div>
         </Section>
