@@ -32,3 +32,19 @@ Then run:
 ```bash
 npm run dev
 ```
+
+## 3. When using the pooler (port 6543): migrations need DIRECT_URL
+
+If you use the **transaction pooler** (port 6543, `?pgbouncer=true`) as `DATABASE_URL`, run migrations with a **direct** connection so Prisma doesn’t hit “prepared statement already exists”.
+
+1. In Supabase: **Project Settings** → **Database** → **Connection string** → **URI** → **Direct connection** (port 5432).
+2. Copy that URI and set it as **`DIRECT_URL`** in `.env` and `.env.local` (same password as in `DATABASE_URL`).
+3. Keep `DATABASE_URL` as the pooler URL for the app.
+4. Run:
+
+   ```bash
+   npx prisma migrate deploy
+   npm run db:seed
+   ```
+
+   Migrate uses `DIRECT_URL`; the app and seed use `DATABASE_URL`.

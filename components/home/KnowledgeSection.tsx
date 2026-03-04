@@ -116,7 +116,7 @@ export function KnowledgeSection() {
                 href="/blog"
                 className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--foreground)] bg-transparent px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-[var(--foreground)]/0.06 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)]"
               >
-                Explore the Knowledge Hub
+                Get My Personalized Health Map
                 <span aria-hidden>→</span>
               </Link>
             </div>

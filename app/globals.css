@@ -213,3 +213,91 @@
 .animate-reframe-anchor-drift {
   animation: reframe-anchor-drift 11s ease-in-out infinite;
 }
+
+/* Global content frame: /about, /lab, /system
+   Max widths: page 1200px, reading column 680px.
+   Horizontal: mobile px-5, tablet px-8, desktop px-10.
+   Vertical: hero pt-20 md:pt-28; sections py-16 md:py-24.
+   Dividers: light border-t border-black/5 only (no thick lines + whitespace).
+*/
+.content-frame {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;  /* px-5 */
+  padding-right: 1.25rem;
+}
+@media (min-width: 768px) {
+  .content-frame {
+    padding-left: 2rem;   /* px-8 */
+    padding-right: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .content-frame {
+    padding-left: 2.5rem; /* px-10 */
+    padding-right: 2.5rem;
+  }
+}
+
+.content-section {
+  padding-top: 4rem;   /* py-16 */
+  padding-bottom: 4rem;
+}
+@media (min-width: 768px) {
+  .content-section {
+    padding-top: 6rem;   /* py-24 */
+    padding-bottom: 6rem;
+  }
+}
+
+.content-hero-pt {
+  padding-top: 5rem;   /* pt-20 */
+}
+@media (min-width: 768px) {
+  .content-hero-pt {
+    padding-top: 7rem;   /* pt-28 */
+  }
+}
+
+.content-divider {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.content-reading-col {
+  max-width: 680px;
+}
+
+/* Legacy aliases (prefer content-frame + content-section + content-divider) */
+.system-page {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+@media (min-width: 768px) {
+  .system-page {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .system-page {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+.system-section {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+@media (min-width: 768px) {
+  .system-section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+.system-reading-col {
+  max-width: 680px;
+}

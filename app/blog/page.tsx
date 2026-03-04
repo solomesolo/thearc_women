@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { FilterBar } from "@/components/blog/FilterBar";
+import { SmartStartCards } from "@/components/blog/SmartStartCards";
 import { ArticleCard } from "@/components/blog/ArticleCard";
 
 type Article = {
@@ -80,22 +81,26 @@ function BlogContent() {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <Container className="py-10 md:py-14">
-        <header className="mb-8">
+        <header className="mb-6">
           <h1 className="text-[1.875rem] font-medium leading-[1.2] tracking-tight text-[var(--text-primary)] md:text-[2.25rem] lg:text-[2.75rem]">
             Knowledge for women who think critically about their health
           </h1>
-          <p className="mt-4 text-base leading-[1.65] text-[var(--text-secondary)] md:text-lg">
+          <p className="mt-3 text-base leading-[1.65] text-[var(--text-secondary)] md:text-lg">
             We curate emerging research and translate it into relevance.
           </p>
         </header>
 
-        <FilterBar tagsByType={tagsByType} searchParams={searchParams} />
+        <SmartStartCards />
 
-        {/* Foundations */}
+        <div className="border-b border-[var(--color-border-hairline)] pb-6">
+          <FilterBar tagsByType={tagsByType} searchParams={searchParams} />
+        </div>
+
+        {/* Foundations — editorial cards, more white space */}
         {foundations.length > 0 && (
-          <section className="mt-12">
+          <section className="mt-10">
             <div className="flex items-end justify-between gap-4">
-              <h2 className="text-lg font-medium text-[var(--text-primary)]">
+              <h2 className="text-base font-medium text-[var(--text-primary)]">
                 Foundations
               </h2>
               <Link
@@ -105,7 +110,7 @@ function BlogContent() {
                 View all
               </Link>
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {foundations.map((a) => (
                 <ArticleCard
                   key={a.id}
@@ -118,6 +123,7 @@ function BlogContent() {
                   readingTimeMinutes={a.readingTimeMinutes}
                   evidenceLevel={a.evidenceLevel}
                   hasGatedContent={a.hasGatedContent}
+                  variant="editorial"
                 />
               ))}
             </div>
@@ -126,9 +132,9 @@ function BlogContent() {
 
         {/* Science reviewed / Trending */}
         {trending.length > 0 && (
-          <section className="mt-14">
+          <section className="mt-12">
             <div className="flex items-end justify-between gap-4">
-              <h2 className="text-lg font-medium text-[var(--text-primary)]">
+              <h2 className="text-base font-medium text-[var(--text-primary)]">
                 Science reviewed
               </h2>
               <Link
@@ -138,7 +144,7 @@ function BlogContent() {
                 View all
               </Link>
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {trending.map((a) => (
                 <ArticleCard
                   key={a.id}
@@ -151,6 +157,7 @@ function BlogContent() {
                   readingTimeMinutes={a.readingTimeMinutes}
                   evidenceLevel={a.evidenceLevel}
                   hasGatedContent={a.hasGatedContent}
+                  variant="editorial"
                 />
               ))}
             </div>
@@ -158,8 +165,8 @@ function BlogContent() {
         )}
 
         {/* All articles */}
-        <section className="mt-14">
-          <h2 className="text-lg font-medium text-[var(--text-primary)]">
+        <section className="mt-12">
+          <h2 className="text-base font-medium text-[var(--text-primary)]">
             All articles
           </h2>
           {loading ? (

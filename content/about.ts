@@ -1,0 +1,90 @@
+export const aboutPage = {
+  hero: {
+    headline: "You are not imagining it. Women experience health differently.",
+    paragraphs: [
+      "Many women grow up learning to ignore the signals their bodies send.",
+      "Energy shifts that feel confusing. Sleep that changes without explanation. Cycles that influence mood, focus, and recovery.",
+      "And too often the answer is simple.",
+      "Everything looks normal.",
+      "The problem is that most health systems were never designed to understand female physiology in the first place.",
+      "The Arc exists because that experience deserves to change.",
+      "This platform was built to help women understand their biology clearly, calmly, and with real scientific context.",
+    ],
+  },
+  section1: {
+    title: "A Different Way to Think About Female Health",
+    left: [
+      "Female biology is not static.",
+      "Hormones shift across the month. Energy changes with stress, sleep, and nutrition. Recovery evolves with age and life stage.",
+      "These changes are not failures of the body. They are signals.",
+      "But most health tools were designed around stable physiological models that do not reflect the cyclical nature of female biology. When patterns appear that do not fit those models, women are often told that nothing is wrong.",
+      "The Arc approaches health differently. Instead of trying to remove variability, the system helps you understand it.",
+      "Patterns become visible. Signals gain context. Your body begins to make sense.",
+    ],
+    nodes: ["Hormones", "Metabolism", "Sleep", "Stress", "Recovery"],
+    nodePanels: {
+      Hormones: "Hormonal rhythms influence metabolism, sleep quality, and recovery patterns.",
+      Metabolism: "Metabolic signals interact with hormones, stress, and recovery.",
+      Sleep: "Sleep architecture affects hormones, metabolism, and recovery.",
+      Stress: "Stress response shapes sleep, recovery, and hormonal patterns.",
+      Recovery: "Recovery capacity influences stress resilience and performance.",
+    },
+  },
+  section2: {
+    title: "The Scientific Foundation",
+    intro: "Understanding female physiology requires knowledge from multiple scientific fields. The Arc brings together insights from several disciplines that explain how biological systems interact.",
+    disciplines: [
+      { id: "endo", name: "Endocrinology", body: "Hormonal systems and their influence on metabolism, mood, and cycle. The foundation for understanding phase-dependent physiology." },
+      { id: "metabolic", name: "Metabolic physiology", body: "How energy, blood sugar, and nutrients interact across different states. Essential for interpreting energy and body composition signals." },
+      { id: "sleep", name: "Sleep science", body: "Sleep architecture changes across hormonal phases and stress states. Understanding these patterns can explain fluctuations in energy, mood, and recovery." },
+      { id: "nutrition", name: "Nutritional biochemistry", body: "How nutrients support hormonal balance, recovery, and metabolic health. Context for diet and supplementation decisions." },
+      { id: "exercise", name: "Exercise physiology", body: "How training load, recovery, and adaptation interact with female physiology. Critical for performance and sustainability." },
+      { id: "preventive", name: "Preventive medicine", body: "Evidence-based screening and monitoring. Helps identify where attention and early action can support long-term health." },
+    ],
+    closing: "These fields provide the scientific framework for understanding how hormones, metabolism, recovery, and stress interact across different life stages. The goal is not to overwhelm with complexity. The goal is to make biology understandable.",
+  },
+  section3: {
+    title: "How The Arc Thinks About Health",
+    intro: "The Arc organizes health information into a structured biological model.",
+    steps: [
+      { id: "signals", label: "Signals", body: "Your body shows patterns through energy levels, sleep quality, cycle changes, and recovery." },
+      { id: "interpretation", label: "System interpretation", body: "The system interprets how different physiological systems may be interacting." },
+      { id: "patterns", label: "Pattern recognition", body: "Patterns become visible across time." },
+      { id: "awareness", label: "Preventive awareness", body: "The platform helps identify areas where awareness and monitoring can support long-term health stability." },
+    ],
+    closing: "Instead of isolated symptoms, health becomes a coherent biological story.",
+  },
+  section4: {
+    title: "Evidence and Transparency",
+    paragraphs: [
+      "Health information can be overwhelming because evidence is rarely explained clearly.",
+      "Within The Arc, every concept is categorized according to the strength of available scientific evidence.",
+      "Some insights come from large clinical studies. Others come from well established physiological research. Some ideas come from emerging scientific literature that is still developing.",
+      "Whenever possible, the platform explains what is known with strong evidence and where research is still evolving.",
+      "Transparency helps users understand the difference between proven knowledge and emerging insight.",
+    ],
+  },
+  letter: {
+    title: "A Letter From the Founder",
+    portraitAlt: "Anna, Founder of The Arc",
+    paragraphs: [
+      "Dear women reading this,",
+      "For most of my career I have worked inside health technology. I have built medical products, worked with laboratories, and helped organizations introduce new technology into clinical systems. I have seen how much effort goes into developing innovation in healthcare. I have also seen where things break when these systems reach real people.",
+      "Too often the gap appears between scientific knowledge and everyday life. Women experience this gap constantly. Signals that feel real are dismissed because they do not fit standard models. Data exists but interpretation is missing. And the responsibility for understanding our own biology often falls entirely on us.",
+      "My work has focused on solving adoption problems in health technology. How do tools actually become useful in the real world. Through that work I began focusing on female health more closely. The deeper I looked, the clearer it became that women were navigating systems that were never designed with their physiology in mind.",
+      "I am also a mother. I have a daughter who will grow up in this world. And I want her to live in a future where understanding her biology is normal, not confusing. Where health information is clear. Where prevention is accessible. Where women do not need to question whether their experiences are valid.",
+      "The Arc is my attempt to contribute to that future. It combines everything I have learned from building technology, working with clinical systems, and studying biological science. But more importantly it is built for the women who will use it.",
+      "If you are reading this, you are already part of the movement that is pushing female health forward. Thank you for being here.",
+      "Anna",
+      "Founder of The Arc",
+    ],
+  },
+  closing: {
+    partOfThis:
+      "If you are here, you are already part of making female health better.",
+    line1: "Understanding your biology should not feel complicated.",
+    line2: "The Arc exists to make that understanding possible.",
+    ctaLabel: "Begin your biological mapping",
+    ctaHref: "/assessment",
+  },
+};

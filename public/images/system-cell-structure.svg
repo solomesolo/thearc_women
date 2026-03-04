@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fafaf9"/>
+      <stop offset="100%" stop-color="#f0f0ee"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/></filter>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <g fill="#d4d4d4" opacity="0.6">
+    <ellipse cx="300" cy="200" rx="120" ry="80" filter="url(#blur)"/>
+    <circle cx="180" cy="400" r="60" filter="url(#blur)"/>
+    <circle cx="420" cy="500" r="70" filter="url(#blur)"/>
+    <ellipse cx="300" cy="650" rx="100" ry="90" filter="url(#blur)"/>
+  </g>
+  <g stroke="#a3a3a3" stroke-width="0.5" fill="none" opacity="0.5">
+    <path d="M200 250 Q350 300 400 450"/>
+    <path d="M350 200 Q250 400 200 550"/>
+  </g>
+</svg>

@@ -27,7 +27,7 @@ export function AuthNav() {
       href="/login"
       className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
     >
-      Sign in
+      Log in
     </Link>
   );
 }

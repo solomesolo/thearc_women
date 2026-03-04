@@ -12,37 +12,43 @@ export function Header() {
         >
           The Arc
         </Link>
-        <nav className="flex items-center gap-6" aria-label="Main">
-          <AuthNav />
+        <nav className="flex flex-1 flex-wrap items-center justify-end gap-4 md:gap-6" aria-label="Main">
           <Link
-            href="/blog"
+            href="/"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
-            Blog
+            Home
           </Link>
           <Link
-            href="/knowledge"
+            href="/blog"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
             Knowledge
           </Link>
           <Link
-            href="/admin"
+            href="/system"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
-            Admin
+            Health System
           </Link>
           <Link
-            href="/survey"
+            href="/lab"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
-            Survey
+            Preventive Lab
           </Link>
+          <Link
+            href="/about"
+            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
+          >
+            About
+          </Link>
+          <AuthNav />
           <Link
             href="/assessment"
-            className="rounded-[14px] border border-[var(--foreground)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-[var(--foreground)]/0.06"
+            className="rounded-[14px] border border-[var(--foreground)] bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] no-underline transition-opacity hover:opacity-90"
           >
-            Begin assessment
+            Get Started
           </Link>
         </nav>
       </Container>

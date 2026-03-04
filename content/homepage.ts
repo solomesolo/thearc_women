@@ -4,7 +4,7 @@ export const homepageContent = {
       "Your biology is a performance system. Not a mystery.",
     subline:
       "Understand, anticipate, and optimize how your body actually operates across work, training, and life.",
-    ctaLabel: "Begin Your Assessment",
+    ctaLabel: "Get My Personalized Health Map",
     ctaHref: "/assessment",
     microtext:
       "Created for women who expect reliability from themselves and from their physiology.",
@@ -80,7 +80,7 @@ export const homepageContent = {
       { value: "full", label: "Full (sleep + HR/HRV)" },
     ],
     resetLabel: "Reset",
-    ctaLabel: "Preview your weekly brief",
+    ctaLabel: "Get My Personalized Health Map",
   },
   designConcept: {
     headline: "Preventive medicine was built on male data.",
@@ -574,7 +574,7 @@ export const homepageContent = {
     feedTitleDefault: "Latest Insights",
     feedTitlePersonalized: "Your Knowledge Feed",
     feedSublinePersonalized: "Curated for your current focus:",
-    ctaLabel: "Explore the Knowledge Hub",
+    ctaLabel: "Get My Personalized Health Map",
     ctaHref: "/knowledge",
   },
   _drop: {
@@ -645,7 +645,7 @@ export const homepageContent = {
         readTime: "7 min",
       },
     ],
-    ctaLabel: "Explore the Knowledge Hub",
+    ctaLabel: "Get My Personalized Health Map",
     ctaHref: "/knowledge",
   },
   howItWorks: {
@@ -712,7 +712,7 @@ export const homepageContent = {
   finalCta: {
     headline:
       "Stop guessing. Start understanding your biology.",
-    ctaLabel: "Begin Your Assessment",
+    ctaLabel: "Get My Personalized Health Map",
     ctaHref: "/assessment",
     microtext:
       "A structured entry experience designed to build your personal biological performance model.",

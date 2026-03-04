@@ -271,3 +271,31 @@ export const GUIDED_PATHS: { slug: string; label: string; query: string }[] = [
   { slug: "perimenopause", label: "Perimenopause symptoms", query: "lifeStage=perimenopause" },
   { slug: "prevention-longevity", label: "I want prevention & longevity", query: "preventiveFocus=healthy-aging" },
 ];
+
+/** Symptom groups for Main Concern popover (grouped, curated) */
+export const SYMPTOM_GROUPS: { label: string; slugs: string[] }[] = [
+  { label: "Energy", slugs: ["chronic-fatigue", "morning-exhaustion", "afternoon-energy-crash", "brain-fog", "burnout", "low-stamina", "fatigue"] },
+  { label: "Hormonal", slugs: ["pms", "pmdd", "irregular-periods", "breast-tenderness", "estrogen-dominance-signs", "low-progesterone-signs", "painful-periods", "heavy-bleeding", "ovulation-pain", "mid-cycle-spotting"] },
+  { label: "Metabolic", slugs: ["weight-gain", "weight-loss-resistance", "belly-fat", "slow-metabolism", "sugar-cravings", "bloating", "acid-reflux", "insulin-resistance", "prediabetes"] },
+  { label: "Mood & brain", slugs: ["anxiety", "pre-period-anxiety", "depression", "mood-swings", "irritability", "poor-focus", "low-motivation", "memory-changes"] },
+  { label: "Sleep", slugs: ["insomnia", "waking-at-3am", "light-sleep", "unrefreshing-sleep", "night-sweats", "sleep-disruption"] },
+  { label: "Gut & digestion", slugs: ["bloating", "constipation", "diarrhea", "ibs", "acid-reflux", "food-sensitivities", "nausea", "slow-digestion"] },
+  { label: "Skin & hair", slugs: ["acne", "hormonal-acne", "hair-thinning", "hair-loss", "dry-skin", "brittle-nails"] },
+  { label: "Thyroid & other", slugs: ["cold-intolerance", "low-libido", "puffy-face", "hoarse-voice", "eyebrow-thinning", "high-cholesterol", "high-blood-pressure"] },
+];
+
+/** Evidence level segments for refined control (order = display) */
+export const EVIDENCE_SEGMENTS: { slug: string; label: string }[] = [
+  { slug: "clinical-practice-based", label: "Clinical" },
+  { slug: "emerging-evidence", label: "Emerging" },
+  { slug: "high-evidence", label: "High" },
+  { slug: "moderate-evidence", label: "Moderate" },
+  { slug: "trend-analysis", label: "Latest" },
+];
+
+/** Smart Start cards (auto-populate filters when selected) */
+export const SMART_START_CARDS: { id: string; label: string; query: string }[] = [
+  { id: "always-tired", label: "I'm always tired", query: "symptom=chronic-fatigue&symptom=fatigue" },
+  { id: "irregular-cycle", label: "My cycle is irregular", query: "symptom=irregular-periods&lifeStage=perimenopause" },
+  { id: "prevention", label: "I want prevention & longevity", query: "preventiveFocus=healthy-aging&goal=energy" },
+];

@@ -166,15 +166,15 @@ export function JourneySection({
               </svg>
 
               <div className="relative flex min-h-[360px] flex-col md:min-h-[460px] md:flex-row">
-                {/* Stage Index — table of contents feel, small header */}
+                {/* Stage Index — scrolls inside canvas so page scroll is independent; all stages reachable */}
                 <nav
-                  className="journey-index mb-6 flex shrink-0 flex-col md:mb-0 md:w-[200px] md:flex-col md:overflow-visible md:pb-0"
+                  className="journey-index mb-6 flex shrink-0 flex-col md:mb-0 md:w-[200px] md:flex-col md:pb-0"
                   aria-label="Journey stages"
                 >
-                  <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] md:mb-4">
+                  <p className="mb-3 shrink-0 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] md:mb-4">
                     The Arc Stages
                   </p>
-                  <div className="flex gap-3 overflow-x-auto pb-2 md:flex-col md:gap-2.5 md:overflow-visible md:pb-0">
+                  <div className="flex gap-3 overflow-x-auto pb-2 md:max-h-[380px] md:min-h-0 md:flex-col md:gap-2.5 md:overflow-y-auto md:overflow-x-hidden md:pb-2 md:pr-1">
                     {stages.map((stage, i) => {
                       const isActive = activeStage === i;
                       const showHint = !hasHinted && isActive;

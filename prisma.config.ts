@@ -7,7 +7,8 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "npx tsx prisma/seed.ts",
   },
+  // Migrations require a direct connection (no pooler). Use DIRECT_URL for migrate deploy.
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DIRECT_URL") ?? env("DATABASE_URL"),
   },
 });
