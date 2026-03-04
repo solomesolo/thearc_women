@@ -32,10 +32,10 @@ export function Header() {
             Health System
           </Link>
           <Link
-            href="/lab"
+            href="/system2"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
-            Preventive Lab
+            How The Arc works
           </Link>
           <Link
             href="/about"

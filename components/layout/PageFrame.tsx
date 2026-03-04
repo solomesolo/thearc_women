@@ -12,7 +12,7 @@ type PageFrameProps = {
 
 /**
  * Global page wrapper: max-width, responsive padding, consistent vertical spacing.
- * Use on /about, /lab, /system for aligned layout.
+ * Use on /about, /system, /system2 for aligned layout.
  */
 export function PageFrame({
   children,

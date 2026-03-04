@@ -7,6 +7,7 @@ import { ScrollReveal } from "@/components/system/ScrollReveal";
 import { PageFrame } from "@/components/layout/PageFrame";
 import { Section } from "@/components/layout/Section";
 import { EditorialImage } from "@/components/media/EditorialImage";
+import { AboutHero } from "@/components/about/AboutHero";
 import { AboutNodeDiagram } from "@/components/about/AboutNodeDiagram";
 import { aboutPage } from "@/content/about";
 
@@ -98,9 +99,9 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <PageFrame variant="standard">
-        {/* Hero */}
+        {/* Hero: text column (6) + system map (6) */}
         <Section noPadding divider={false}>
-          <div className="content-hero-pt py-16 md:py-24 relative overflow-hidden">
+          <div className="content-hero-pt py-12 md:py-20 relative overflow-hidden">
             <div
               className="pointer-events-none absolute inset-0 opacity-[0.03]"
               aria-hidden
@@ -109,29 +110,14 @@ export default function AboutPage() {
                                  radial-gradient(circle at 80% 30%, var(--text-primary) 1px, transparent 1px),
                                  radial-gradient(circle at 40% 80%, var(--text-primary) 1px, transparent 1px)`,
                 backgroundSize: "60px 60px",
-                animation: "about-flow 25s ease-in-out infinite",
               }}
             />
-            <style>{`
-              @keyframes about-flow {
-                0%, 100% { opacity: 0.03; transform: translate(0, 0); }
-                50% { opacity: 0.05; transform: translate(2%, -1%); }
-              }
-            `}</style>
-            <div className="grid grid-cols-12 relative">
-              <div className="col-span-12 text-center md:col-span-8 md:col-start-3">
-                <h1 className="text-4xl font-semibold tracking-tight text-[var(--text-primary)] md:text-5xl">
-                  {aboutPage.hero.headline}
-                </h1>
-                <div className="mt-4 space-y-4 text-base leading-relaxed text-black/70 md:mt-6 md:text-lg md:space-y-5">
-                  {aboutPage.hero.paragraphs.map((p, i) => (
-                    <HighlightSentence key={i}>
-                      <p>{p}</p>
-                    </HighlightSentence>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <AboutHero
+              h1={aboutPage.hero.h1}
+              lead={aboutPage.hero.lead}
+              proofPills={aboutPage.hero.proofPills}
+              systemMap={aboutPage.hero.systemMap}
+            />
           </div>
         </Section>
 

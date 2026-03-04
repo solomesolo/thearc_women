@@ -1,15 +1,108 @@
 export const aboutPage = {
   hero: {
-    headline: "You are not imagining it. Women experience health differently.",
-    paragraphs: [
-      "Many women grow up learning to ignore the signals their bodies send.",
-      "Energy shifts that feel confusing. Sleep that changes without explanation. Cycles that influence mood, focus, and recovery.",
-      "And too often the answer is simple.",
-      "Everything looks normal.",
-      "The problem is that most health systems were never designed to understand female physiology in the first place.",
-      "The Arc exists because that experience deserves to change.",
-      "This platform was built to help women understand their biology clearly, calmly, and with real scientific context.",
+    h1: "You are not imagining it. Women experience health differently.",
+    lead:
+      "Female biology is dynamic. Most health systems were designed as if it wasn't.",
+    proofPills: [
+      {
+        id: "hormones",
+        label: "Hormones",
+        hoverText:
+          "Cycle-driven hormonal shifts influence energy, sleep, and metabolism.",
+      },
+      {
+        id: "sleep",
+        label: "Sleep",
+        hoverText: "Sleep architecture changes across hormonal phases.",
+      },
+      {
+        id: "stress",
+        label: "Stress",
+        hoverText:
+          "Stress load affects sleep quality, recovery, and hormonal balance.",
+      },
+      {
+        id: "metabolism",
+        label: "Metabolism",
+        hoverText:
+          "Metabolic signals interact with hormones, energy, and recovery.",
+      },
+      {
+        id: "recovery",
+        label: "Recovery",
+        hoverText:
+          "Recovery capacity influences stress resilience and performance.",
+      },
+      {
+        id: "biomarkers",
+        label: "Biomarkers",
+        hoverText:
+          "Lab and wearable data gain meaning when seen in biological context.",
+      },
     ],
+    systemMap: {
+      nodes: [
+        {
+          id: "Hormones",
+          label: "Hormones",
+          insight: {
+            title: "Hormones interact with sleep and metabolism.",
+            signals: ["cycle phase", "temperature", "sleep changes"],
+          },
+        },
+        {
+          id: "Metabolism",
+          label: "Metabolism",
+          insight: {
+            title: "Metabolism interacts with hormones and energy stability.",
+            signals: ["energy patterns", "glucose stability", "appetite"],
+          },
+        },
+        {
+          id: "Stress",
+          label: "Stress",
+          insight: {
+            title: "Stress interacts with sleep and recovery.",
+            signals: ["cortisol rhythm", "sleep quality", "recovery scores"],
+          },
+        },
+        {
+          id: "Sleep",
+          label: "Sleep",
+          insight: {
+            title: "Sleep interacts with hormones and stress.",
+            signals: ["sleep architecture", "phase shifts", "fragmentation"],
+          },
+        },
+        {
+          id: "Recovery",
+          label: "Recovery",
+          insight: {
+            title: "Recovery interacts with stress and metabolism.",
+            signals: ["HRV", "resting HR", "training load"],
+          },
+        },
+        {
+          id: "Biomarkers",
+          label: "Biomarkers",
+          insight: {
+            title: "Biomarkers reflect hormonal and metabolic state.",
+            signals: ["iron", "vitamin D", "lipids", "inflammatory markers"],
+          },
+        },
+      ],
+      connections: [
+        ["Hormones", "Sleep"],
+        ["Hormones", "Metabolism"],
+        ["Metabolism", "Recovery"],
+        ["Stress", "Sleep"],
+        ["Stress", "Recovery"],
+        ["Sleep", "Recovery"],
+        ["Hormones", "Stress"],
+        ["Metabolism", "Biomarkers"],
+        ["Hormones", "Biomarkers"],
+      ],
+    },
   },
   section1: {
     title: "A Different Way to Think About Female Health",

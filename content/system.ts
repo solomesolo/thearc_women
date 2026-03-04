@@ -307,47 +307,87 @@ export const systemPage = {
     title: "Preventive Planning",
     shortIntro:
       "The system highlights domains that benefit from attention—before symptoms dominate.",
+    // Order: clockwise from top — Hormonal, Cardiovascular, Bone, Micronutrient, Stress, Metabolic
     domains: [
       {
-        id: "metabolic",
-        label: "Metabolic resilience",
-        whyItMatters:
-          "Energy stability and long-term metabolic health depend on consistent signals.",
-        signals: ["fasting glucose", "energy patterns", "body composition trend"],
-        monitoring: "Periodic labs + ongoing energy and fueling tracking.",
-      },
-      {
         id: "hormonal",
-        label: "Hormonal stability",
-        whyItMatters: "Cycle rhythm and hormone-sensitive systems shape daily function.",
-        signals: ["cycle regularity", "symptom by phase", "cycle-related energy"],
-        monitoring: "Cycle and symptom tracking; labs when indicated.",
-      },
-      {
-        id: "micronutrient",
-        label: "Micronutrient reserves",
+        label: "Hormonal Stability",
         whyItMatters:
-          "Deficiencies show up in energy, recovery, and mood before labs flag.",
-        signals: ["iron, vitamin D", "B vitamins", "magnesium and zinc"],
-        monitoring: "Targeted labs based on intake and symptoms.",
-      },
-      {
-        id: "bone",
-        label: "Bone health",
-        whyItMatters: "Hormonal shifts influence bone remodeling over time.",
+          "Hormonal rhythms influence sleep, metabolism, mood, and recovery.",
         signals: [
-          "vitamin D",
-          "menstrual regularity",
-          "resistance training exposure",
+          "cycle regularity",
+          "luteal phase symptoms",
+          "sleep variability",
+          "stress sensitivity",
         ],
-        monitoring: "Periodic labs + long-term tracking.",
+        patterns:
+          "Cycle variability, mood shifts, delayed recovery.",
       },
       {
         id: "cardiovascular",
-        label: "Cardiovascular markers",
-        whyItMatters: "Early awareness supports long-term heart health.",
-        signals: ["blood pressure", "lipids", "inflammatory markers"],
-        monitoring: "Screening per guidelines; trend over time.",
+        label: "Cardiovascular Health",
+        whyItMatters:
+          "Cardiovascular markers shape long term metabolic and inflammatory stability.",
+        signals: [
+          "blood pressure trends",
+          "lipid markers",
+          "inflammation indicators",
+        ],
+        patterns:
+          "Reduced recovery capacity, persistent fatigue.",
+      },
+      {
+        id: "bone",
+        label: "Bone Integrity",
+        whyItMatters:
+          "Bone health is strongly influenced by hormonal patterns and mechanical loading.",
+        signals: [
+          "menstrual regularity",
+          "strength training exposure",
+          "vitamin D and calcium",
+        ],
+        patterns:
+          "Reduced training resilience, stress injury risk.",
+      },
+      {
+        id: "micronutrient",
+        label: "Micronutrient Reserves",
+        whyItMatters:
+          "Low micronutrient reserves quietly affect energy, immunity, and recovery.",
+        signals: [
+          "ferritin levels",
+          "vitamin D status",
+          "magnesium related sleep patterns",
+        ],
+        patterns:
+          "Persistent fatigue, slower recovery, cold sensitivity.",
+      },
+      {
+        id: "stress",
+        label: "Stress & Recovery Balance",
+        whyItMatters:
+          "Chronic stress reshapes sleep, metabolism, and hormonal stability.",
+        signals: [
+          "sleep variability",
+          "resting heart rate trends",
+          "recovery scores",
+        ],
+        patterns:
+          "Fragmented sleep, mental fatigue, slow training adaptation.",
+      },
+      {
+        id: "metabolic",
+        label: "Metabolic Resilience",
+        whyItMatters:
+          "Metabolism shapes energy stability, recovery, and cognitive performance.",
+        signals: [
+          "energy fluctuations",
+          "post training recovery",
+          "appetite variability",
+          "glucose stability patterns",
+        ],
+        patterns:
+          "Afternoon fatigue, unstable training response, sugar cravings.",
       },
     ],
   },
