@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ReasoningTrace as Trace } from "@/content/systemPageData";
 import { EvidencePill } from "./EvidencePill";
 
+/** "center" = modal (default); "right" = right drawer desktop / bottom sheet mobile */
+export type DrawerPlacement = "center" | "right";
+
 type ReasoningTraceDrawerProps = {
   trace: Trace | null;
   onClose: () => void;
+  placement?: DrawerPlacement;
 };
 
 function focusTrap(container: HTMLElement | null) {
@@ -37,11 +41,28 @@ function focusTrap(container: HTMLElement | null) {
   return () => container.removeEventListener("keydown", handleKeyDown);
 }
 
-export function ReasoningTraceDrawer({ trace, onClose }: ReasoningTraceDrawerProps) {
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    setIsMobile(mq.matches);
+    const fn = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+export function ReasoningTraceDrawer({
+  trace,
+  onClose,
+  placement = "center",
+}: ReasoningTraceDrawerProps) {
   const router = useRouter();
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!trace) return;
@@ -72,6 +93,23 @@ export function ReasoningTraceDrawer({ trace, onClose }: ReasoningTraceDrawerPro
 
   if (!trace) return null;
 
+  const isRightPlacement = placement === "right";
+  const fromBottom = isRightPlacement && isMobile;
+  const fromRight = isRightPlacement && !isMobile;
+
+  const overlayClass = isRightPlacement
+    ? "flex items-end justify-center md:items-stretch md:justify-end"
+    : "flex items-end justify-center sm:items-center sm:p-4";
+  const panelClass = fromRight
+    ? "relative w-full max-w-md md:max-h-[100vh] md:h-full overflow-y-auto rounded-t-2xl border-t border-black/10 bg-[var(--background)] shadow-xl md:rounded-l-2xl md:rounded-tr-none md:border-r"
+    : fromBottom
+      ? "relative w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-black/10 bg-[var(--background)] shadow-xl"
+      : "relative w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-black/10 bg-[var(--background)] shadow-xl sm:max-w-lg sm:rounded-2xl sm:border";
+
+  const panelInitial = fromRight ? { opacity: 0, x: "100%" } : { opacity: 0, y: 24 };
+  const panelAnimate = fromRight ? { opacity: 1, x: 0 } : { opacity: 1, y: 0 };
+  const panelExit = fromRight ? { opacity: 0, x: "100%" } : { opacity: 0, y: 24 };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -80,7 +118,7 @@ export function ReasoningTraceDrawer({ trace, onClose }: ReasoningTraceDrawerPro
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
+        className={`fixed inset-0 z-50 ${overlayClass}`}
         onClick={handleOverlayClick}
         aria-modal="true"
         role="dialog"
@@ -89,12 +127,12 @@ export function ReasoningTraceDrawer({ trace, onClose }: ReasoningTraceDrawerPro
         <div className="absolute inset-0 bg-black/20 sm:bg-black/30" />
         <motion.div
           ref={panelRef}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
+          initial={panelInitial}
+          animate={panelAnimate}
+          exit={panelExit}
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border-t border-black/10 bg-[var(--background)] shadow-xl sm:max-w-lg sm:rounded-2xl sm:border"
+          className={panelClass}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-[var(--background)] px-4 py-3">
             <button

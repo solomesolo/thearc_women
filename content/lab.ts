@@ -97,6 +97,6 @@ export const labPage = {
     line1: "Prevention is structured awareness.",
     line2: "The Preventive Lab turns biological understanding into practical intelligence.",
     ctaLabel: "Explore the Preventive Lab",
-    ctaHref: "/assessment",
+    ctaHref: "/survey",
   },
 };

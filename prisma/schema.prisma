@@ -126,8 +126,9 @@ model UserProfile {
   riskFactors    String[] @default([])
   trainingVolume String?
   stressLevel    String?
-  generatedTags String[] @default([])  // rule-based from above
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  generatedTags   String[] @default([])  // rule-based from above
+  surveyResponses Json?                  // full Arc intake variable_id -> value
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 

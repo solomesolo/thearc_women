@@ -68,6 +68,21 @@
   display: none;
 }
 
+/* Survey: step transition (fade + translateY) */
+.survey-step {
+  animation: survey-step-in 220ms ease-out forwards;
+}
+@keyframes survey-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Journey: active stage = editorial chapter highlight (left accent, no box) */
 .journey-stage-btn {
   background: transparent;
@@ -299,5 +314,71 @@
   }
 }
 .system-reading-col {
+  max-width: 680px;
+}
+
+/* Dashboard: shell + spacing — nothing touches viewport edges */
+.dashboard-shell {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 768px) {
+  .dashboard-shell {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+@media (min-width: 1024px) {
+  .dashboard-shell {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+.dashboard-section-gap { gap: 48px; }
+@media (min-width: 768px) {
+  .dashboard-section-gap { gap: 72px; }
+}
+
+.dashboard-block-gap { gap: 16px; }
+@media (min-width: 768px) {
+  .dashboard-block-gap { gap: 24px; }
+}
+
+.dashboard-grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+.dashboard-frame {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 768px) {
+  .dashboard-frame { padding-left: 32px; padding-right: 32px; }
+}
+@media (min-width: 1024px) {
+  .dashboard-frame { padding-left: 40px; padding-right: 40px; }
+}
+
+.dashboard-section {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+@media (min-width: 768px) {
+  .dashboard-section {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+}
+
+.dashboard-reading-col {
   max-width: 680px;
 }

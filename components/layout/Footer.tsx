@@ -18,7 +18,7 @@ export function Footer() {
               Knowledge Hub
             </Link>
             <Link
-              href="/assessment"
+              href="/survey"
               className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
             >
               Get My Personalized Health Map

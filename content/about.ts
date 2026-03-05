@@ -178,6 +178,6 @@ export const aboutPage = {
     line1: "Understanding your biology should not feel complicated.",
     line2: "The Arc exists to make that understanding possible.",
     ctaLabel: "Begin your biological mapping",
-    ctaHref: "/assessment",
+    ctaHref: "/survey",
   },
 };

@@ -5,7 +5,7 @@ export const homepageContent = {
     subline:
       "Understand, anticipate, and optimize how your body actually operates across work, training, and life.",
     ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/assessment",
+    ctaHref: "/survey",
     microtext:
       "Created for women who expect reliability from themselves and from their physiology.",
     imageSrc: "/images/Hero.avif",
@@ -575,7 +575,7 @@ export const homepageContent = {
     feedTitlePersonalized: "Your Knowledge Feed",
     feedSublinePersonalized: "Curated for your current focus:",
     ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/knowledge",
+    ctaHref: "/survey",
   },
   _drop: {
     _: [
@@ -646,7 +646,7 @@ export const homepageContent = {
       },
     ],
     ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/knowledge",
+    ctaHref: "/survey",
   },
   howItWorks: {
     headline: "Clarity without noise.",
@@ -713,7 +713,7 @@ export const homepageContent = {
     headline:
       "Stop guessing. Start understanding your biology.",
     ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/assessment",
+    ctaHref: "/survey",
     microtext:
       "A structured entry experience designed to build your personal biological performance model.",
     variant: "subtleSurface",

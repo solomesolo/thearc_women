@@ -460,6 +460,6 @@ export const systemPage = {
     line1: "Your biology already follows patterns.",
     line2: "The Arc helps you see them.",
     ctaLabel: "Begin your biological mapping",
-    ctaHref: "/assessment",
+    ctaHref: "/survey",
   },
 };

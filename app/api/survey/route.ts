@@ -1,17 +1,20 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { generateTagsFromProfile } from "@/lib/generatedTags";
 
 type Body = {
-  lifeStage?: string;
-  cyclePattern?: string;
+  lifeStage?: string | null;
+  cyclePattern?: string | null;
   goals?: string[];
   symptoms?: string[];
   riskFactors?: string[];
-  trainingVolume?: string;
-  stressLevel?: string;
+  trainingVolume?: string | number | null;
+  stressLevel?: string | number | null;
+  /** Full Arc intake responses (variable_id -> value); used when present to populate profile + store raw */
+  surveyResponses?: Record<string, unknown>;
 };
 
 export async function POST(request: NextRequest) {
@@ -34,17 +37,19 @@ export async function POST(request: NextRequest) {
   }
 
   const email = session.user.email;
+  const raw = body.surveyResponses as Record<string, unknown> | undefined;
   const goals = Array.isArray(body.goals) ? body.goals : [];
   const symptoms = Array.isArray(body.symptoms) ? body.symptoms : [];
   const riskFactors = Array.isArray(body.riskFactors) ? body.riskFactors : [];
   const profile = {
-    lifeStage: body.lifeStage ?? null,
-    cyclePattern: body.cyclePattern ?? null,
+    lifeStage: body.lifeStage ?? (raw?.life_stage != null ? String(raw.life_stage) : null),
+    cyclePattern: body.cyclePattern ?? (raw?.cycle_regular != null ? String(raw.cycle_regular) : null),
     goals,
     symptoms,
     riskFactors,
-    trainingVolume: body.trainingVolume ?? null,
-    stressLevel: body.stressLevel ?? null,
+    trainingVolume: body.trainingVolume != null ? String(body.trainingVolume) : (raw?.exercise_days != null ? String(raw.exercise_days) : null),
+    stressLevel: body.stressLevel != null ? String(body.stressLevel) : (raw?.stress_level != null ? String(raw.stress_level) : null),
+    surveyResponses: raw ?? null,
   };
   const generatedTags = generateTagsFromProfile(profile);
 
@@ -60,6 +65,7 @@ export async function POST(request: NextRequest) {
       trainingVolume: profile.trainingVolume,
       stressLevel: profile.stressLevel,
       generatedTags,
+      surveyResponses: profile.surveyResponses != null ? (profile.surveyResponses as Prisma.InputJsonValue) : undefined,
       updatedAt: new Date(),
     },
     update: {
@@ -71,6 +77,7 @@ export async function POST(request: NextRequest) {
       trainingVolume: profile.trainingVolume,
       stressLevel: profile.stressLevel,
       generatedTags,
+      surveyResponses: profile.surveyResponses != null ? (profile.surveyResponses as Prisma.InputJsonValue) : undefined,
       updatedAt: new Date(),
     },
   });

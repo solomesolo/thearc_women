@@ -1,0 +1,797 @@
+{
+  "meta": {
+    "survey_id": "arc_core_intake_v1",
+    "source_spec": "Survey_.pdf",
+    "estimated_questions": 58,
+    "estimated_time_minutes": "4–6",
+    "tone": {
+      "voice": "calm, supportive, non-diagnostic",
+      "audience": "women",
+      "rules": [
+        "Avoid medical alarmism",
+        "Explain why we ask in plain language",
+        "Use 'patterns' language, not diagnoses",
+        "One question per screen"
+      ]
+    }
+  },
+  "ui_defaults": {
+    "one_question_per_screen": true,
+    "auto_advance_on_select": {
+      "multiple_choice": true,
+      "boolean": true,
+      "scale": false,
+      "numeric": false,
+      "optional_numeric": false
+    },
+    "allow_back_navigation": true,
+    "show_progress": true,
+    "progress_style": "stepper",
+    "accessibility": {
+      "keyboard_shortcuts": true,
+      "min_tap_target_px": 44
+    }
+  },
+  "logic": {
+    "conditions": {
+      "is_menopause_stage": {
+        "anyOf": [
+          { "eq": ["life_stage", "Menopause"] },
+          { "eq": ["life_stage", "Postmenopause"] },
+          { "eq": ["life_stage", "Surgical menopause"] }
+        ]
+      },
+      "has_periods": {
+        "not": { "eq": ["cycle_regular", "I do not currently have periods"] }
+      }
+    },
+    "screens": [
+      {
+        "id": "safety_prompt_missed_period",
+        "type": "safety_prompt",
+        "title": "A quick note",
+        "body": "If you've missed your period for 3 months or longer and you're not pregnant, it can be helpful to check in with a clinician—especially if this is new for you. We'll keep going, and we'll use your answers to provide context (not diagnoses).",
+        "actions": [
+          { "label": "Continue", "action": "continue" }
+        ]
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "sec_01_profile",
+      "title": "Profile & life stage",
+      "short_title": "Basics",
+      "intro": {
+        "type": "content_break",
+        "title": "Let's start with a few basics",
+        "body": "These questions help us understand your current life stage and set a baseline. Your answers help the Arc connect signals across systems (like hormones, sleep, and metabolism)."
+      },
+      "items": [
+        {
+          "id": "q_age_years",
+          "kind": "question",
+          "variable_id": "age_years",
+          "question": "How old are you?",
+          "type": "numeric",
+          "input": { "placeholder": "Enter age", "min": 13, "max": 100, "unit": "years" },
+          "support": "Age helps us interpret life-stage patterns in hormones, metabolism, and long-term monitoring (like bone and cardiovascular health)."
+        },
+        {
+          "id": "q_life_stage",
+          "kind": "question",
+          "variable_id": "life_stage",
+          "question": "Which life stage best describes you right now?",
+          "type": "multiple_choice",
+          "options": [
+            "Early reproductive (18–25)",
+            "Reproductive (26–35)",
+            "Advanced reproductive (36–40)",
+            "Trying to conceive",
+            "Postpartum",
+            "Breastfeeding",
+            "After hormonal contraception",
+            "Perimenopause",
+            "Menopause",
+            "Postmenopause",
+            "Surgical menopause"
+          ],
+          "support": "Life stage strongly influences hormone patterns, sleep, and energy regulation."
+        },
+        {
+          "id": "q_height_cm",
+          "kind": "question",
+          "variable_id": "height_cm",
+          "question": "What is your current height?",
+          "type": "numeric",
+          "input": { "placeholder": "e.g., 165", "min": 90, "max": 220, "unit": "cm" },
+          "support": "This helps us interpret weight changes and health signals more accurately."
+        },
+        {
+          "id": "q_weight_kg",
+          "kind": "question",
+          "variable_id": "weight_kg",
+          "question": "What is your current weight?",
+          "type": "numeric",
+          "input": { "placeholder": "e.g., 62", "min": 25, "max": 250, "unit": "kg" },
+          "support": "Weight is optional context that helps interpret metabolism and energy signals over time."
+        },
+        {
+          "id": "q_weight_change_3mo",
+          "kind": "question",
+          "variable_id": "weight_change_3mo",
+          "question": "Has your weight changed in the last 3 months?",
+          "type": "multiple_choice",
+          "options": ["Stable", "Gained 2–5 kg", "Gained >5 kg", "Lost 2–5 kg", "Lost >5 kg", "Not sure"],
+          "support": "Recent changes can reflect shifts in metabolism, stress load, sleep, or hormonal rhythm."
+        },
+        {
+          "id": "kb_systems_work_together_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Your body works as a system",
+          "body": "Energy, hormones, sleep, and stress influence each other. Next we'll look at cycle signals that often add important context."
+        }
+      ]
+    },
+    {
+      "id": "sec_02_cycle",
+      "title": "Cycle & reproductive health",
+      "short_title": "Cycle",
+      "display_if": { "not": { "ref": "is_menopause_stage" } },
+      "intro": {
+        "type": "content_break",
+        "title": "Cycle signals add context",
+        "body": "Many patterns—like sleep changes, cravings, and recovery—shift across the cycle. These questions help us interpret those shifts calmly and clearly."
+      },
+      "items": [
+        {
+          "id": "q_cycle_regular",
+          "kind": "question",
+          "variable_id": "cycle_regular",
+          "question": "Are your menstrual cycles usually regular?",
+          "type": "multiple_choice",
+          "options": ["Very regular", "Somewhat irregular", "Very irregular", "I do not currently have periods"],
+          "support": "Cycle regularity helps us understand hormonal rhythm stability."
+        },
+        {
+          "id": "q_cycle_length_days",
+          "kind": "question",
+          "variable_id": "cycle_length_days",
+          "question": "About how many days is your typical cycle?",
+          "type": "multiple_choice",
+          "options": ["<21", "21–25", "26–30", "31–35", ">35", "Not sure"],
+          "support": "Cycle length helps us interpret timing-based patterns (like energy dips or sleep changes).",
+          "display_if": { "ref": "has_periods" }
+        },
+        {
+          "id": "q_period_heaviness",
+          "kind": "question",
+          "variable_id": "period_heaviness",
+          "question": "How heavy are your periods usually?",
+          "type": "multiple_choice",
+          "options": ["Light", "Moderate", "Heavy", "Very heavy"],
+          "support": "Heavier bleeding can affect iron stores, which may influence fatigue and recovery.",
+          "display_if": { "ref": "has_periods" }
+        },
+        {
+          "id": "q_period_clots",
+          "kind": "question",
+          "variable_id": "period_clots",
+          "question": "Do you pass large blood clots during your period?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "This helps us understand bleeding patterns that can relate to iron and energy signals.",
+          "display_if": { "ref": "has_periods" }
+        },
+        {
+          "id": "q_period_pain_sev",
+          "kind": "question",
+          "variable_id": "period_pain_sev",
+          "question": "How painful are your periods usually?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "No pain", "mid": "Moderate", "max": "Severe" },
+          "support": "Pain patterns can influence stress signals, sleep, and recovery.",
+          "display_if": { "ref": "has_periods" }
+        },
+        {
+          "id": "q_pms_sev",
+          "kind": "question",
+          "variable_id": "pms_sev",
+          "question": "How strong are your PMS symptoms overall?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "None", "mid": "Moderate", "max": "Very strong" },
+          "support": "PMS intensity can help us interpret mood, sleep, and energy changes across the month.",
+          "display_if": { "ref": "has_periods" }
+        },
+        {
+          "id": "q_missed_period_3mo",
+          "kind": "question",
+          "variable_id": "missed_period_3mo",
+          "question": "Have you missed your period for 3 months or longer (and you're not pregnant)?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This helps us interpret hormonal rhythm signals and know when extra context may be helpful.",
+          "display_if": { "ref": "has_periods" },
+          "triggers": [
+            {
+              "when": { "eq": ["missed_period_3mo", "Yes"] },
+              "action": "show_screen",
+              "screen_id": "safety_prompt_missed_period"
+            }
+          ]
+        },
+        {
+          "id": "q_contraception_type",
+          "kind": "question",
+          "variable_id": "contraception_type",
+          "question": "What type of contraception do you currently use?",
+          "type": "multiple_choice",
+          "options": ["None", "Combined pill", "Progestin-only pill", "Hormonal IUD", "Copper IUD", "Implant", "Injection", "Ring / patch", "Other"],
+          "support": "Hormonal contraception can change cycle-related signals and how we interpret patterns."
+        },
+        {
+          "id": "kb_cycle_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: energy & metabolism signals",
+          "body": "Fatigue, cravings, and exercise tolerance can reflect sleep, stress load, or metabolic regulation. We'll ask a few questions to understand your pattern."
+        }
+      ]
+    },
+    {
+      "id": "sec_03_energy_metabolism",
+      "title": "Energy & metabolism",
+      "short_title": "Energy",
+      "intro": {
+        "type": "content_break",
+        "title": "Energy isn't one signal",
+        "body": "Energy can be influenced by sleep quality, stress load, blood sugar stability, iron status, and cycle timing. We'll focus on what you feel day-to-day."
+      },
+      "items": [
+        {
+          "id": "q_fatigue_freq",
+          "kind": "question",
+          "variable_id": "fatigue_freq",
+          "question": "How often do you feel unusually tired or fatigued?",
+          "type": "multiple_choice",
+          "options": ["Never", "Occasionally", "Weekly", "Most days", "Daily"],
+          "support": "Frequency helps us understand whether this is occasional or a consistent pattern."
+        },
+        {
+          "id": "q_fatigue_sev",
+          "kind": "question",
+          "variable_id": "fatigue_sev",
+          "question": "When you feel fatigued, how intense is it?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Very mild", "mid": "Moderate", "max": "Very intense" },
+          "support": "Intensity helps us weight this signal when building your system map."
+        },
+        {
+          "id": "q_fatigue_timing",
+          "kind": "question",
+          "variable_id": "fatigue_timing",
+          "question": "When is your fatigue usually worst?",
+          "type": "multiple_choice",
+          "options": ["Morning", "Afternoon", "Evening", "All day", "Varies"],
+          "support": "Timing can help distinguish sleep-driven vs. metabolic-driven patterns."
+        },
+        {
+          "id": "q_energy_crash",
+          "kind": "question",
+          "variable_id": "energy_crash",
+          "question": "Do you experience sudden energy crashes during the day?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "Energy crashes can be linked to stress load, sleep debt, or blood sugar variability."
+        },
+        {
+          "id": "q_crash_post_meal",
+          "kind": "question",
+          "variable_id": "crash_post_meal",
+          "question": "Do these crashes tend to happen after meals?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "Post-meal crashes can be a clue about blood sugar stability.",
+          "display_if": { "not": { "eq": ["energy_crash", "No"] } }
+        },
+        {
+          "id": "q_sugar_cravings",
+          "kind": "question",
+          "variable_id": "sugar_cravings",
+          "question": "How strong are sugar cravings for you lately?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "None", "mid": "Moderate", "max": "Very strong" },
+          "support": "Cravings can shift with cycle phase, stress hormones, and blood sugar regulation."
+        },
+        {
+          "id": "q_exercise_tolerance",
+          "kind": "question",
+          "variable_id": "exercise_tolerance",
+          "question": "How well do you tolerate exercise right now?",
+          "type": "multiple_choice",
+          "options": ["Excellent", "Good", "Moderate", "Poor", "Very poor"],
+          "support": "Exercise tolerance can reflect recovery capacity, sleep, stress load, and energy availability."
+        },
+        {
+          "id": "kb_energy_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: mood & cognitive signals",
+          "body": "Mood, anxiety, and brain fog often reflect how stress, sleep, and hormones interact. We'll keep this simple."
+        }
+      ]
+    },
+    {
+      "id": "sec_04_mood_cognitive",
+      "title": "Mood & cognitive signals",
+      "short_title": "Mood",
+      "items": [
+        {
+          "id": "q_anxiety_freq",
+          "kind": "question",
+          "variable_id": "anxiety_freq",
+          "question": "How often do you feel anxious or on edge?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 4, "step": 1 },
+          "labels": { "min": "Never", "mid": "Sometimes", "max": "Very often" },
+          "support": "This helps us understand stress response load over time."
+        },
+        {
+          "id": "q_anxiety_sev",
+          "kind": "question",
+          "variable_id": "anxiety_sev",
+          "question": "When anxiety shows up, how intense does it feel?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Mild", "mid": "Moderate", "max": "Very intense" },
+          "support": "Intensity helps us weight this signal in your system map."
+        },
+        {
+          "id": "q_anxiety_cycle_link",
+          "kind": "question",
+          "variable_id": "anxiety_cycle_link",
+          "question": "Do these feelings tend to worsen before your period?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often", "Not sure"],
+          "support": "Cycle-linked mood changes can help us interpret hormonal rhythm and stress interactions.",
+          "display_if": { "not": { "ref": "is_menopause_stage" } }
+        },
+        {
+          "id": "q_brain_fog_freq",
+          "kind": "question",
+          "variable_id": "brain_fog_freq",
+          "question": "How often do you experience brain fog or difficulty concentrating?",
+          "type": "multiple_choice",
+          "options": ["Never", "Occasionally", "Weekly", "Most days", "Daily"],
+          "support": "Brain fog patterns can reflect sleep quality, stress load, and energy regulation."
+        },
+        {
+          "id": "q_brain_fog_sev",
+          "kind": "question",
+          "variable_id": "brain_fog_sev",
+          "question": "How intense is the brain fog when it happens?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Very mild", "mid": "Moderate", "max": "Very intense" },
+          "support": "This helps us weight cognitive signals in your overall pattern."
+        },
+        {
+          "id": "kb_mood_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: sleep signals",
+          "body": "Sleep is one of the body's main regulatory systems. Even small changes can affect mood, recovery, and metabolism."
+        }
+      ]
+    },
+    {
+      "id": "sec_05_sleep",
+      "title": "Sleep signals",
+      "short_title": "Sleep",
+      "items": [
+        {
+          "id": "q_sleep_hours",
+          "kind": "question",
+          "variable_id": "sleep_hours",
+          "question": "On average, how many hours do you sleep per night?",
+          "type": "multiple_choice",
+          "options": ["<5", "5–6", "6–7", "7–8", "8+"],
+          "support": "Duration helps us interpret fatigue, recovery, and stress resilience."
+        },
+        {
+          "id": "q_sleep_quality",
+          "kind": "question",
+          "variable_id": "sleep_quality",
+          "question": "How would you rate your sleep quality lately?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Very poor", "mid": "Okay", "max": "Excellent" },
+          "support": "Quality often matters as much as quantity for recovery."
+        },
+        {
+          "id": "q_sleep_latency",
+          "kind": "question",
+          "variable_id": "sleep_latency",
+          "question": "How long does it usually take you to fall asleep?",
+          "type": "multiple_choice",
+          "options": ["<15 min", "15–45 min", ">45 min"],
+          "support": "Longer time to fall asleep can reflect stress load, nervous system activation, or schedule mismatch."
+        },
+        {
+          "id": "q_night_waking",
+          "kind": "question",
+          "variable_id": "night_waking",
+          "question": "How often do you wake during the night?",
+          "type": "multiple_choice",
+          "options": ["Never", "Once", "2–3 times", "4+ times"],
+          "support": "Night waking can influence recovery and next-day energy."
+        },
+        {
+          "id": "q_wake_3am",
+          "kind": "question",
+          "variable_id": "wake_3am",
+          "question": "Do you often wake around 3–4 AM?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "This can be a helpful pattern marker for sleep architecture and stress rhythm (not a diagnosis)."
+        },
+        {
+          "id": "q_unrefreshed_sleep",
+          "kind": "question",
+          "variable_id": "unrefreshed_sleep",
+          "question": "How often do you wake up feeling unrefreshed?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Never", "mid": "Sometimes", "max": "Almost always" },
+          "support": "Unrefreshed sleep helps us interpret recovery capacity even when sleep duration looks fine."
+        },
+        {
+          "id": "kb_sleep_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: gut & digestion",
+          "body": "Digestion can reflect stress, food tolerance, and hormonal shifts. We'll ask a few quick questions."
+        }
+      ]
+    },
+    {
+      "id": "sec_06_gut",
+      "title": "Gut & digestion",
+      "short_title": "Gut",
+      "items": [
+        {
+          "id": "q_bloating_freq",
+          "kind": "question",
+          "variable_id": "bloating_freq",
+          "question": "How often do you experience bloating?",
+          "type": "multiple_choice",
+          "options": ["Never", "Occasionally", "Weekly", "Most days", "Daily"],
+          "support": "Bloating patterns can be influenced by food tolerance, stress, and cycle timing."
+        },
+        {
+          "id": "q_constipation_freq",
+          "kind": "question",
+          "variable_id": "constipation_freq",
+          "question": "How often do you experience constipation?",
+          "type": "multiple_choice",
+          "options": ["Never", "Occasionally", "Weekly", "Most days", "Daily"],
+          "support": "Constipation patterns can relate to hydration, stress, hormones, and gut motility."
+        },
+        {
+          "id": "q_diarrhea_freq",
+          "kind": "question",
+          "variable_id": "diarrhea_freq",
+          "question": "How often do you experience diarrhea or loose stools?",
+          "type": "multiple_choice",
+          "options": ["Never", "Occasionally", "Weekly", "Most days", "Daily"],
+          "support": "This helps us understand gut variability and sensitivity patterns."
+        },
+        {
+          "id": "q_food_sensitivity",
+          "kind": "question",
+          "variable_id": "food_sensitivity",
+          "question": "Do certain foods frequently trigger digestive symptoms for you?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "Food-triggered symptoms can help us identify sensitivity patterns worth monitoring."
+        },
+        {
+          "id": "kb_gut_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: skin & hair signals",
+          "body": "Skin, hair, and nails can reflect hormonal shifts, stress load, and micronutrient reserves. We'll keep it quick."
+        }
+      ]
+    },
+    {
+      "id": "sec_07_skin_hair",
+      "title": "Skin & hair signals",
+      "short_title": "Skin & hair",
+      "items": [
+        {
+          "id": "q_hair_loss",
+          "kind": "question",
+          "variable_id": "hair_loss",
+          "question": "Have you noticed increased hair shedding or thinning?",
+          "type": "multiple_choice",
+          "options": ["No", "Mild", "Moderate", "Severe"],
+          "support": "Hair changes can relate to stress load, hormone shifts, iron status, and thyroid context."
+        },
+        {
+          "id": "q_acne_sev",
+          "kind": "question",
+          "variable_id": "acne_sev",
+          "question": "How severe are acne or skin breakouts for you lately?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "None", "mid": "Moderate", "max": "Severe" },
+          "support": "Breakouts can shift with cycle phase, stress, and androgen-related patterns."
+        },
+        {
+          "id": "q_dry_skin_sev",
+          "kind": "question",
+          "variable_id": "dry_skin_sev",
+          "question": "How dry does your skin feel lately?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Not dry", "mid": "Somewhat dry", "max": "Very dry" },
+          "support": "Dryness can reflect hydration, environment, and sometimes thyroid or hormonal context."
+        },
+        {
+          "id": "q_brittle_nails",
+          "kind": "question",
+          "variable_id": "brittle_nails",
+          "question": "Do your nails break easily?",
+          "type": "multiple_choice",
+          "options": ["No", "Sometimes", "Often"],
+          "support": "Nails can reflect micronutrient reserves and overall recovery state."
+        },
+        {
+          "id": "kb_skin_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: lifestyle & stress",
+          "body": "Lifestyle context helps us interpret signals accurately—especially when stress, sleep, and training change."
+        }
+      ]
+    },
+    {
+      "id": "sec_08_lifestyle_stress",
+      "title": "Lifestyle & stress",
+      "short_title": "Lifestyle",
+      "items": [
+        {
+          "id": "q_stress_level",
+          "kind": "question",
+          "variable_id": "stress_level",
+          "question": "How would you rate your current stress level?",
+          "type": "scale",
+          "scale": { "min": 0, "max": 5, "step": 1 },
+          "labels": { "min": "Low", "mid": "Moderate", "max": "Very high" },
+          "support": "Stress level helps us interpret sleep quality, recovery, cravings, and mood patterns."
+        },
+        {
+          "id": "q_stress_event_3mo",
+          "kind": "question",
+          "variable_id": "stress_event_3mo",
+          "question": "Have you experienced a major life stressor in the past 3 months?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes"],
+          "support": "Recent changes can shift patterns quickly—this helps us avoid over-interpreting short-term fluctuations."
+        },
+        {
+          "id": "q_exercise_days",
+          "kind": "question",
+          "variable_id": "exercise_days",
+          "question": "How many days per week do you exercise (on average)?",
+          "type": "numeric",
+          "input": { "placeholder": "0–7", "min": 0, "max": 7, "unit": "days/week" },
+          "support": "Training load is important context for recovery and fatigue signals."
+        },
+        {
+          "id": "q_caffeine_cups",
+          "kind": "question",
+          "variable_id": "caffeine_cups",
+          "question": "How many cups of caffeine do you have per day (on average)?",
+          "type": "multiple_choice",
+          "options": ["0", "1", "2", "3", "4+"],
+          "support": "Caffeine can influence sleep latency, anxiety, and perceived energy."
+        },
+        {
+          "id": "q_alcohol_freq",
+          "kind": "question",
+          "variable_id": "alcohol_freq",
+          "question": "How often do you drink alcohol?",
+          "type": "multiple_choice",
+          "options": ["Never", "Monthly", "Weekly", "Several times per week", "Daily"],
+          "support": "Alcohol can affect sleep architecture and recovery signals."
+        },
+        {
+          "id": "kb_lifestyle_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Next: medical history",
+          "body": "A few health history questions help us avoid false pattern matches and interpret signals responsibly."
+        }
+      ]
+    },
+    {
+      "id": "sec_09_med_history",
+      "title": "Medical history & diagnoses",
+      "short_title": "History",
+      "items": [
+        {
+          "id": "q_hx_pcos",
+          "kind": "question",
+          "variable_id": "hx_pcos",
+          "question": "Have you ever been diagnosed with PCOS?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This helps us interpret cycle and androgen-related patterns accurately."
+        },
+        {
+          "id": "q_hx_thyroid",
+          "kind": "question",
+          "variable_id": "hx_thyroid",
+          "question": "Have you ever been diagnosed with a thyroid condition?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "Thyroid context can influence energy, skin/hair, and metabolism signals."
+        },
+        {
+          "id": "q_hx_endometriosis",
+          "kind": "question",
+          "variable_id": "hx_endometriosis",
+          "question": "Have you been diagnosed with endometriosis?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This can add context to pain patterns and cycle-related symptoms."
+        },
+        {
+          "id": "q_hx_autoimmune",
+          "kind": "question",
+          "variable_id": "hx_autoimmune",
+          "question": "Have you been diagnosed with an autoimmune condition?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "Autoimmune history can affect fatigue, inflammation signals, and recovery patterns."
+        },
+        {
+          "id": "kb_labs_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Optional: lab values",
+          "body": "If you have recent lab results, you can add them now. If not, you can skip—your dashboard will still work."
+        }
+      ]
+    },
+    {
+      "id": "sec_10_labs_optional",
+      "title": "Labs (optional)",
+      "short_title": "Labs",
+      "intro": {
+        "type": "content_break",
+        "title": "Add lab values if you have them",
+        "body": "Labs can clarify certain patterns—especially fatigue, hair changes, and metabolic variability. You can leave any field blank."
+      },
+      "items": [
+        {
+          "id": "q_lab_ferritin_value",
+          "kind": "question",
+          "variable_id": "lab_ferritin_value",
+          "question": "Ferritin (iron stores) — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 30", "min": 0, "max": 1000, "unit": "ng/mL" },
+          "support": "Ferritin reflects iron storage and can influence fatigue and recovery."
+        },
+        {
+          "id": "q_lab_tsh_value",
+          "kind": "question",
+          "variable_id": "lab_tsh_value",
+          "question": "TSH (thyroid) — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 2.0", "min": 0, "max": 100, "unit": "mIU/L" },
+          "support": "TSH is commonly used to understand thyroid context related to energy and metabolism."
+        },
+        {
+          "id": "q_lab_vitd_value",
+          "kind": "question",
+          "variable_id": "lab_vitd_value",
+          "question": "Vitamin D — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 28", "min": 0, "max": 200, "unit": "ng/mL" },
+          "support": "Vitamin D can relate to mood, immune function, and long-term bone health context."
+        },
+        {
+          "id": "q_lab_glucose_value",
+          "kind": "question",
+          "variable_id": "lab_glucose_value",
+          "question": "Fasting glucose — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 90", "min": 0, "max": 500, "unit": "mg/dL" },
+          "support": "Fasting glucose helps interpret blood sugar stability patterns."
+        },
+        {
+          "id": "q_lab_hba1c_value",
+          "kind": "question",
+          "variable_id": "lab_hba1c_value",
+          "question": "HbA1c — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 5.3", "min": 0, "max": 20, "unit": "%" },
+          "support": "HbA1c reflects average blood sugar levels over time and can add useful context."
+        },
+        {
+          "id": "q_lab_insulin_value",
+          "kind": "question",
+          "variable_id": "lab_insulin_value",
+          "question": "Fasting insulin — if you know it",
+          "type": "optional_numeric",
+          "input": { "placeholder": "e.g., 8", "min": 0, "max": 500, "unit": "µIU/mL" },
+          "support": "Insulin can help clarify energy crashes and craving patterns for some people."
+        },
+        {
+          "id": "kb_family_01",
+          "kind": "content_break",
+          "type": "content_break",
+          "title": "Last: family risk",
+          "body": "Family history helps us personalize long-term monitoring without guessing. This isn't about predicting—just adding context."
+        }
+      ]
+    },
+    {
+      "id": "sec_11_family_risk",
+      "title": "Family risk",
+      "short_title": "Family",
+      "items": [
+        {
+          "id": "q_fam_diabetes",
+          "kind": "question",
+          "variable_id": "fam_diabetes",
+          "question": "Does diabetes run in your family?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This can influence what we recommend monitoring over time (like blood sugar stability markers)."
+        },
+        {
+          "id": "q_fam_cvd",
+          "kind": "question",
+          "variable_id": "fam_cvd",
+          "question": "Is there a family history of early cardiovascular disease?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This helps personalize longer-term cardiovascular awareness in a calm, non-alarmist way."
+        },
+        {
+          "id": "q_fam_breast_cancer",
+          "kind": "question",
+          "variable_id": "fam_breast_cancer",
+          "question": "Is there a family history of breast cancer?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This is used only for preventive context and education—not risk prediction."
+        },
+        {
+          "id": "q_fam_osteoporosis",
+          "kind": "question",
+          "variable_id": "fam_osteoporosis",
+          "question": "Is there a family history of osteoporosis?",
+          "type": "multiple_choice",
+          "options": ["No", "Yes", "Not sure"],
+          "support": "This helps personalize bone health awareness over time, especially across life stages."
+        }
+      ],
+      "outro": {
+        "type": "content_break",
+        "title": "You're done",
+        "body": "We'll use your answers to generate your biological lens, system map, and what to watch—based on patterns, not diagnoses.",
+        "primary_action": { "label": "Build my dashboard", "action": "submit" }
+      }
+    }
+  ]
+}

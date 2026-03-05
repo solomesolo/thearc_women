@@ -45,7 +45,7 @@ export function Header() {
           </Link>
           <AuthNav />
           <Link
-            href="/assessment"
+            href="/survey"
             className="rounded-[14px] border border-[var(--foreground)] bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] no-underline transition-opacity hover:opacity-90"
           >
             Get Started
