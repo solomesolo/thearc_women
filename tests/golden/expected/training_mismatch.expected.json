@@ -1,0 +1,21 @@
+{
+  "top_clusters": ["CL_TRAIN_MISMATCH", "CL_INFLAM_LOAD", "CL_ENERGY_VAR", "CL_THYROID_SIGNALS", "CL_SUGAR_INSTAB"],
+  "system_status": {
+    "SYS_HORMONAL": "stable",
+    "SYS_METABOLIC": "stable",
+    "SYS_STRESS": "stable",
+    "SYS_SLEEP": "stable",
+    "SYS_GUT": "stable",
+    "SYS_MICRO": "stable",
+    "SYS_CARDIO": "stable",
+    "SYS_BONE": "stable",
+    "SYS_RECOVERY": "stable",
+    "SYS_INFLAM_CTX": "stable",
+    "SYS_NUTRITION": "stable",
+    "SYS_BIOMARKERS_CTX": "stable"
+  },
+  "top_root_patterns": ["RP_OVERTRAIN", "RP_STRESS_LOAD", "RP_MICRO_DEPLETION"],
+  "primary_lens_id": "LENS_BASELINE",
+  "secondary_lens_id": null,
+  "safety_rule_ids": []
+}

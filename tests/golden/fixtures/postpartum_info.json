@@ -1,0 +1,15 @@
+{
+  "user_id": "fixture_postpartum",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Postpartum",
+    "age_years": 33,
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 3,
+    "stress_level": 2,
+    "raw_fields": {"postpartum_months": 3}
+  },
+  "labs": [],
+  "history": {}
+}

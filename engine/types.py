@@ -76,6 +76,8 @@ class SystemResult:
     status: str = "stable"
     top_drivers: List[str] = field(default_factory=list)
     reasoning_trace_id: Optional[str] = None
+    confidence: Optional[float] = None
+    explain_meta: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -85,6 +87,7 @@ class RootPatternResult:
     confidence: float = 0.0
     evidence_level: Optional[str] = None
     reasoning_trace_id: Optional[str] = None
+    explain_meta: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,6 +100,7 @@ class LensResult:
     lens_reason_tags: List[str] = field(default_factory=list)
     lens_confidence: Optional[float] = None
     reasoning_trace_id: Optional[str] = None
+    explain_meta: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -108,6 +112,19 @@ class SafetyPrompt:
     escalation: Optional[str] = None
     cluster_override: List[str] = field(default_factory=list)
     reasoning_trace_id: Optional[str] = None
+
+
+@dataclass
+class ReasoningTrace:
+    """Lightweight trace for reasoning chain: cluster → system → pattern → lens → safety."""
+    trace_id: str
+    trace_type: str  # "cluster" | "system" | "pattern" | "lens" | "safety"
+    entity_id: str
+    summary: str
+    inputs: Dict[str, Any] = field(default_factory=dict)
+    calculations: Dict[str, Any] = field(default_factory=dict)
+    outputs: Dict[str, Any] = field(default_factory=dict)
+    links: Dict[str, List[str]] = field(default_factory=dict)
 
 
 # --- Final output type ---
@@ -135,4 +152,5 @@ class EngineOutput:
     biological_priorities: List[Dict[str, Any]] = field(default_factory=list)
     weekly_insights: List[Dict[str, Any]] = field(default_factory=list)
 
+    dashboard_sections: Dict[str, Any] = field(default_factory=dict)
     debug_meta: Dict[str, Any] = field(default_factory=dict)

@@ -1,0 +1,20 @@
+{
+  "user_id": "fixture_thyroid",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 38,
+    "fatigue_freq": "Daily",
+    "fatigue_sev": 4,
+    "stress_level": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_COLD_INTOL", "severity": 4},
+      {"symptom_id": "SYM_DRY_SKIN", "severity": 4},
+      {"symptom_id": "SYM_WEIGHT_RESIST", "severity": 4}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

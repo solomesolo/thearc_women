@@ -1,0 +1,20 @@
+{
+  "user_id": "fixture_peri",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Perimenopause",
+    "age_years": 48,
+    "stress_level": 3,
+    "fatigue_freq": "Weekly",
+    "fatigue_sev": 3,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_NIGHT_SWEATS", "severity": 4, "frequency": 3},
+      {"symptom_id": "SYM_INSOMNIA", "severity": 4},
+      {"symptom_id": "SYM_IRREG_CYCLE", "severity": 4}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

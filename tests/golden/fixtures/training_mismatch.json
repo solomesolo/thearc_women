@@ -1,0 +1,23 @@
+{
+  "user_id": "fixture_training",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 29,
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 4,
+    "stress_level": 3,
+    "exercise_days": 5,
+    "endurance_minutes_week": 180,
+    "endurance_training": true,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_UNREFRESHED", "severity": 4},
+      {"symptom_id": "SYM_EX_INTOL", "severity": 4},
+      {"symptom_id": "SYM_LOW_STAMINA", "severity": 4}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

@@ -46,6 +46,8 @@ def compute_derived_flags(normalized_survey, signal_scores, registry, config) ->
     )
     lifestyle = getattr(normalized_survey, "lifestyle_fields", None) or {}
     flags["food_sensitivity"] = lifestyle.get("food_sensitivity") if lifestyle else None
+    flags["exercise_days"] = lifestyle.get("exercise_days")
+    flags["endurance_minutes_week"] = lifestyle.get("endurance_minutes_week")
 
     # Micro flag (symptom-only for Phase 2)
     flags["micro_data_present"] = any(

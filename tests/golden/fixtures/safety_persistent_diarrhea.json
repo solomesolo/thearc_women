@@ -1,0 +1,16 @@
+{
+  "user_id": "fixture_safe12",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 27,
+    "stress_level": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_DIARRHEA", "severity": 4, "frequency": 4, "duration_days": 10}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

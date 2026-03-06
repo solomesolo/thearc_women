@@ -1,0 +1,18 @@
+{
+  "user_id": "fixture_safe02",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 31,
+    "period_heaviness": "Heavy",
+    "fatigue_sev": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_HEAVY_BLEED", "severity": 4},
+      {"symptom_id": "SYM_DIZZINESS", "severity": 4}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

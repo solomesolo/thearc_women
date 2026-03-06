@@ -328,6 +328,18 @@ def _build_symptom_inputs(raw: Dict[str, Any], out: NormalizedSurvey) -> None:
             SymptomInput(symptom_id="SYM_PMS", severity=out.pms_sev)
         )
 
+    # Merge fixture/test-provided symptom_inputs (e.g. for golden tests)
+    extra = _get(raw, "symptom_inputs")
+    if isinstance(extra, list):
+        for s in extra:
+            if not isinstance(s, dict) or not s.get("symptom_id"):
+                continue
+            allowed = {"symptom_id", "severity", "frequency", "duration_days", "timing", "phase_link", "post_meal"}
+            kwargs = {k: v for k, v in s.items() if k in allowed and v is not None}
+            if kwargs.get("severity") is not None and isinstance(kwargs["severity"], (int, float)):
+                kwargs["severity"] = _clamp_scale_0_5(kwargs["severity"]) if kwargs["severity"] is not None else None
+            symptoms.append(SymptomInput(**kwargs))
+
     out.symptom_inputs = symptoms
 
 

@@ -1,0 +1,18 @@
+{
+  "user_id": "fixture_cycle_acne",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 26,
+    "stress_level": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_IRREG_CYCLE", "severity": 4},
+      {"symptom_id": "SYM_ACNE", "severity": 4},
+      {"symptom_id": "SYM_HAIR_LOSS", "severity": 4}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}

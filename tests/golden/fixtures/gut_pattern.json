@@ -1,0 +1,18 @@
+{
+  "user_id": "fixture_gut",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 28,
+    "stress_level": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_BLOATING", "severity": 4, "frequency": 3},
+      {"symptom_id": "SYM_CONSTIP", "severity": 3, "frequency": 2},
+      {"symptom_id": "SYM_DIARRHEA", "severity": 2, "frequency": 1}
+    ],
+    "raw_fields": {"food_sensitivity": true}
+  },
+  "labs": [],
+  "history": {}
+}

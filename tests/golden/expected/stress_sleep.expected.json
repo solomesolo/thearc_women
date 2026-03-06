@@ -1,0 +1,21 @@
+{
+  "top_clusters": ["CL_INFLAM_LOAD", "CL_SLEEP_DISRUPT", "CL_STRESS_ACCUM", "CL_TRAIN_MISMATCH", "CL_THYROID_SIGNALS"],
+  "system_status": {
+    "SYS_HORMONAL": "stable",
+    "SYS_METABOLIC": "stable",
+    "SYS_STRESS": "stable",
+    "SYS_SLEEP": "stable",
+    "SYS_GUT": "stable",
+    "SYS_MICRO": "stable",
+    "SYS_CARDIO": "stable",
+    "SYS_BONE": "stable",
+    "SYS_RECOVERY": "stable",
+    "SYS_INFLAM_CTX": "stable",
+    "SYS_NUTRITION": "stable",
+    "SYS_BIOMARKERS_CTX": "stable"
+  },
+  "top_root_patterns": ["RP_STRESS_LOAD", "RP_CORTISOL_RHYTHM"],
+  "primary_lens_id": "LENS_BASELINE",
+  "secondary_lens_id": null,
+  "safety_rule_ids": []
+}

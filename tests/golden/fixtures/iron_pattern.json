@@ -1,0 +1,20 @@
+{
+  "user_id": "fixture_iron",
+  "timestamp": "2026-03-06T10:00:00Z",
+  "time_window": "7d",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 32,
+    "period_heaviness": "Heavy",
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 4,
+    "stress_level": 2,
+    "symptom_inputs": [
+      {"symptom_id": "SYM_HAIR_LOSS", "severity": 4, "duration_days": 35},
+      {"symptom_id": "SYM_DIZZINESS", "severity": 4, "duration_days": 35}
+    ],
+    "raw_fields": {}
+  },
+  "labs": [],
+  "history": {}
+}
