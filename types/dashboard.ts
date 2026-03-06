@@ -129,30 +129,104 @@ export type ReasoningTrace = {
 
 // —— Adapter input (survey engine swap) ——
 
-/** Future: output from the survey/assessment engine. */
+/** Engine output shape (subset) from Python engine for adapter mapping. */
+export type EngineOutputJson = {
+  lens?: {
+    primary_lens_id?: string;
+    primary_lens_score?: number;
+    secondary_lens_id?: string | null;
+    reasoning_trace_id?: string | null;
+  };
+  clusters?: Array<{
+    cluster_id?: string;
+    strength?: number;
+    confidence?: number;
+    reasoning_trace_id?: string | null;
+  }>;
+  systems?: Array<{
+    system_id?: string;
+    score?: number;
+    status?: string;
+    reasoning_trace_id?: string | null;
+  }>;
+  root_patterns?: Array<{
+    pattern_id?: string;
+    score?: number;
+    confidence?: number;
+    evidence_level?: string | null;
+    reasoning_trace_id?: string | null;
+  }>;
+  dashboard_sections?: {
+    primary_lens_card?: { title?: string; body?: string; show_reasoning_trace_id?: string | null };
+    systems_map?: {
+      items?: Array<{
+        system_id?: string;
+        label?: string;
+        score?: number;
+        status?: string;
+        reasoning_trace_id?: string | null;
+        short_explanation?: string;
+      }>;
+    };
+    clusters_panel?: { clusters?: Array<{ cluster_id?: string; strength?: number; confidence?: number; reasoning_trace_id?: string | null }> };
+    root_patterns_panel?: {
+      root_patterns?: Array<{
+        pattern_id?: string;
+        score?: number;
+        confidence?: number;
+        evidence_level?: string | null;
+        reasoning_trace_id?: string | null;
+      }>;
+    };
+  };
+  debug_meta?: {
+    reasoning_traces?: Record<
+      string,
+      {
+        trace_type?: string;
+        entity_id?: string;
+        summary?: string;
+        inputs?: Record<string, unknown>;
+        calculations?: Record<string, unknown>;
+        outputs?: Record<string, unknown>;
+        links?: Record<string, unknown>;
+      }
+    >;
+  };
+};
+
+/** Output from the survey/assessment engine (from GET /api/dashboard). */
 export type SurveyOutput = {
   _source: "survey";
-  profile?: {
-    lifeStage?: string | null;
-    cyclePattern?: string | null;
-    goals?: string[];
-    symptoms?: string[];
-    riskFactors?: string[];
-    trainingVolume?: string | null;
-    stressLevel?: string | null;
-    generatedTags?: string[];
-  };
-  lens?: { id: string; title: string; oneLine: string };
-  /** Extend with more engine outputs as needed. */
+  output: EngineOutputJson;
+  timeRange?: DashboardTimeRange;
 };
 
 /** Time range for dashboard; swapping changes which dummy variant (or future API window) is used. */
 export type DashboardTimeRange = "today" | "7d" | "30d";
 
+/** Dummy payload shape (same as getDummyPayloadByTimeRange return). */
+export type DummyPayload = {
+  lens: Lens;
+  systems: System[];
+  clusters: Cluster[];
+  monitoringAreas: MonitoringArea[];
+  knowledgeCards: KnowledgeCard[];
+  labs: Lab[];
+  priorities: Priority[];
+  trackingSignals: TrackingSignal[];
+  rootPatterns: RootPattern[];
+  weeklyInsights: WeeklyInsight[];
+  traces: ReasoningTrace[];
+  strategies: PreventiveStrategy[];
+};
+
 /** Dummy input for Phase 0; adapter returns view model from static dummy data. */
 export type DummyInput = {
   _source: "dummy";
   timeRange?: DashboardTimeRange;
+  /** When provided (e.g. from API), use this instead of getDummyPayloadByTimeRange. */
+  payload?: DummyPayload;
 };
 
 // —— View model (adapter output) ——

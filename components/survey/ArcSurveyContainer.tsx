@@ -40,6 +40,7 @@ export function ArcSurveyContainer() {
   const [pendingSafetyScreenId, setPendingSafetyScreenId] = useState<string | null>(null);
   const [showingSafetyScreenId, setShowingSafetyScreenId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [animKey, setAnimKey] = useState(0);
   const nextButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -137,13 +138,21 @@ export function ArcSurveyContainer() {
       surveyResponses: ans,
     };
     try {
-      await fetch("/api/survey", {
+      const res = await fetch("/api/survey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-    } finally {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error("Survey save failed:", res.status, err);
+        setSubmitError(res.status === 401 ? "Please sign in to save your survey." : "Could not save. Try again.");
+        return;
+      }
       setSubmitted(true);
+    } catch (e) {
+      console.error("Survey save failed:", e);
+      setSubmitError("Could not save. Check your connection and try again.");
     }
   }, []);
 
@@ -240,13 +249,20 @@ export function ArcSurveyContainer() {
       )}
 
       {currentScreen.type === "outro" && (
-        <OutroScreen
-          sectionTitle={currentScreen.sectionTitle}
-          title={currentScreen.title}
-          body={currentScreen.body}
-          primaryLabel={currentScreen.primaryAction?.label ?? "Build my dashboard"}
-          onSubmit={() => submitAndComplete(answers)}
-        />
+        <>
+          <OutroScreen
+            sectionTitle={currentScreen.sectionTitle}
+            title={currentScreen.title}
+            body={currentScreen.body}
+            primaryLabel={currentScreen.primaryAction?.label ?? "Build my dashboard"}
+            onSubmit={() => submitAndComplete(answers)}
+          />
+          {submitError && (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
+        </>
       )}
     </div>
   );

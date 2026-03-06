@@ -6,8 +6,27 @@
  * Only this adapter should read from dashboard dummy data; all UI consumes DashboardVM.
  */
 
-import type { DashboardVM, DummyInput, SurveyOutput } from "@/types/dashboard";
-import { getDummyPayloadByTimeRange } from "@/data/dashboardDummy";
+import type {
+  DashboardVM,
+  DummyInput,
+  EngineOutputJson,
+  Lens,
+  ReasoningTrace,
+  RootPattern,
+  SurveyOutput,
+  System,
+  Cluster,
+} from "@/types/dashboard";
+import {
+  getDummyPayloadByTimeRange,
+  dummyMonitoringAreas,
+  dummyKnowledgeCards,
+  dummyLabs,
+  dummyPriorities,
+  dummyTrackingSignals,
+  dummyWeeklyInsights,
+  dummyStrategies,
+} from "@/data/dashboardDummy";
 
 function isDummyInput(input: DummyInput | SurveyOutput): input is DummyInput {
   return (input as DummyInput)._source === "dummy";
@@ -23,13 +42,16 @@ export function buildDashboardViewModel(
   input: SurveyOutput | DummyInput
 ): DashboardVM {
   if (isDummyInput(input)) {
-    return buildFromDummy(input.timeRange ?? "7d");
+    const timeRange = (input as DummyInput).timeRange ?? "7d";
+    const payload = (input as DummyInput).payload ?? getDummyPayloadByTimeRange(timeRange);
+    return buildFromDummyPayload(payload);
   }
   return buildFromSurvey(input);
 }
 
-function buildFromDummy(timeRange: "today" | "7d" | "30d"): DashboardVM {
-  const payload = getDummyPayloadByTimeRange(timeRange);
+function buildFromDummyPayload(
+  payload: ReturnType<typeof getDummyPayloadByTimeRange>
+): DashboardVM {
   return {
     lens: payload.lens,
     systems: [...payload.systems],
@@ -46,12 +68,89 @@ function buildFromDummy(timeRange: "today" | "7d" | "30d"): DashboardVM {
   };
 }
 
+function buildFromDummy(timeRange: "today" | "7d" | "30d"): DashboardVM {
+  return buildFromDummyPayload(getDummyPayloadByTimeRange(timeRange));
+}
+
+function evidenceLevelToEvidence(
+  level: string | null | undefined
+): "strong" | "established" | "emerging" | "exploratory" {
+  if (level === "High") return "strong";
+  if (level === "Moderate") return "established";
+  if (level === "Emerging") return "emerging";
+  if (level === "Clinical_Practice") return "exploratory";
+  return "exploratory";
+}
+
 /**
  * Maps survey/assessment engine output to DashboardVM.
- * Phase 0: returns dummy-based VM; replace with real mapping when survey engine is wired.
  */
-function buildFromSurvey(_output: SurveyOutput): DashboardVM {
-  // TODO: map profile, lens, and any engine outputs to DashboardVM.
-  // For now, use dummy data so the dashboard page can render.
-  return buildFromDummy("7d");
+function buildFromSurvey(surveyOutput: SurveyOutput): DashboardVM {
+  const out: EngineOutputJson = surveyOutput.output;
+  const sections = out.dashboard_sections ?? {};
+  const lensCard = sections.primary_lens_card ?? {};
+  const lensResult = out.lens ?? {};
+  const lens: Lens = {
+    id: lensResult.primary_lens_id ?? "LENS_BASELINE",
+    title: lensCard.title ?? "Your lens",
+    oneLine: lensCard.body ?? "",
+    traceId: lensResult.reasoning_trace_id ?? lensCard.show_reasoning_trace_id ?? undefined,
+  };
+
+  const systemItems = sections.systems_map?.items ?? [];
+  const systems: System[] = systemItems.map((item) => ({
+    id: item.system_id ?? "",
+    label: item.label ?? item.system_id ?? "",
+    status: (item.status as "stable" | "variable" | "needs_attention") ?? "stable",
+    traceId: item.reasoning_trace_id ?? undefined,
+    micro: item.short_explanation,
+  }));
+
+  const clusterList = sections.clusters_panel?.clusters ?? out.clusters ?? [];
+  const clusters: Cluster[] = clusterList.map((c) => ({
+    id: c.cluster_id ?? "",
+    label: c.cluster_id ?? "",
+    systemIds: [],
+    traceId: c.reasoning_trace_id ?? undefined,
+  }));
+
+  const patternList = sections.root_patterns_panel?.root_patterns ?? out.root_patterns ?? [];
+  const rootPatterns: RootPattern[] = patternList.map((p) => ({
+    id: p.pattern_id ?? "",
+    title: p.pattern_id ?? "",
+    summary: `Confidence ${p.confidence ?? 0}%.`,
+    signalTags: [],
+    evidence: evidenceLevelToEvidence(p.evidence_level),
+    traceId: p.reasoning_trace_id ?? undefined,
+  }));
+
+  const tracesMap = out.debug_meta?.reasoning_traces ?? {};
+  const traces: ReasoningTrace[] = Object.entries(tracesMap).map(([id, t]) => ({
+    id,
+    title: t.entity_id ?? t.summary ?? id,
+    signals: [],
+    interpretation: t.summary ?? "",
+    chainSteps: [
+      ...(t.inputs ? [{ label: "Inputs", detail: JSON.stringify(t.inputs) }] : []),
+      ...(t.calculations ? [{ label: "Calculations", detail: JSON.stringify(t.calculations) }] : []),
+      ...(t.outputs ? [{ label: "Outputs", detail: JSON.stringify(t.outputs) }] : []),
+    ],
+    evidence: "exploratory",
+    watchNext: [],
+  }));
+
+  return {
+    lens,
+    systems,
+    clusters,
+    monitoringAreas: [...dummyMonitoringAreas],
+    knowledgeCards: [...dummyKnowledgeCards],
+    labs: [...dummyLabs],
+    priorities: [...dummyPriorities],
+    trackingSignals: [...dummyTrackingSignals],
+    rootPatterns,
+    weeklyInsights: [...dummyWeeklyInsights],
+    traces,
+    strategies: [...dummyStrategies],
+  };
 }

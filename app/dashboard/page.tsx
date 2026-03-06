@@ -32,11 +32,52 @@ function DashboardPageContent() {
   const [timeRange, setTimeRange] = useState<DashboardTimeRange>("7d");
   const [drawerTrace, setDrawerTrace] = useState<ReasoningTrace | null>(null);
   const [surveyModalOpen, setSurveyModalOpen] = useState(false);
+  const [dashboardInput, setDashboardInput] = useState<
+    { _source: "dummy"; timeRange: DashboardTimeRange; payload?: unknown } | { _source: "survey"; timeRange: DashboardTimeRange; output: unknown } | null
+  >(null);
+  const [engineError, setEngineError] = useState<string | null>(null);
+  const [surveyDataPresent, setSurveyDataPresent] = useState<boolean | null>(null);
 
-  const vm = useMemo(
-    () => buildDashboardViewModel({ _source: "dummy", timeRange }),
-    [timeRange]
-  );
+  useEffect(() => {
+    let cancelled = false;
+    setEngineError(null);
+    setSurveyDataPresent(null);
+    fetch(`/api/dashboard?timeRange=${timeRange}`, { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) throw new Error(res.status === 401 ? "Unauthorized" : `Dashboard ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setSurveyDataPresent(data._surveyDataPresent === true);
+        if (data._source === "survey" && data.output != null) {
+          setEngineError(null);
+          setDashboardInput({ _source: "survey", timeRange: data.timeRange ?? "7d", output: data.output });
+        } else {
+          if (data._engineError) setEngineError(data._engineError);
+          setDashboardInput({
+            _source: "dummy",
+            timeRange: data.timeRange ?? "7d",
+            payload: data.payload,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDashboardInput({ _source: "dummy", timeRange: timeRange ?? "7d" });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [timeRange]);
+
+  const vm = useMemo(() => {
+    if (dashboardInput == null) {
+      return buildDashboardViewModel({ _source: "dummy", timeRange });
+    }
+    return buildDashboardViewModel(dashboardInput);
+  }, [dashboardInput, timeRange]);
 
   // URL → drawer: deep-link and back/forward
   useEffect(() => {
@@ -87,6 +128,16 @@ function DashboardPageContent() {
         <h1 className="pt-6 text-[28px] font-semibold tracking-tight text-[var(--text-primary)] md:text-[32px] md:pt-8">
           Dashboard
         </h1>
+        {surveyDataPresent === false && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Complete the survey to see personalized results. Until then, you’re seeing sample data.
+          </div>
+        )}
+        {engineError != null && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Your survey is saved, but the analysis engine couldn’t run (e.g. Python not available in this environment). Showing sample data.
+          </div>
+        )}
         <AboveTheFold
           vm={vm}
           onOpenTrace={openTrace}

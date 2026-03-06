@@ -15,11 +15,16 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email = credentials.email.trim();
+        const email = credentials.email.trim().toLowerCase();
         const password = credentials.password;
-        const expectedEmail = process.env.CREDENTIALS_EMAIL ?? "demo@thearc.com";
         const expectedPassword = process.env.CREDENTIALS_PASSWORD ?? "demo";
-        if (email !== expectedEmail || password !== expectedPassword) return null;
+        const defaultEmails = "demo@thearc.com,iron@test.com,stress@test.com,sugar@test.com,baseline@test.com";
+        const allowedEmails = (process.env.CREDENTIALS_EMAIL ?? defaultEmails)
+          .split(",")
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
+        if (allowedEmails.length === 0) allowedEmails.push("demo@thearc.com");
+        if (!allowedEmails.includes(email) || password !== expectedPassword) return null;
         return { id: email, email, name: email };
       },
     }),

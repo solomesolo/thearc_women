@@ -97,7 +97,7 @@ function LoginForm() {
           </button>
         </form>
         <p className="mt-6 text-xs text-[var(--text-secondary)]">
-          MVP: use the demo credentials from .env (e.g. demo@thearc.com / demo).
+          MVP: password is &quot;demo&quot; (or CREDENTIALS_PASSWORD). Use demo@thearc.com, iron@test.com, stress@test.com, sugar@test.com, or baseline@test.com.
         </p>
         <Link href="/blog" className="mt-4 inline-block text-sm text-[var(--text-secondary)] underline hover:text-[var(--text-primary)]">
           ← Back to Blog
