@@ -1,0 +1,3 @@
+"""
+Lens-related output templates.
+"""
