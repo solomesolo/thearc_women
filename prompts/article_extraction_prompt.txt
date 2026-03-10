@@ -1,0 +1,133 @@
+You are a biomedical research interpreter.
+
+Your task is to analyze the following medical research article and extract structured information for a preventive health knowledge system focused on women's biology.
+
+IMPORTANT RULES
+
+1. Do not invent information that is not present in the article.
+2. Use only concepts supported by the article text.
+3. If information is unclear or missing, return an empty array [].
+4. Output must be valid JSON.
+5. Do not include explanations outside JSON.
+
+Your output must follow the schema below exactly.
+
+---------------------------------------
+
+OUTPUT SCHEMA
+
+{
+ "summary": "short paragraph summarizing the article findings",
+ "key_findings": ["finding 1", "finding 2", "finding 3"],
+ "biological_systems": ["system"],
+ "symptoms": ["symptom"],
+ "biomarkers": ["biomarker"],
+ "root_causes": ["root cause"],
+ "preventive_topics": ["preventive topic"],
+ "intervention_types": ["intervention type"],
+ "life_stages": ["life stage"],
+ "evidence_level": "high | moderate | emerging"
+}
+
+---------------------------------------
+
+DEFINITION GUIDELINES
+
+biological_systems examples:
+Hormonal System
+Metabolic Health
+Nervous System
+Gut Microbiome
+Immune System
+Cardiovascular System
+Bone Health
+Mitochondrial Function
+Detoxification Pathways
+
+symptoms examples:
+Fatigue
+Brain Fog
+Insomnia
+Irregular Periods
+Hair Loss
+Anxiety
+Weight Gain
+Low Libido
+
+biomarkers examples:
+Ferritin
+Vitamin D
+TSH
+Free T3
+Estradiol
+Progesterone
+Cortisol
+Fasting Insulin
+HbA1c
+CRP
+
+root_causes examples:
+Iron Deficiency
+Chronic Stress Load
+Blood Sugar Instability
+Sleep Deprivation
+Inflammatory State
+Micronutrient Depletion
+Gut Dysbiosis
+Estrogen Dominance
+Progesterone Deficiency
+
+preventive_topics examples:
+Metabolic Longevity
+Cycle Optimization
+Bone Density Protection
+Cardiovascular Prevention
+Hormone Balance Maintenance
+Healthy Aging
+
+intervention_types examples:
+Lifestyle Intervention
+Nutrition Strategy
+Exercise Adjustment
+Stress Regulation
+Sleep Optimization
+Supplement Strategy
+Lab Testing Strategy
+Clinical Evaluation Needed
+
+life_stages examples:
+Early Reproductive
+Reproductive
+Advanced Reproductive
+Trying to Conceive
+Postpartum
+Perimenopause
+Menopause
+Postmenopause
+
+evidence_level rules:
+
+High:
+systematic review or meta analysis
+
+Moderate:
+clinical trials or multiple cohort studies
+
+Emerging:
+observational or early research
+
+---------------------------------------
+
+ARTICLE INPUT
+
+Title:
+{{title}}
+
+Journal:
+{{journal}}
+
+Abstract:
+{{abstract}}
+
+Full Text:
+{{full_text}}

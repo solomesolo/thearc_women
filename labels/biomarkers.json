@@ -1,0 +1,21 @@
+{
+  "cortisol": "Cortisol",
+  "ferritin": "Ferritin",
+  "iron": "Ferritin",
+  "vitamin d": "Vitamin D",
+  "vitamin D": "Vitamin D",
+  "estradiol": "Estradiol",
+  "estrogen": "Estradiol",
+  "progesterone": "Progesterone",
+  "tsh": "TSH",
+  "thyroid": "TSH",
+  "fasting glucose": "Fasting Glucose",
+  "glucose": "Fasting Glucose",
+  "hba1c": "HbA1c",
+  "insulin": "Fasting Insulin",
+  "fasting insulin": "Fasting Insulin",
+  "hdl": "HDL",
+  "ldl": "LDL",
+  "cholesterol": "HDL",
+  "ferritin level": "Ferritin"
+}

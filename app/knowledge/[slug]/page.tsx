@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { getArticleBySlug, KNOWLEDGE_ARTICLES } from "@/content/knowledge";
+import { prisma } from "@/lib/db";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -9,8 +12,109 @@ export async function generateStaticParams() {
   return KNOWLEDGE_ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
+export const dynamicParams = true;
+
 export default async function KnowledgeArticlePage({ params }: Props) {
   const { slug } = await params;
+  const isPipelineId = UUID_REGEX.test(slug);
+
+  if (isPipelineId) {
+    const pipeline = await prisma.knowledgeArticle.findUnique({
+      where: { id: slug },
+      include: { contents: true, labels: true },
+    });
+    if (!pipeline) notFound();
+    return (
+      <main className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
+        <Container className="py-16 md:py-24">
+          <div className="mx-auto max-w-[48rem]">
+            <Link
+              href="/knowledge"
+              className="text-sm text-[var(--text-secondary)] underline hover:text-[var(--text-primary)]"
+            >
+              ← Knowledge Hub
+            </Link>
+            <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
+              {pipeline.evidenceLevel ?? "Research"}
+            </p>
+            <h1 className="mt-2 text-[1.875rem] font-medium leading-[1.2] tracking-tight md:text-[2.25rem] lg:text-[2.5rem]">
+              {pipeline.title}
+            </h1>
+            {pipeline.summary && (
+              <p className="mt-4 text-base leading-[1.7] text-[var(--text-secondary)] md:text-lg">
+                {pipeline.summary}
+              </p>
+            )}
+            {pipeline.contents.map((c) => (
+              <div key={c.id} className="mt-10 space-y-6">
+                {c.scienceExplained && (
+                  <>
+                    <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--text-primary)]">
+                      Science explained
+                    </h2>
+                    <p className="text-base leading-[1.7] text-[var(--text-secondary)]">
+                      {c.scienceExplained}
+                    </p>
+                  </>
+                )}
+                {c.patternsAndRootCauses && (
+                  <>
+                    <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--text-primary)]">
+                      Patterns and root causes
+                    </h2>
+                    <p className="text-base leading-[1.7] text-[var(--text-secondary)]">
+                      {c.patternsAndRootCauses}
+                    </p>
+                  </>
+                )}
+                {c.preventiveInsights && (
+                  <>
+                    <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--text-primary)]">
+                      Preventive insights
+                    </h2>
+                    <p className="text-base leading-[1.7] text-[var(--text-secondary)]">
+                      {c.preventiveInsights}
+                    </p>
+                  </>
+                )}
+                {c.clinicalContext && (
+                  <>
+                    <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--text-primary)]">
+                      Clinical context
+                    </h2>
+                    <p className="text-base leading-[1.7] text-[var(--text-secondary)]">
+                      {c.clinicalContext}
+                    </p>
+                  </>
+                )}
+              </div>
+            ))}
+            {pipeline.labels.length > 0 && (
+              <div className="mt-10 flex flex-wrap gap-2">
+                {pipeline.labels.map((l) => (
+                  <span
+                    key={l.id}
+                    className="rounded-full border border-[var(--color-border-hairline)] px-3 py-1 text-xs text-[var(--text-secondary)]"
+                  >
+                    {l.labelType}: {l.labelValue}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="mt-16 border-t border-[var(--color-border-hairline)] pt-10">
+              <Link
+                href="/knowledge"
+                className="text-sm text-[var(--text-primary)] underline hover:no-underline"
+              >
+                ← Back to Knowledge Hub
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </main>
+    );
+  }
+
   const article = getArticleBySlug(slug);
   if (!article) notFound();
 

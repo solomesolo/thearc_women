@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { TAXONOMY_LABELS } from "../content/taxonomy";
+import { isCrediblePubmedSource } from "../content/credible-platforms";
 
 const connectionString =
   process.env.DATABASE_URL ?? "postgresql://localhost:5432/thearc";
@@ -182,6 +183,7 @@ async function upsertArticleFromPubmed(args: {
   };
 }) {
   const { pmid, label, tagIdBySlug, summary } = args;
+  if (!isCrediblePubmedSource(summary.source)) return { createdOrUpdated: false };
   const title = (summary.title ?? "").trim();
   if (!title) return { createdOrUpdated: false };
 
@@ -218,14 +220,19 @@ async function upsertArticleFromPubmed(args: {
     },
   });
 
-  await prisma.articleSource.create({
-    data: {
-      articleId: article.id,
-      label: summary.source ? `${summary.source} (PubMed)` : "PubMed",
-      url: doiUrl ?? pubmedUrl,
-      evidenceNote: pubmedUrl,
-    },
+  const existingSource = await prisma.articleSource.findFirst({
+    where: { articleId: article.id },
   });
+  if (!existingSource) {
+    await prisma.articleSource.create({
+      data: {
+        articleId: article.id,
+        label: summary.source ? `${summary.source} (PubMed)` : "PubMed",
+        url: doiUrl ?? pubmedUrl,
+        evidenceNote: pubmedUrl,
+      },
+    });
+  }
 
   for (const tagId of tagIds) {
     await prisma.articleTagJoin.upsert({

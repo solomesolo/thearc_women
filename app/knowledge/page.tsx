@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import {
@@ -10,12 +10,73 @@ import {
 } from "@/content/knowledge";
 import clsx from "clsx";
 
+type ApiArticle = {
+  id: string;
+  title: string;
+  summary: string | null;
+  evidenceLevel: string | null;
+  lifeStages: string[];
+  labels: { type: string; value: string }[];
+  createdAt: string | null;
+};
+
 export default function KnowledgePage() {
   const [filter, setFilter] = useState<KnowledgeCategory | "All">("All");
-  const articles =
+  const [apiArticles, setApiArticles] = useState<ApiArticle[]>([]);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setApiError(null);
+    fetch("/api/knowledge/articles?limit=50")
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setApiError((body as { message?: string }).message ?? `HTTP ${res.status}`);
+          return { articles: [] };
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setApiArticles(data.articles ?? []);
+      })
+      .catch((e) => {
+        setApiError(e instanceof Error ? e.message : "Failed to load");
+        setApiArticles([]);
+      })
+      .finally(() => setApiLoading(false));
+  }, []);
+
+  const staticArticles =
     filter === "All"
       ? KNOWLEDGE_ARTICLES
       : KNOWLEDGE_ARTICLES.filter((a) => a.category === filter);
+  const categoryForApi = (a: ApiArticle) =>
+    a.evidenceLevel || a.lifeStages?.[0] || "Research";
+  const apiFiltered =
+    filter === "All"
+      ? apiArticles
+      : apiArticles.filter(
+          (a) =>
+            categoryForApi(a).toLowerCase().includes(filter.toLowerCase()) ||
+            a.labels?.some(
+              (l) =>
+                l.value.toLowerCase().includes(filter.toLowerCase())
+            )
+        );
+  const articles = [
+    ...apiFiltered.map((a) => ({
+      id: a.id,
+      slug: a.id,
+      title: a.title,
+      abstract: a.summary ?? "",
+      category: categoryForApi(a) as KnowledgeCategory,
+      readTime: "",
+      date: a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "",
+      fromApi: true,
+    })),
+    ...staticArticles.map((a) => ({ ...a, fromApi: false })),
+  ];
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
@@ -64,7 +125,17 @@ export default function KnowledgePage() {
           ))}
         </nav>
 
-        {/* Article grid: 3-col desktop, 2-col tablet, 1-col mobile */}
+        {/* Article grid: pipeline articles from API + static curated */}
+        {apiLoading && (
+          <p className="mt-8 text-center text-sm text-[var(--text-secondary)]">
+            Loading research articles…
+          </p>
+        )}
+        {apiError && !apiLoading && (
+          <p className="mt-4 text-center text-sm text-amber-600 dark:text-amber-400">
+            Could not load research articles from the database. ({apiError}) Ensure DIRECT_URL is set in .env.local for the API.
+          </p>
+        )}
         <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
             <Link
@@ -81,19 +152,20 @@ export default function KnowledgePage() {
               <p className="mt-2 text-sm leading-[1.55] text-[var(--text-secondary)]">
                 {article.abstract}
               </p>
-              {article.whyItMattersForWomen && (
+              {"whyItMattersForWomen" in article && article.whyItMattersForWomen && (
                 <p className="mt-2 text-xs italic text-[var(--text-secondary)]">
                   Why it matters for women: {article.whyItMattersForWomen}
                 </p>
               )}
               <p className="mt-3 text-xs text-[var(--text-secondary)]">
-                {article.readTime} read · {article.date}
+                {article.readTime ? `${article.readTime} read · ` : ""}
+                {article.date}
               </p>
             </Link>
           ))}
         </div>
 
-        {articles.length === 0 && (
+        {!apiLoading && articles.length === 0 && (
           <p className="mt-12 text-center text-[var(--text-secondary)]">
             No articles in this category yet.
           </p>

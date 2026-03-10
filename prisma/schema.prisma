@@ -6,6 +6,92 @@ datasource db {
   provider = "postgresql"
 }
 
+/// Raw scraped medical articles from external sources (PubMed, guidelines, etc.)
+model RawMedicalArticle {
+  id               String   @id @default(uuid()) @db.Uuid
+  source           String
+  sourceUrl        String
+  title            String
+  authors          String?
+  journal          String?
+  publicationDate  DateTime?
+  abstract         String?
+  fullText         String?
+  keywords         String[] @default([]) // PostgreSQL text[]
+  doi              String?
+  scrapedAt        DateTime @default(now())
+  processed        Boolean  @default(false)
+
+  knowledgeArticles KnowledgeArticle[]
+
+  @@map("raw_medical_articles")
+}
+
+/// Structured knowledge article derived from a raw medical article
+model KnowledgeArticle {
+  id                 String   @id @default(uuid()) @db.Uuid
+  rawArticleId       String?  @db.Uuid
+  rawArticle         RawMedicalArticle? @relation(fields: [rawArticleId], references: [id])
+
+  title              String
+  summary            String?
+  keyFindings        String[] @default([])
+  biologicalSystems  String[] @default([])
+  symptoms           String[] @default([])
+  biomarkers         String[] @default([])
+  rootCauses         String[] @default([])
+  preventiveTopics   String[] @default([])
+  interventionTypes  String[] @default([])
+  lifeStages         String[] @default([])
+  evidenceLevel      String?
+  createdAt          DateTime @default(now())
+
+  contents           KnowledgeContent[]
+  labels             ArticleLabel[]
+
+  @@map("knowledge_articles")
+}
+
+/// Rich narrative knowledge content attached to a knowledge article
+model KnowledgeContent {
+  id                   String   @id @default(uuid()) @db.Uuid
+  articleId            String   @db.Uuid
+  article              KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  scienceExplained     String?
+  patternsAndRootCauses String?
+  preventiveInsights   String?
+  clinicalContext      String?
+  qualityScore         Float?
+  createdAt            DateTime @default(now())
+
+  @@map("knowledge_content")
+}
+
+/// Flat label entries for flexible tagging and analytics
+model ArticleLabel {
+  id         String   @id @default(uuid()) @db.Uuid
+  articleId  String   @db.Uuid
+  article    KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  labelType  String
+  labelValue String
+  createdAt  DateTime @default(now())
+
+  @@map("article_labels")
+}
+
+/// Pipeline event log (scrape errors, LLM failures, JSON errors, duplicates, label failures)
+model PipelineLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  event     String   // e.g. scrape_error, llm_failure, json_parse_error, duplicate_article, label_mapping_failure
+  message   String?
+  payload   Json?    // optional context (article_id, error detail, etc.)
+  createdAt DateTime @default(now())
+
+  @@map("pipeline_logs")
+}
+
 /// Top-level article metadata
 model Article {
   id             Int              @id @default(autoincrement())

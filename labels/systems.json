@@ -1,0 +1,18 @@
+{
+  "endocrine": "Hypothalamic-Pituitary-Ovarian Axis",
+  "hpo axis": "Hypothalamic-Pituitary-Ovarian Axis",
+  "thyroid": "Thyroid System",
+  "adrenal": "Adrenal Function",
+  "nervous system": "Nervous System",
+  "gut": "Gut Microbiome",
+  "microbiome": "Gut Microbiome",
+  "immune": "Immune System",
+  "immune system": "Immune System",
+  "metabolic": "Metabolic Health",
+  "metabolism": "Metabolic Health",
+  "cardiovascular": "Cardiovascular System",
+  "cardiovascular system": "Cardiovascular System",
+  "bone": "Bone Health",
+  "bone health": "Bone Health",
+  "liver": "Liver Function"
+}

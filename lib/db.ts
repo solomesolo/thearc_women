@@ -6,7 +6,9 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL ?? "postgresql://localhost:5432/thearc";
+// Prefer DIRECT_URL for serverless/API (avoids pgbouncer transaction limits with Prisma)
+const connectionString =
+  process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "postgresql://localhost:5432/thearc";
 const adapter = new PrismaPg({ connectionString });
 
 export const prisma: PrismaClient =
