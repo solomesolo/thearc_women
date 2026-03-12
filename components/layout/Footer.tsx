@@ -12,10 +12,10 @@ export function Footer() {
         <div className="flex flex-col gap-6">
           <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
             <Link
-              href="/knowledge"
+              href="/blog"
               className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
             >
-              Knowledge Hub
+              Blog
             </Link>
             <Link
               href="/survey"

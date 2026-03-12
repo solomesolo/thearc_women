@@ -19,12 +19,21 @@ type Props = {
   onSectionSaved?: () => void;
 };
 
+const SECTION_INDEX_TITLES: Record<number, string> = {
+  8: "Action protocol",
+  9: "Tracking framework",
+};
+
 export function SectionEditor({ articleId, sections: initialSections, onSectionSaved }: Props) {
   const [sections, setSections] = useState<Section[]>(initialSections);
-  const [activeIndex, setActiveIndex] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const first = [...initialSections].sort((a, b) => a.sectionIndex - b.sectionIndex)[0];
+    return first?.sectionIndex ?? 1;
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const sortedSections = [...sections].sort((a, b) => a.sectionIndex - b.sectionIndex);
   const section = sections.find((s) => s.sectionIndex === activeIndex);
   const isGatedSection = activeIndex >= 6;
 
@@ -68,22 +77,23 @@ export function SectionEditor({ articleId, sections: initialSections, onSectionS
     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
       <nav className="flex flex-col gap-1 border-r border-[var(--color-border-hairline)] pr-4">
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-          Sections 1–7
+          Sections {sortedSections.length > 0 ? `1–${sortedSections[sortedSections.length - 1].sectionIndex}` : "—"}
         </p>
-        {[1, 2, 3, 4, 5, 6, 7].map((idx) => {
-          const s = sections.find((x) => x.sectionIndex === idx);
+        {sortedSections.map((s) => {
+          const displayTitle =
+            s.title?.trim() || SECTION_INDEX_TITLES[s.sectionIndex] || `Section ${s.sectionIndex}`;
           return (
             <button
-              key={idx}
+              key={s.sectionIndex}
               type="button"
-              onClick={() => setActiveIndex(idx)}
+              onClick={() => setActiveIndex(s.sectionIndex)}
               className={`rounded-lg px-3 py-2 text-left text-sm ${
-                activeIndex === idx
+                activeIndex === s.sectionIndex
                   ? "bg-[var(--color-surface)] font-medium text-[var(--text-primary)]"
                   : "text-[var(--text-secondary)] hover:bg-[var(--color-surface)]/50"
               }`}
             >
-              {s?.title?.trim() || `Section ${idx}`}
+              {displayTitle}
             </button>
           );
         })}

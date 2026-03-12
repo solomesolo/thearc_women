@@ -62,7 +62,7 @@ function BlogContent() {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const mainQuery = buildQuery(searchParams, { limit: 12 });
+      const mainQuery = buildQuery(searchParams, { limit: 50 });
       const [foundationsRes, trendingRes, mainRes] = await Promise.all([
         fetchArticles(buildQuery(new URLSearchParams(), { pillar: "Foundations", limit: 4 })),
         fetchArticles(buildQuery(new URLSearchParams(), { pillar: "Trending", limit: 4 })),

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
@@ -103,13 +104,16 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
     type: j.tag.type,
   }));
 
+  const toIso = (d: Date | string | null | undefined): string | null =>
+    d == null ? null : typeof d === "string" ? d : d instanceof Date ? d.toISOString() : null;
+
   const relatedArticles = related.map((a) => ({
     id: a.id,
     slug: a.slug,
     title: a.title,
     excerpt: a.excerpt,
     category: a.category,
-    publishedAt: a.publishedAt?.toISOString() ?? null,
+    publishedAt: toIso(a.publishedAt),
     readingTimeMinutes: a.readingTimeMinutes ?? null,
     tags: a.tagJoins.map((j) => ({
       slug: j.tag.slug,

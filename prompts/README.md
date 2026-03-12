@@ -2,8 +2,9 @@
 
 Prompts are stored here so they can be updated without changing code.
 
-- **article_extraction_prompt.txt** — Biomedical research interpreter: extract structured fields (summary, key_findings, biological_systems, symptoms, biomarkers, root_causes, preventive_topics, intervention_types, life_stages, evidence_level) from raw article text. Placeholders: `{{title}}`, `{{journal}}`, `{{abstract}}`, `{{full_text}}`. Output is validated against `ArticleExtractionSchema`.
-- **knowledge_generation_prompt.txt** — Medical science communicator: generate narrative content (science_explained, patterns_and_root_causes, preventive_insights, clinical_context) for the knowledge_content table. Placeholders: `{{summary}}`, `{{key_findings}}`, `{{biological_systems}}`, `{{root_causes}}`.
-- **label_alignment_prompt.txt** — Map extraction output to approved taxonomy; outputs life_stage_labels, symptom_labels, body_system_labels, biomarker_labels, root_cause_labels, preventive_health_labels, goal_labels, intervention_type_labels. Placeholders: `{{summary}}`, `{{key_findings}}`, `{{biological_systems}}`, `{{symptoms}}`, `{{biomarkers}}`, `{{root_causes}}`, `{{preventive_topics}}`.
+- **article_extraction_prompt.txt** — Biomedical research interpreter: extract structured fields (summary, key_findings, biological_systems, symptoms, biomarkers, root_causes, etc.) from raw article text. Used as input for blog_article_from_research_prompt.
+- **blog_article_from_research_prompt.txt** — Turns research + extraction into the exact blog article structure: title, excerpt, evidenceLevel, category, pillar, tags, sources, and 7 sections (Context, Why this is trending, What research says, What this means for women, When it might apply, When it might not, Implementation considerations). Sections 6–7 gated. Placeholders: `{{title}}`, `{{summary}}`, `{{key_findings}}`, `{{biological_systems}}`, `{{symptoms}}`, `{{biomarkers}}`, `{{root_causes}}`, `{{evidence_level}}`, `{{abstract}}`.
+- **knowledge_generation_prompt.txt** — Legacy: narrative content for knowledge_content table.
+- **label_alignment_prompt.txt** — Map extraction output to approved taxonomy.
 
 Placeholders use double braces `{{name}}` and are replaced at runtime when loading the template.

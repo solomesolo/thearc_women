@@ -21,8 +21,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   const sectionIndex = Number(body.sectionIndex);
-  if (!Number.isInteger(sectionIndex) || sectionIndex < 1 || sectionIndex > 7) {
-    return Response.json({ error: "sectionIndex must be 1–7" }, { status: 400 });
+  if (!Number.isInteger(sectionIndex) || sectionIndex < 1 || sectionIndex > 9) {
+    return Response.json({ error: "sectionIndex must be 1–9" }, { status: 400 });
   }
 
   const section = await prisma.articleSection.findFirst({
@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const preview = body.preview?.trim() ?? section.preview ?? null;
   if (isGated && !preview) {
     return Response.json(
-      { error: "Preview text is required for gated sections (6–7)" },
+      { error: "Preview text is required for gated sections (6–9)" },
       { status: 400 }
     );
   }

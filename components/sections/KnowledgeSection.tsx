@@ -169,7 +169,7 @@ export function KnowledgeSection({
             {articles.map((article, i) => (
               <Link
                 key={article.slug}
-                href={`/knowledge/${article.slug}`}
+                href={`/blog/${article.slug}`}
                 className="block rounded-[12px] border border-[var(--color-border-hairline)] bg-[var(--background)] px-4 py-5 transition-colors hover:border-[var(--text-primary)]/20"
               >
                 <p className="text-[0.7rem] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
@@ -190,7 +190,7 @@ export function KnowledgeSection({
 
           <div className="mt-10 text-left">
             <Link
-              href={ctaHref ?? "/knowledge"}
+              href={ctaHref ?? "/blog"}
               className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--foreground)] bg-transparent px-5 py-3 text-base font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-[var(--foreground)]/0.06 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground)]"
             >
               {ctaLabel}

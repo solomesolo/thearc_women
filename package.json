@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "prisma migrate deploy && prisma db seed && next dev -p 3000",
+    "dev": "prisma migrate deploy && prisma db seed && npm run backfill:sections-8-9 && next dev -p 3000",
     "dev:only": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
@@ -11,11 +11,12 @@
     "scrape:pubmed": "tsx scripts/scrape_pubmed.ts",
     "scrape:pubmed:raw": "tsx scripts/scrape_pubmed_raw.ts",
     "process:articles": "tsx scripts/process_articles.ts",
+    "backfill:sections-8-9": "tsx scripts/backfill_sections_8_9.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "db:setup": "prisma migrate deploy && prisma db seed",
+    "db:setup": "prisma migrate deploy && prisma db seed && npm run backfill:sections-8-9",
     "db:push": "prisma db push"
   },
   "prisma": {

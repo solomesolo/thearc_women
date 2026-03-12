@@ -10,8 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const article = await prisma.knowledgeArticle.findUnique({
-    where: { id },
+  const article = await prisma.knowledgeArticle.findFirst({
+    where: { id, approvalStatus: "approved" },
     include: { contents: true, labels: true },
   });
   if (!article) return new Response(null, { status: 404 });

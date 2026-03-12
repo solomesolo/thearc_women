@@ -16,6 +16,12 @@ export default function AdminLayout({
             Articles
           </Link>
           <Link
+            href="/admin/knowledge"
+            className="text-sm font-medium text-[var(--text-primary)] no-underline hover:underline"
+          >
+            Pipeline (approve)
+          </Link>
+          <Link
             href="/"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >

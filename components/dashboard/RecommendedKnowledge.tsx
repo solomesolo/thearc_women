@@ -19,7 +19,7 @@ export function RecommendedKnowledge({ cards }: RecommendedKnowledgeProps) {
       <div className="mt-4 overflow-x-auto md:overflow-visible">
         <div className="flex gap-4 pb-2 md:grid md:grid-cols-2 md:gap-6 md:pb-0 lg:grid-cols-3">
           {cards.map((card) => (
-            <Link key={card.id} href={`/knowledge/${card.slug}`} className="block min-w-[260px] shrink-0 md:min-w-0 md:shrink">
+            <Link key={card.id} href={`/blog/${card.slug}`} className="block min-w-[260px] shrink-0 md:min-w-0 md:shrink">
               <DashboardCard as="div" className="h-full">
                 <span className="text-[15px] font-medium text-[var(--text-primary)]">
                   {card.title}

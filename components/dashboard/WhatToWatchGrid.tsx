@@ -9,7 +9,7 @@ type WhatToWatchGridProps = {
 };
 
 function monitoringHref(area: MonitoringArea): string {
-  if (area.slug) return `/knowledge/${area.slug}`;
+  if (area.slug) return `/blog/${area.slug}`;
   return `/dashboard/monitoring/${area.id}`;
 }
 

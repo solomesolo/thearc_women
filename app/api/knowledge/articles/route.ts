@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Number(searchParams.get("limit")) || 20, 100);
     const offset = Math.max(0, Number(searchParams.get("offset")) || 0);
 
+    // Only approved articles are shown on the blog
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
+    const where: any = { approvalStatus: "approved" };
 
     if (labelParam) {
       const [labelType, labelValue] = labelParam.split(":").map((s) => s?.trim());

@@ -41,7 +41,7 @@ export type MonitoringArea = {
   description?: string;
   signalIds: string[];
   priority?: number;
-  /** Slug for knowledge detail route (e.g. /knowledge/[slug]). */
+  /** Slug for blog article detail route (e.g. /blog/[slug]). */
   slug?: string;
 };
 
