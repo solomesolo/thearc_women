@@ -539,9 +539,8 @@ export const homepageContent = {
       "Not symptom logging.",
       "Dynamic interpretation of patterns your body already follows.",
     ],
-    uiImageSrc: "/images/Diverse Women Group 4.png",
-    uiImageAlt:
-      "Diverse group of women standing together representing performance and health",
+    uiImageSrc: "/images/IMG_2900-modified.JPG",
+    uiImageAlt: "Portrait of a woman in motion, representing focused female performance",
   },
   knowledge: {
     sectionName: "Your health starts with better knowledge.",

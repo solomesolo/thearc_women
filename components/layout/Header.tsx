@@ -37,12 +37,6 @@ export function Header() {
           >
             How The Arc works
           </Link>
-          <Link
-            href="/about"
-            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-          >
-            About
-          </Link>
           <AuthNav />
           <Link
             href="/survey"
