@@ -8,8 +8,9 @@ import { JourneySection } from "@/components/sections/JourneySection";
 import { KnowledgeSection } from "@/components/home/KnowledgeSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { IdentitySection } from "@/components/sections/IdentitySection";
-import { DifferentiationSection } from "@/components/sections/DifferentiationSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
+import { FounderMessageSection } from "@/components/sections/FounderMessageSection";
+import { homepageContent } from "@/content/homepage";
 
 export default function Home() {
   return (
@@ -24,7 +25,15 @@ export default function Home() {
       <ProductIntroSection />
       <HowItWorksSection />
       <IdentitySection />
-      <DifferentiationSection />
+      <FounderMessageSection
+        label={homepageContent.founderMessage.label}
+        headline={homepageContent.founderMessage.headline}
+        paragraphs={homepageContent.founderMessage.paragraphs}
+        founderName={homepageContent.founderMessage.founderName}
+        founderTitle={homepageContent.founderMessage.founderTitle}
+        imageSrc={homepageContent.founderMessage.imageSrc}
+        imageAlt={homepageContent.founderMessage.imageAlt}
+      />
       <FinalCTASection />
     </main>
   );

@@ -523,6 +523,15 @@ export const homepageContent = {
       },
     ],
   },
+  founderNote: {
+    headline: "A note from the founder",
+    paragraphs: [
+      "The Arc was created because too many high-performing women were being asked to push through signals they were never taught how to interpret.",
+      "I wanted a system that treats female physiology as a performance asset — something you can understand, anticipate, and work with, instead of a variable that keeps getting in the way.",
+      "Everything you see here is built to give you medically literate, context-aware interpretations so your effort is matched by clarity, not guesswork.",
+    ],
+    signature: "Founder, The Arc",
+  },
   productIntro: {
     headline:
       "A biological intelligence layer designed for female performance.",
@@ -698,15 +707,23 @@ export const homepageContent = {
     layoutVariant: "grid",
   },
   differentiation: {
-    headline:
-      "Beyond observation. Beyond symptoms. Beyond averages.",
-    paragraphs: [
-      "Most platforms collect information.",
-      "Few explain variability.",
-      "Almost none model female specific dynamics.",
-      "This system was built around how women actually function, not adapted from generalized physiology assumptions.",
-    ],
+    // Legacy differentiation section replaced by FounderMessageSection on the homepage.
+    headline: "",
+    paragraphs: [],
     themeVariant: "inverted",
+  },
+  founderMessage: {
+    label: "FOUNDER'S NOTE",
+    headline: "I’m building this for my mother, my daughter, and myself.",
+    paragraphs: [
+      "I first understood how much women’s health is dismissed when my mother developed cancer and did not get the right checkups in time. The treatment that followed was harder than it should have been.",
+      "Now she is fighting cancer for the second time — again diagnosed late, again shaped by the belief that symptoms are only serious when they become unbearable.",
+      "I’m building this product because women deserve better prevention, better context, and better reasons to pay attention earlier. That belief has shaped my work across healthtech, diagnostics, preventive medicine, and women’s health product development. For my mother. For my daughter. For me.",
+    ],
+    founderName: "Anna Solovyova",
+    founderTitle: "Founder",
+    imageSrc: "/images/IMG_8091-modified.JPG",
+    imageAlt: "Portrait of Anna Solovyova",
   },
   finalCta: {
     headline:
