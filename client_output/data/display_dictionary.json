@@ -1,0 +1,77 @@
+{
+  "clusters": {
+    "CL_ENERGY_VAR": { "display_title": "Energy Variability", "short_label": "Energy swings" },
+    "CL_STRESS_ACCUM": { "display_title": "Stress Load Signals", "short_label": "Stress load" },
+    "CL_SLEEP_DISRUPT": { "display_title": "Sleep Disruption", "short_label": "Sleep variability" },
+    "CL_CYCLE_VAR": { "display_title": "Cycle Rhythm Changes", "short_label": "Cycle variability" },
+    "CL_SUGAR_INSTAB": { "display_title": "Blood Sugar Variability", "short_label": "Blood sugar swings" },
+    "CL_IRON_PATTERN": { "display_title": "Iron Reserve Signals", "short_label": "Iron signals" },
+    "CL_THYROID_SIGNALS": { "display_title": "Thyroid Context Signals", "short_label": "Thyroid signals" },
+    "CL_TRAIN_MISMATCH": { "display_title": "Recovery–Training Mismatch", "short_label": "Recovery mismatch" },
+    "CL_GUT_PATTERN": { "display_title": "Gut Pattern Signals", "short_label": "Gut pattern" },
+    "CL_INFLAM_LOAD": { "display_title": "Inflammation Context Signals", "short_label": "Inflammation context" }
+  },
+  "systems": {
+    "SYS_HORMONAL": { "display_title": "Hormonal Rhythm", "short_label": "Hormonal" },
+    "SYS_METABOLIC": { "display_title": "Metabolic Health", "short_label": "Metabolic" },
+    "SYS_STRESS": { "display_title": "Stress Response", "short_label": "Stress" },
+    "SYS_SLEEP": { "display_title": "Sleep Architecture", "short_label": "Sleep" },
+    "SYS_GUT": { "display_title": "Gut System", "short_label": "Gut" },
+    "SYS_MICRO": { "display_title": "Micronutrient Reserves", "short_label": "Micronutrient" },
+    "SYS_CARDIO": { "display_title": "Cardiovascular Signals", "short_label": "Cardiovascular" },
+    "SYS_BONE": { "display_title": "Bone Health Context", "short_label": "Bone health" },
+    "SYS_RECOVERY": { "display_title": "Recovery Capacity", "short_label": "Recovery" },
+    "SYS_BIOMARKERS_CTX": { "display_title": "Biomarker Context", "short_label": "Biomarkers" },
+    "SYS_INFLAM_CTX": { "display_title": "Inflammation Context", "short_label": "Inflammation" },
+    "SYS_NUTRITION": { "display_title": "Nutrition Patterns", "short_label": "Nutrition" }
+  },
+  "root_patterns": {
+    "RP_STRESS_LOAD": { "display_title": "Stress Load Pattern", "short_label": "Stress load" },
+    "RP_BLOOD_SUGAR": { "display_title": "Blood Sugar Regulation Pattern", "short_label": "Blood sugar" },
+    "RP_IRON_DEPLETION": { "display_title": "Iron Reserve Pattern", "short_label": "Iron reserve" },
+    "RP_THYROID_SLOWING": { "display_title": "Thyroid Regulation Pattern", "short_label": "Thyroid" },
+    "RP_PROG_LOW": { "display_title": "Progesterone Signal Pattern", "short_label": "Progesterone" },
+    "RP_ESTRO_DOM": { "display_title": "Estrogen Signal Pattern", "short_label": "Estrogen" },
+    "RP_ANDRO_EXCESS": { "display_title": "Androgen Signal Pattern", "short_label": "Androgen" },
+    "RP_MICRO_DEPLETION": { "display_title": "Nutrient Reserve Pattern", "short_label": "Nutrient reserve" },
+    "RP_OVERTRAIN": { "display_title": "Recovery Strain Pattern", "short_label": "Recovery strain" },
+    "RP_SLEEP_DEPRIVATION": { "display_title": "Sleep Deprivation Pattern", "short_label": "Sleep depriv." },
+    "RP_GUT_DYSBIOSIS": { "display_title": "Gut Balance Pattern", "short_label": "Gut balance" },
+    "RP_NERVOUS_DYS": { "display_title": "Nervous System Pattern", "short_label": "Nervous system" },
+    "RP_INFLAM_CTX": { "display_title": "Inflammation Context Pattern", "short_label": "Inflammation" },
+    "RP_VASOMOTOR_CTX": { "display_title": "Vasomotor Transition Context", "short_label": "Vasomotor" },
+    "RP_PERI_TRANSITION": { "display_title": "Perimenopause Transition Pattern", "short_label": "Perimenopause" }
+  },
+  "labs": {
+    "LAB_FERRITIN": { "display_title": "Ferritin", "short_label": "Ferritin" },
+    "LAB_B12": { "display_title": "Vitamin B12", "short_label": "B12" },
+    "LAB_FOLATE": { "display_title": "Folate", "short_label": "Folate" },
+    "LAB_VITD": { "display_title": "Vitamin D", "short_label": "Vitamin D" },
+    "LAB_TSH": { "display_title": "TSH", "short_label": "TSH" },
+    "LAB_FT4": { "display_title": "Free T4", "short_label": "Free T4" },
+    "LAB_GLUCOSE_FAST": { "display_title": "Fasting Glucose", "short_label": "Glucose" },
+    "LAB_HBA1C": { "display_title": "HbA1c", "short_label": "HbA1c" },
+    "LAB_INSULIN_FAST": { "display_title": "Fasting Insulin", "short_label": "Insulin" },
+    "LAB_TRIG": { "display_title": "Triglycerides", "short_label": "Triglycerides" },
+    "LAB_HDL": { "display_title": "HDL Cholesterol", "short_label": "HDL" },
+    "LAB_LDL": { "display_title": "LDL Cholesterol", "short_label": "LDL" },
+    "LAB_CRP": { "display_title": "C-Reactive Protein", "short_label": "CRP" },
+    "LAB_OMEGA3": { "display_title": "Omega-3", "short_label": "Omega-3" },
+    "LAB_MAG": { "display_title": "Magnesium", "short_label": "Magnesium" },
+    "LAB_ZINC": { "display_title": "Zinc", "short_label": "Zinc" }
+  },
+  "lenses": {
+    "LENS_STRESS_RECOVERY": { "display_title": "Stress & Recovery Regulation", "short_label": "Stress & recovery" },
+    "LENS_ENERGY_METABOLIC": { "display_title": "Energy & Metabolic Stability", "short_label": "Energy & metabolic" },
+    "LENS_HORMONAL_RHYTHM": { "display_title": "Hormonal Rhythm Signals", "short_label": "Hormonal rhythm" },
+    "LENS_GUT_ABSORPTION": { "display_title": "Gut Comfort & Absorption", "short_label": "Gut & absorption" },
+    "LENS_NUTRIENT_RESERVES": { "display_title": "Nutrient Reserves & Vitality", "short_label": "Nutrient reserves" },
+    "LENS_BASELINE": { "display_title": "Baseline Overview", "short_label": "Baseline" }
+  },
+  "safety_message_types": {
+    "MSG_INFO": { "display_title": "General Information", "short_label": "Info" },
+    "MSG_AWARENESS": { "display_title": "Clinical Awareness", "short_label": "Awareness" },
+    "MSG_CLINICIAN": { "display_title": "Consider Clinician Discussion", "short_label": "Clinician" },
+    "MSG_URGENT": { "display_title": "Prompt Medical Attention", "short_label": "Urgent" }
+  }
+}

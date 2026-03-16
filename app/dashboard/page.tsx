@@ -28,6 +28,7 @@ function DashboardPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const traceParam = searchParams.get("trace");
+  const fixtureParam = searchParams.get("fixture");
 
   const [timeRange, setTimeRange] = useState<DashboardTimeRange>("7d");
   const [drawerTrace, setDrawerTrace] = useState<ReasoningTrace | null>(null);
@@ -42,7 +43,9 @@ function DashboardPageContent() {
     let cancelled = false;
     setEngineError(null);
     setSurveyDataPresent(null);
-    fetch(`/api/dashboard?timeRange=${timeRange}`, { credentials: "include" })
+    const qs = new URLSearchParams({ timeRange });
+    if (fixtureParam) qs.set("fixture", fixtureParam);
+    fetch(`/api/dashboard?${qs.toString()}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error(res.status === 401 ? "Unauthorized" : `Dashboard ${res.status}`);
         return res.json();
@@ -70,7 +73,7 @@ function DashboardPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [timeRange]);
+  }, [timeRange, fixtureParam]);
 
   const vm = useMemo(() => {
     if (dashboardInput == null) {

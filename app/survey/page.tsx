@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ArcSurveyContainer } from "@/components/survey/ArcSurveyContainer";
+import { SurveyDevProfiles } from "@/components/survey/SurveyDevProfiles";
 
 export default async function SurveyPage() {
   const session = await getServerSession(authOptions);
@@ -17,6 +18,7 @@ export default async function SurveyPage() {
           Help us personalize your experience. Your answers are stored securely and used only for recommendations.
         </p>
         <div className="mt-8">
+          <SurveyDevProfiles />
           <ArcSurveyContainer />
         </div>
       </div>
