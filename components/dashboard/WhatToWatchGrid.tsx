@@ -13,6 +13,15 @@ function monitoringHref(area: MonitoringArea): string {
   return `/dashboard/monitoring/${area.id}`;
 }
 
+function whyThisMatters(area: MonitoringArea): string {
+  const key = `${area.id} ${area.label}`.toLowerCase();
+  if (key.includes("sleep")) return "Sleep consistency affects energy and hormone balance.";
+  if (key.includes("recovery") || key.includes("hrv"))
+    return "Recovery trends help you balance load and avoid slow fatigue build-up.";
+  if (key.includes("energy")) return "Energy stability often reflects sleep, stress, and fueling.";
+  return "This signal is a high-leverage input to your baseline.";
+}
+
 /**
  * Desktop: 3 cols. Tablet: 2 cols. Mobile: horizontal scroll with snap, min-width 280px.
  * Cards: title (2 lines max), 1 sentence body, optional "Why this matters" link.
@@ -35,9 +44,10 @@ export function WhatToWatchGrid({ areas }: WhatToWatchGridProps) {
                   {area.description}
                 </p>
               )}
-              <span className="mt-3 inline-block text-[14px] text-black/70 underline-offset-2 hover:underline">
-                Why this matters
-              </span>
+              <p className="mt-3 text-[13px] leading-relaxed text-black/70">
+                <span className="font-medium text-black/80">Why this matters:</span>{" "}
+                {whyThisMatters(area)}
+              </p>
             </DashboardCard>
           </Link>
         ))}
@@ -60,9 +70,10 @@ export function WhatToWatchGrid({ areas }: WhatToWatchGridProps) {
                   {area.description}
                 </p>
               )}
-              <span className="mt-3 inline-block text-[14px] text-black/70 underline-offset-2 hover:underline">
-                Why this matters
-              </span>
+              <p className="mt-3 text-[13px] leading-relaxed text-black/70">
+                <span className="font-medium text-black/80">Why this matters:</span>{" "}
+                {whyThisMatters(area)}
+              </p>
             </DashboardCard>
           </Link>
         ))}

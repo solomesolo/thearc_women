@@ -10,8 +10,8 @@ type SystemsGridProps = {
 };
 
 /**
- * Desktop: 4 cols × 2 rows. Tablet: 2 cols × 4 rows. Mobile: 1 col.
- * Gap 16–20px. No truncation; titles wrap.
+ * Desktop: 3 cols max. Tablet: 2 cols. Mobile: 1 col.
+ * Increased spacing for readability. No truncation; titles wrap.
  */
 export function SystemsGrid({
   systems,
@@ -20,7 +20,7 @@ export function SystemsGrid({
 }: SystemsGridProps) {
   return (
     <div
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4"
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-6"
       role="tablist"
       aria-label="Systems"
     >

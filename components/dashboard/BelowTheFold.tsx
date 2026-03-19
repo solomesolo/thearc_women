@@ -1,13 +1,10 @@
 "use client";
 
 import type { DashboardVM } from "@/types/dashboard";
-import { RecommendedKnowledge } from "./RecommendedKnowledge";
-import { LabAwarenessGrid } from "./LabAwarenessGrid";
-import { BiologicalPriorities } from "./BiologicalPriorities";
-import { TrackingSignalsPanel } from "./TrackingSignalsPanel";
-import { RootPatternLayer } from "./RootPatternLayer";
-import { PreventiveStrategyLibrary } from "./PreventiveStrategyLibrary";
-import { WeeklyBiologicalInsights } from "./WeeklyBiologicalInsights";
+import { LabAwarenessSection } from "./LabAwarenessSection";
+import { RecommendedForYou } from "./RecommendedForYou";
+import { PreventiveStrategiesToExplore } from "./PreventiveStrategiesToExplore";
+import { UnderlyingPatternsAdvanced } from "./UnderlyingPatternsAdvanced";
 
 type BelowTheFoldProps = {
   vm: DashboardVM;
@@ -20,21 +17,15 @@ export function BelowTheFold({
   onOpenTrace,
   onUpdateSignals,
 }: BelowTheFoldProps) {
+  void vm;
+  void onOpenTrace;
+  void onUpdateSignals;
   return (
     <div className="border-t border-black/5">
-      <RecommendedKnowledge cards={vm.knowledgeCards} />
-      <LabAwarenessGrid labs={vm.labs} />
-      <BiologicalPriorities priorities={vm.priorities} />
-      <TrackingSignalsPanel
-        signals={vm.trackingSignals}
-        onUpdateSignals={onUpdateSignals}
-      />
-      <RootPatternLayer patterns={vm.rootPatterns} />
-      <PreventiveStrategyLibrary strategies={vm.strategies} />
-      <WeeklyBiologicalInsights
-        insights={vm.weeklyInsights}
-        onOpenTrace={onOpenTrace}
-      />
+      <LabAwarenessSection />
+      <RecommendedForYou />
+      <PreventiveStrategiesToExplore />
+      <UnderlyingPatternsAdvanced />
     </div>
   );
 }

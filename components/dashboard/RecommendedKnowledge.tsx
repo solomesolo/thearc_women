@@ -13,22 +13,29 @@ export function RecommendedKnowledge({ cards }: RecommendedKnowledgeProps) {
 
   return (
     <section className="dashboard-section dashboard-shell" aria-labelledby="recommended-knowledge-heading">
-      <h2 id="recommended-knowledge-heading" className="text-[17px] font-semibold text-[var(--text-primary)]">
-        Recommended for you
-      </h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="recommended-knowledge-heading" className="text-[17px] font-semibold text-[var(--text-primary)]">
+            Recommended for you
+          </h2>
+          <p className="mt-1 text-[14px] leading-relaxed text-black/70">
+            Based on your current signals
+          </p>
+        </div>
+      </div>
       <div className="mt-4 overflow-x-auto md:overflow-visible">
         <div className="flex gap-4 pb-2 md:grid md:grid-cols-2 md:gap-6 md:pb-0 lg:grid-cols-3">
           {cards.map((card) => (
             <Link key={card.id} href={`/blog/${card.slug}`} className="block min-w-[260px] shrink-0 md:min-w-0 md:shrink">
               <DashboardCard as="div" className="h-full">
-                <span className="text-[15px] font-medium text-[var(--text-primary)]">
+                <span className="text-[15px] font-semibold text-[var(--text-primary)]">
                   {card.title}
                 </span>
                 <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-black/70">
                   {card.abstract}
                 </p>
-                <span className="mt-3 inline-block text-[14px] text-black/70 underline-offset-2 hover:underline">
-                  Read
+                <span className="mt-3 inline-block text-[13px] font-medium text-black/70 underline-offset-2 hover:underline">
+                  Read →
                 </span>
               </DashboardCard>
             </Link>

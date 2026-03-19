@@ -15,14 +15,21 @@ export function LabAwarenessGrid({ labs }: LabAwarenessGridProps) {
       <h2 id="lab-awareness-heading" className="text-[17px] font-semibold text-[var(--text-primary)]">
         Lab awareness
       </h2>
+      <p className="mt-1 max-w-[680px] text-[14px] leading-relaxed text-black/70">
+        These labs may be relevant based on your signals.
+      </p>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {labs.map((lab) => (
           <DashboardCard key={lab.id} hover={false}>
-            <span className="text-[15px] font-medium text-[var(--text-primary)]">
+            <span className="text-[15px] font-semibold text-[var(--text-primary)]">
               {lab.name}
             </span>
             <p className="mt-2 text-[14px] leading-relaxed text-black/70">
-              {lab.reflects ?? lab.whenToCheck ?? "—"}
+              {lab.reflects ?? "—"}
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-black/65">
+              <span className="font-medium text-black/75">Why it matters:</span>{" "}
+              {lab.whenToCheck ?? "Useful context when symptoms persist or patterns repeat."}
             </p>
           </DashboardCard>
         ))}

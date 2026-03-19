@@ -123,11 +123,18 @@ export function PreventiveStrategyLibrary({
       <h2 id="strategy-library-heading" className="text-[17px] font-semibold text-[var(--text-primary)]">
         Preventive strategy library
       </h2>
+      <p className="mt-1 max-w-[680px] text-[14px] leading-relaxed text-black/70">
+        Filter for strategies that match your stage and current symptoms.
+      </p>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 rounded-[18px] border border-black/[0.08] bg-black/[0.015] p-5 md:p-6">
+        <p className="text-[12px] font-semibold uppercase tracking-wider text-black/55">
+          Filters
+        </p>
+        <div className="mt-4 space-y-5">
         {lifeStageLabels.length > 0 && (
           <div>
-            <span className="text-[12px] font-medium uppercase tracking-wider text-black/55">
+            <span className="text-[12px] font-semibold uppercase tracking-wider text-black/55">
               Life stage
             </span>
             <div className="mt-2">
@@ -137,7 +144,7 @@ export function PreventiveStrategyLibrary({
         )}
         {symptomLabels.length > 0 && (
           <div>
-            <span className="text-[12px] font-medium uppercase tracking-wider text-black/55">
+            <span className="text-[12px] font-semibold uppercase tracking-wider text-black/55">
               Symptoms
             </span>
             <div className="mt-2">
@@ -147,7 +154,7 @@ export function PreventiveStrategyLibrary({
         )}
         {biomarkerLabels.length > 0 && (
           <div>
-            <span className="text-[12px] font-medium uppercase tracking-wider text-black/55">
+            <span className="text-[12px] font-semibold uppercase tracking-wider text-black/55">
               Biomarkers
             </span>
             <div className="mt-2">
@@ -155,17 +162,21 @@ export function PreventiveStrategyLibrary({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (
           <DashboardCard key={s.id} hover={false}>
-            <span className="text-[15px] font-medium text-[var(--text-primary)]">
+            <span className="text-[15px] font-semibold text-[var(--text-primary)]">
               {s.title}
             </span>
-            <p className="mt-2 text-[14px] leading-relaxed text-black/70">
+            <p className="mt-2 text-[14px] leading-relaxed text-black/70 line-clamp-2">
               {s.oneLine}
             </p>
+            <span className="mt-3 inline-block text-[13px] font-medium text-black/70">
+              Benefit: more consistent recovery and energy
+            </span>
           </DashboardCard>
         ))}
       </div>

@@ -319,7 +319,7 @@
 
 /* Dashboard: shell + spacing — nothing touches viewport edges */
 .dashboard-shell {
-  max-width: 1200px;
+  max-width: 1440px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
@@ -333,9 +333,15 @@
 }
 @media (min-width: 1024px) {
   .dashboard-shell {
-    padding-left: 40px;
-    padding-right: 40px;
+    padding-left: 32px;
+    padding-right: 32px;
   }
+}
+
+.dashboard-section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .dashboard-section-gap { gap: 48px; }
@@ -351,7 +357,7 @@
 .dashboard-grid-12 {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
 .dashboard-frame {

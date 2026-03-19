@@ -9,25 +9,25 @@ const STYLES: Record<
   { border: string; bg: string; text: string }
 > = {
   stable: {
-    border: "border-black/[0.10]",
-    bg: "bg-black/[0.02]",
-    text: "text-black/70",
+    border: "border-emerald-200",
+    bg: "bg-emerald-100",
+    text: "text-emerald-900",
   },
   variable: {
-    border: "border-black/[0.14]",
-    bg: "bg-black/[0.03]",
-    text: "text-black/75",
+    border: "border-amber-200",
+    bg: "bg-amber-100",
+    text: "text-amber-900",
   },
   needs_attention: {
-    border: "border-black/[0.18]",
-    bg: "bg-black/[0.04]",
-    text: "text-black/90",
+    border: "border-rose-200",
+    bg: "bg-rose-100",
+    text: "text-rose-900",
   },
 };
 
 const LABELS: Record<SystemStatus, string> = {
-  stable: "Stable",
-  variable: "Variable",
+  stable: "Steady",
+  variable: "Monitor",
   needs_attention: "Needs attention",
 };
 
@@ -41,7 +41,7 @@ export function StatusChip({ status, className }: StatusChipProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
         s.border,
         s.bg,
         s.text,

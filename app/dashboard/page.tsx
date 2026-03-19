@@ -7,8 +7,7 @@ import type { DashboardTimeRange } from "@/types/dashboard";
 import type { ReasoningTrace } from "@/types/dashboard";
 import { ReasoningTraceDrawer } from "@/components/system2/ReasoningTraceDrawer";
 import { DashboardStickyHeader } from "@/components/dashboard/DashboardStickyHeader";
-import { AboveTheFold } from "@/components/dashboard/AboveTheFold";
-import { BelowTheFold } from "@/components/dashboard/BelowTheFold";
+import { DashboardV3 } from "@/components/dashboard/DashboardV3";
 import { SurveyModalPlaceholder } from "@/components/dashboard/SurveyModalPlaceholder";
 import {
   trackDashboardTimeRangeChanged,
@@ -127,27 +126,22 @@ function DashboardPageContent() {
         onUpdateSignals={handleUpdateSignals}
       />
 
-      <main className="dashboard-shell">
-        <h1 className="pt-6 text-[28px] font-semibold tracking-tight text-[var(--text-primary)] md:text-[32px] md:pt-8">
-          Dashboard
-        </h1>
+      <main>
         {surveyDataPresent === false && (
-          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Complete the survey to see personalized results. Until then, you’re seeing sample data.
+          <div className="dashboard-shell pt-6">
+            <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Complete the survey to see personalized results. Until then, you’re seeing sample data.
+            </div>
           </div>
         )}
         {engineError != null && (
-          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Your survey is saved, but the analysis engine couldn’t run (e.g. Python not available in this environment). Showing sample data.
+          <div className="dashboard-shell pt-6">
+            <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Your survey is saved, but the analysis engine couldn’t run (e.g. Python not available in this environment). Showing sample data.
+            </div>
           </div>
         )}
-        <AboveTheFold
-          vm={vm}
-          onOpenTrace={openTrace}
-          onSystemOpened={trackDashboardSystemOpened}
-        />
-        <div className="border-t border-black/[0.06]" />
-        <BelowTheFold vm={vm} onOpenTrace={openTrace} onUpdateSignals={handleUpdateSignals} />
+        <DashboardV3 />
       </main>
 
       <ReasoningTraceDrawer

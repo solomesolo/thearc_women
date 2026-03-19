@@ -22,18 +22,21 @@ export function BiologicalPriorities({ priorities }: BiologicalPrioritiesProps) 
       <h2 id="biological-priorities-heading" className="text-[17px] font-semibold text-[var(--text-primary)]">
         Biological priorities
       </h2>
+      <p className="mt-1 max-w-[680px] text-[14px] leading-relaxed text-black/70">
+        Your highest-leverage actions to improve your baseline this week.
+      </p>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {top3.map((p) => (
           <Link key={p.id} href={frameworkHref(p)} className="block">
             <DashboardCard as="div" className="h-full">
-              <span className="text-[15px] font-medium text-[var(--text-primary)]">
+              <span className="text-[15px] font-semibold text-[var(--text-primary)]">
                 {p.label}
               </span>
-              <p className="mt-2 text-[14px] leading-relaxed text-black/70">
+              <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-black/70">
                 {p.focus}
               </p>
-              <span className="mt-3 inline-block text-[13px] text-black/70 underline-offset-2 hover:underline">
-                View framework →
+              <span className="mt-3 inline-block text-[13px] font-medium text-black/70 underline-offset-2 hover:underline">
+                Learn more →
               </span>
             </DashboardCard>
           </Link>

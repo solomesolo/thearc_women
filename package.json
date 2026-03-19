@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "prisma migrate deploy && prisma db seed && npm run backfill:sections-8-9 && next dev -p 3000",
     "dev:only": "next dev -p 3000",
+    "dev:ui": "NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_BUILD_WORKER=1 CI=1 next dev -p 3000 -H 127.0.0.1",
+    "dev:check": "lsof -nP -iTCP:3000 -sTCP:LISTEN || true",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

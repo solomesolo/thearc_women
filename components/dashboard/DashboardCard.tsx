@@ -11,9 +11,9 @@ type DashboardCardProps = {
 };
 
 /**
- * Unified card surface: warm white, border 6–8% black, radius 16–20px,
- * padding 14–16px mobile / 16–20px desktop. No shadow.
- * Hover: border 14–18%, background black 2%.
+ * Unified card surface: calm warm white, subtle border, radius 24px,
+ * standard padding 24px. Soft shadow for premium touch.
+ * Hover: slightly stronger border + lift.
  */
 export function DashboardCard({
   children,
@@ -24,9 +24,11 @@ export function DashboardCard({
   return (
     <Component
       className={clsx(
-        "rounded-[18px] border border-black/[0.07] bg-[var(--background)] p-4 md:p-5",
-        "transition-colors duration-200",
-        hover && "hover:border-black/[0.16] hover:bg-black/[0.02]",
+        "rounded-[24px] border border-black/[0.08] bg-[var(--background)] p-6",
+        "shadow-[0_1px_0_rgba(12,12,12,0.04),0_10px_22px_rgba(12,12,12,0.04)]",
+        "transition duration-200",
+        hover &&
+          "hover:border-black/[0.14] hover:bg-black/[0.01] hover:shadow-[0_1px_0_rgba(12,12,12,0.05),0_16px_30px_rgba(12,12,12,0.06)]",
         className
       )}
     >

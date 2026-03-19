@@ -45,9 +45,9 @@ export const dummyClusters: Cluster[] = [
 ];
 
 export const dummyMonitoringAreas: MonitoringArea[] = [
-  { id: "ma1", label: "Recovery & HRV", description: "Track recovery score and HRV trends.", signalIds: ["recovery-score", "hrv"], priority: 1, slug: "hrv-and-recovery" },
-  { id: "ma2", label: "Sleep quality", description: "Consistency and architecture.", signalIds: ["sleep-fragmentation", "sleep-duration"], priority: 2, slug: "cortisol-ranges-by-phase" },
-  { id: "ma3", label: "Energy & phase", description: "Energy stability by cycle phase.", signalIds: ["energy-stability", "cycle-phase"], priority: 3, slug: "cortisol-ranges-by-phase" },
+  { id: "ma1", label: "Recovery & HRV", description: "Watch recovery score and HRV trends to spot stress vs. recovery shifts.", signalIds: ["recovery-score", "hrv"], priority: 1, slug: "hrv-and-recovery" },
+  { id: "ma2", label: "Sleep quality", description: "Sleep consistency affects energy and hormone balance—especially across phases.", signalIds: ["sleep-fragmentation", "sleep-duration"], priority: 2, slug: "cortisol-ranges-by-phase" },
+  { id: "ma3", label: "Energy & phase", description: "Track energy stability by cycle phase to separate normal shifts from outliers.", signalIds: ["energy-stability", "cycle-phase"], priority: 3, slug: "cortisol-ranges-by-phase" },
 ];
 
 export const dummyKnowledgeCards: KnowledgeCard[] = [
