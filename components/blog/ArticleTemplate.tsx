@@ -1,8 +1,33 @@
+/**
+ * ArticleTemplate — modular, dashboard-style article page shell.
+ *
+ * Section routing (by sectionIndex):
+ *   1 + 2   → SplitInsightCard  ("Why this matters")
+ *   3       → InsightSection    (frameLabel: "Science overview")
+ *   4       → InsightSection    (frameLabel: "Practical meaning")
+ *   5 + 6   → ApplicabilityPair ("Who this applies to")
+ *   ── ActionTransition bridge ──
+ *   7       → GatedSection      (Implementation)
+ *   8       → StructuredBodyCard / GatedSection (Action Protocol)
+ *   9       → StructuredBodyCard / GatedSection (Tracking Framework)
+ *
+ * All text content is passed through unchanged.
+ */
+
 import Link from "next/link";
-import { Tag } from "@/components/ui/Tag";
 import { GatedSection } from "@/components/blog/GatedSection";
 import { SourcesList } from "@/components/blog/SourcesList";
 import { ArticleCard } from "@/components/blog/ArticleCard";
+import { ArticleHero } from "@/components/blog/article-ui/ArticleHero";
+import { ArticleNav } from "@/components/blog/article-ui/ArticleNav";
+import { InsightSection } from "@/components/blog/article-ui/InsightSection";
+import { SplitInsightCard } from "@/components/blog/article-ui/SplitInsightCard";
+import { ApplicabilityPair } from "@/components/blog/article-ui/ApplicabilityPair";
+import { ActionTransition } from "@/components/blog/article-ui/ActionTransition";
+import { StructuredBodyCard } from "@/components/blog/article-ui/StructuredBodyCard";
+import { TrustCue } from "@/components/blog/article-ui/TrustCue";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Section = {
   sectionIndex: number;
@@ -47,8 +72,16 @@ type ArticleTemplateProps = {
   isSubscriber?: boolean;
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function byIndex(sections: Section[], idx: number): Section | undefined {
+  return sections.find((s) => s.sectionIndex === idx);
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function ArticleTemplate({
-  slug,
+  slug: _slug,
   title,
   excerpt,
   category,
@@ -61,181 +94,163 @@ export function ArticleTemplate({
   relatedArticles,
   isSubscriber = false,
 }: ArticleTemplateProps) {
-  const freeSections = sections.filter((s) => s.sectionIndex <= 5);
-  const gatedSections = sections.filter((s) => s.sectionIndex >= 6);
-  const dateStr = publishedAt
-    ? new Date(publishedAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : null;
+  // Nav receives all sections (title only — no body)
+  const navSections = sections.map((s) => ({
+    sectionIndex: s.sectionIndex,
+    title: s.title,
+    isGated: s.isGated,
+  }));
+
+  // Section lookups
+  const s1 = byIndex(sections, 1);
+  const s2 = byIndex(sections, 2);
+  const s3 = byIndex(sections, 3);
+  const s4 = byIndex(sections, 4);
+  const s5 = byIndex(sections, 5);
+  const s6 = byIndex(sections, 6);
+  const s7 = byIndex(sections, 7);
+  const s8 = byIndex(sections, 8);
+  const s9 = byIndex(sections, 9);
+
+  // Any gated section exists
+  const hasActionZone = !!(s7 || s8 || s9);
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      <article className="pb-16">
-        <header className="border-b border-[var(--color-border-hairline)] pb-8">
-          <Link
-            href="/blog"
-            className="text-sm text-[var(--text-secondary)] underline hover:text-[var(--text-primary)]"
-          >
-            ← Blog
-          </Link>
-          {category && (
-            <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-              {category}
-            </p>
-          )}
-          <h1 className="mt-2 text-[1.875rem] font-medium leading-[1.2] tracking-tight text-[var(--text-primary)] md:text-[2.25rem] lg:text-[2.5rem]">
-            {title}
-          </h1>
-          <p className="mt-4 text-base leading-[1.65] text-[var(--text-secondary)]">
-            {excerpt}
-          </p>
+      <article className="pb-20">
+        {/* ── Above-the-fold hero ── */}
+        <ArticleHero
+          title={title}
+          excerpt={excerpt}
+          category={category}
+          evidenceLevel={evidenceLevel}
+          publishedAt={publishedAt}
+          readingTimeMinutes={readingTimeMinutes}
+          tags={tags}
+          sections={navSections}
+          isSubscriber={isSubscriber}
+        />
 
-          {/* Meta: evidence level, date, reading time */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
-            {evidenceLevel && (
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                Evidence: {evidenceLevel}
-              </span>
-            )}
-            {dateStr && (
-              <span className="text-xs text-[var(--text-secondary)]">
-                {dateStr}
-              </span>
-            )}
-            {readingTimeMinutes != null && readingTimeMinutes > 0 && (
-              <span className="text-xs text-[var(--text-secondary)]">
-                {readingTimeMinutes} min read
-              </span>
-            )}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {tags.map((t) => (
-              <Tag key={t.slug} variant="muted">
-                {t.label}
-              </Tag>
-            ))}
-          </div>
+        {/* ── Sticky section navigation ── */}
+        <ArticleNav sections={navSections} />
 
-          {/* Content map — what's free vs gated */}
-          {sections.length > 0 && (
-            <div className="mt-6 rounded-[14px] border border-[var(--color-border-hairline)] bg-[var(--color-surface)]/30 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                This article includes
-              </p>
-              <ul className="mt-2 space-y-1.5 text-sm text-[var(--text-primary)]">
-                {freeSections.length > 0 && (
-                  <>
-                    <li className="flex items-center gap-2">
-                      <span aria-hidden>✅</span>
-                      <span>Science explained (free)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span aria-hidden>✅</span>
-                      <span>Common patterns & root causes (free)</span>
-                    </li>
-                  </>
-                )}
-                {gatedSections.length > 0 && !isSubscriber && (
-                  <>
-                    <li className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <span aria-hidden>🔒</span>
-                      <span>Personalized action protocol (subscriber)</span>
-                    </li>
-                    <li className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <span aria-hidden>🔒</span>
-                      <span>Tracking & progress framework (subscriber)</span>
-                    </li>
-                  </>
-                )}
-                {gatedSections.length > 0 && isSubscriber && (
-                  <>
-                    <li className="flex items-center gap-2">
-                      <span aria-hidden>✅</span>
-                      <span>Action protocol</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span aria-hidden>✅</span>
-                      <span>Tracking framework</span>
-                    </li>
-                  </>
-                )}
-              </ul>
-            </div>
+        {/* ── Content sections ── */}
+        <div className="mt-2 flex flex-col gap-4 md:gap-5">
+
+          {/* Sections 1 + 2 — Why this matters (split card) */}
+          {(s1 || s2) && (
+            <SplitInsightCard
+              left={s1 ? { sectionIndex: s1.sectionIndex, title: s1.title, body: s1.body } : null}
+              right={s2 ? { sectionIndex: s2.sectionIndex, title: s2.title, body: s2.body } : null}
+            />
           )}
 
-          {/* Section navigation (anchor list) */}
-          {sections.length > 0 && (
-            <nav className="mt-6" aria-label="Article sections">
-              <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                Sections
-              </p>
-              <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                {sections.map((s) => (
-                  <li key={s.sectionIndex}>
-                    <a
-                      href={`#section-${s.sectionIndex}`}
-                      className="text-[var(--text-secondary)] underline hover:text-[var(--text-primary)]"
-                    >
-                      {s.title ?? `Section ${s.sectionIndex}`}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+          {/* Section 3 — What research says */}
+          {s3 && (
+            <InsightSection
+              sectionIndex={s3.sectionIndex}
+              title={s3.title}
+              body={s3.body}
+              frameLabel="Science overview"
+            />
           )}
-        </header>
 
-        {/* Sections 1–5: free */}
-        <div className="mt-10 space-y-10">
-          {freeSections.map((s) => (
-            <section
-              key={s.sectionIndex}
-              id={`section-${s.sectionIndex}`}
-              className="scroll-mt-24"
-            >
-              {s.title && (
-                <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--text-primary)]">
-                  {s.title}
-                </h2>
-              )}
-              <div className="mt-2 whitespace-pre-wrap text-base leading-[1.7] text-[var(--text-secondary)]">
-                {s.body}
-              </div>
-            </section>
+          {/* Section 4 — What this means for women */}
+          {s4 && (
+            <InsightSection
+              sectionIndex={s4.sectionIndex}
+              title={s4.title}
+              body={s4.body}
+              frameLabel="Practical meaning"
+            />
+          )}
+
+          {/* Sections 5 + 6 — When it applies / When to be careful */}
+          {(s5 || s6) && (
+            <ApplicabilityPair
+              mayApply={s5 ?? null}
+              mayCaution={s6 ?? null}
+              isSubscriber={isSubscriber}
+            />
+          )}
+
+          {/* ── Action zone transition ── */}
+          {hasActionZone && <ActionTransition isSubscriber={isSubscriber} />}
+
+          {/* Section 7 — Implementation considerations (gated) */}
+          {s7 && (
+            <GatedSection
+              sectionIndex={s7.sectionIndex}
+              title={s7.title}
+              body={s7.body}
+              isGated={s7.isGated}
+              preview={s7.preview}
+              isSubscriber={isSubscriber}
+            />
+          )}
+
+          {/* Section 8 — Action Protocol */}
+          {s8 && (isSubscriber || !s8.isGated ? (
+            <StructuredBodyCard
+              sectionIndex={s8.sectionIndex}
+              title={s8.title}
+              body={s8.body}
+            />
+          ) : (
+            <GatedSection
+              sectionIndex={s8.sectionIndex}
+              title={s8.title}
+              body={s8.body}
+              isGated={s8.isGated}
+              preview={s8.preview}
+              isSubscriber={isSubscriber}
+            />
           ))}
 
-          {/* Sections 6–7: gated */}
-          {gatedSections.map((s) => (
+          {/* Section 9 — Tracking Framework */}
+          {s9 && (isSubscriber || !s9.isGated ? (
+            <StructuredBodyCard
+              sectionIndex={s9.sectionIndex}
+              title={s9.title}
+              body={s9.body}
+            />
+          ) : (
             <GatedSection
-              key={s.sectionIndex}
-              sectionIndex={s.sectionIndex}
-              title={s.title}
-              body={s.body}
-              isGated={s.isGated}
-              preview={s.preview}
+              sectionIndex={s9.sectionIndex}
+              title={s9.title}
+              body={s9.body}
+              isGated={s9.isGated}
+              preview={s9.preview}
               isSubscriber={isSubscriber}
             />
           ))}
         </div>
 
-        <div className="mt-14">
-          <SourcesList sources={sources} defaultOpen={false} />
+        {/* ── Trust cue ── */}
+        <div className="mt-8">
+          <TrustCue />
         </div>
+
+        {/* ── Sources / citations ── */}
+        {sources.length > 0 && (
+          <div className="mt-6">
+            <SourcesList sources={sources} defaultOpen={false} />
+          </div>
+        )}
       </article>
 
-      {/* Related articles */}
+      {/* ── Related articles ── */}
       {relatedArticles.length > 0 && (
-        <aside className="border-t border-[var(--color-border-hairline)] pt-10">
-          <h2 className="text-lg font-medium text-[var(--text-primary)]">
-            Related articles
-          </h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            By shared focus and tags
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <aside className="border-t border-[var(--color-border-hairline)] pt-10 pb-20">
+          <div className="mb-6">
+            <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
+              Related insights
+            </h2>
+            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+              By shared focus and tags
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {relatedArticles.slice(0, 3).map((a) => (
               <ArticleCard
                 key={a.id}

@@ -1,0 +1,25 @@
+{
+  "_fixture": "gut_dominant",
+  "_description": "Daily gut symptoms, significant bloating, bowel changes, moderate fatigue. Gut is the primary driver.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 29,
+    "gut_symptoms": "Daily",
+    "bloating": "Severe",
+    "bowel_changes": "Often",
+    "fatigue_freq": "Weekly",
+    "fatigue_sev": 2,
+    "stress_level": 2,
+    "sleep_quality": 3,
+    "night_waking": "Occasionally",
+    "energy_crash": "Sometimes"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_GUT_DISRUPTION", "SIG_APPETITE_INSTABILITY"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_STRESS_LOAD"],
+    "hero_code": "HERO_GUT_PATTERN",
+    "key_area_attention": ["gut"],
+    "confidence_band": "medium"
+  }
+}

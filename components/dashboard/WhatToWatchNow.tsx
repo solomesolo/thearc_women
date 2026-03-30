@@ -1,14 +1,23 @@
 "use client";
 
+import type { DashboardKeyArea, DashboardSignal } from "@/lib/dashboard/types";
 import { DashboardCard } from "./DashboardCard";
 
-type WatchCard = {
-  title: string;
-  body: string;
-  why: string;
+const AREA_LABELS: Record<string, string> = {
+  sleep: "Sleep",
+  stress: "Stress",
+  energy: "Energy",
+  recovery: "Recovery",
+  hormones: "Hormones",
+  cycle: "Cycle",
+  metabolism: "Metabolism",
+  nutrition: "Nutrition",
+  cardiovascular: "Cardiovascular",
+  gut: "Gut Health",
+  skin_hair: "Skin & Hair",
 };
 
-const WATCH: WatchCard[] = [
+const FALLBACK_CARDS = [
   {
     title: "Recovery & HRV",
     body: "Track recovery score and HRV to understand how your body responds to stress and rest.",
@@ -26,7 +35,57 @@ const WATCH: WatchCard[] = [
   },
 ];
 
-export function WhatToWatchNow() {
+type WatchCard = { title: string; body: string; why: string };
+
+type Props = {
+  keyAreas: DashboardKeyArea[];
+  signals: DashboardSignal[];
+};
+
+export function WhatToWatchNow({ keyAreas, signals }: Props) {
+  let cards: WatchCard[];
+
+  if (keyAreas.length > 0 || signals.length > 0) {
+    // Priority: key areas that are "worth attention" (non-stable severity), then by score
+    const attentionAreas = keyAreas
+      .filter((ka) => ka.severity && ka.severity !== "stable")
+      .sort((a, b) => b.score - a.score);
+    const stableAreas = keyAreas
+      .filter((ka) => !ka.severity || ka.severity === "stable")
+      .sort((a, b) => b.score - a.score);
+
+    // Supplement with signals if needed
+    const topSignals = signals
+      .filter((s) => s.severity && s.severity !== "stable")
+      .slice(0, 3);
+
+    const merged: WatchCard[] = [];
+
+    for (const ka of [...attentionAreas, ...stableAreas].slice(0, 3)) {
+      merged.push({
+        title: AREA_LABELS[ka.area] ?? ka.title,
+        body: ka.shortBody,
+        why: ka.whyItMatters ?? `Tracking ${AREA_LABELS[ka.area] ?? ka.area} helps you catch changes early.`,
+      });
+    }
+
+    // Fill remaining slots from signals
+    if (merged.length < 3) {
+      for (const sig of topSignals) {
+        if (merged.length >= 3) break;
+        merged.push({
+          title: sig.title,
+          body: sig.interpretation ?? `This signal reflects your ${sig.domain} patterns.`,
+          why: `Monitoring ${sig.title.toLowerCase()} can surface patterns before they become noticeable.`,
+        });
+      }
+    }
+
+    cards = merged.length > 0 ? merged : FALLBACK_CARDS;
+  } else {
+    cards = FALLBACK_CARDS;
+  }
+
   return (
     <section className="dashboard-section dashboard-shell" aria-labelledby="what-to-watch-heading">
       <h2 id="what-to-watch-heading" className="text-[20px] font-semibold tracking-tight text-[var(--text-primary)]">
@@ -37,7 +96,7 @@ export function WhatToWatchNow() {
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {WATCH.map((c) => (
+        {cards.map((c) => (
           <DashboardCard key={c.title} as="div" className="h-full p-5">
             <p className="text-[15px] font-semibold text-[var(--text-primary)]">
               {c.title}
@@ -61,4 +120,3 @@ export function WhatToWatchNow() {
     </section>
   );
 }
-

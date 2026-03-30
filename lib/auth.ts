@@ -5,6 +5,21 @@ import { prisma } from "@/lib/db";
 
 export type Access = { isLoggedIn: boolean; isSubscriber: boolean };
 
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(timeoutMessage)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(t);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(t);
+        reject(err);
+      });
+  });
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -37,12 +52,24 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.email = token.email as string;
+        const disableLookup = process.env.DISABLE_SUBSCRIBER_LOOKUP === "1";
+        const lookupTimeoutMs = Number(process.env.SUBSCRIBER_LOOKUP_TIMEOUT_MS ?? 1500);
+        if (disableLookup) {
+          (session.user as { isSubscriber?: boolean }).isSubscriber = false;
+          return session;
+        }
+
         try {
-          const sub = await prisma.subscriber.findUnique({
-            where: { email: token.email as string },
-          });
+          const sub = await withTimeout(
+            prisma.subscriber.findUnique({
+              where: { email: token.email as string },
+            }),
+            lookupTimeoutMs,
+            `subscriber_lookup_timeout_${lookupTimeoutMs}ms`
+          );
           (session.user as { isSubscriber?: boolean }).isSubscriber = sub?.isActive ?? false;
         } catch {
+          // Keep auth/session fast and resilient; subscriber status is optional UI personalization.
           (session.user as { isSubscriber?: boolean }).isSubscriber = false;
         }
       }

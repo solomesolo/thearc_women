@@ -24,9 +24,9 @@ export function AboveTheFold({ vm, onOpenTrace, onSystemOpened }: AboveTheFoldPr
 
   return (
     <div aria-label="Dashboard overview">
-      <HeroHealthBaseline />
-      <BodySystemsOverview />
-      <WhatToWatchNow />
+      <HeroHealthBaseline hero={null} keyAreas={[]} />
+      <BodySystemsOverview keyAreas={[]} />
+      <WhatToWatchNow keyAreas={[]} signals={[]} />
       <WeeklyInsightsSummary />
       <PrioritiesRightNow />
       <TrackTheseOverTime />

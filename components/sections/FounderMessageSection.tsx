@@ -9,7 +9,7 @@ import { homepageContent } from "@/content/homepage";
 type FounderMessageSectionProps = {
   label: string;
   headline: string;
-  paragraphs: string[];
+  paragraphs: readonly string[];
   founderName: string;
   founderTitle: string;
   imageSrc: string;

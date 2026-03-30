@@ -10,10 +10,10 @@ let prismaSingleton: PrismaClient | null = null;
 
 function createPrismaClient() {
   // Prefer DIRECT_URL for serverless/API (avoids pgbouncer transaction limits with Prisma)
-  const connectionString =
-    process.env.DIRECT_URL ??
-    process.env.DATABASE_URL ??
-    "postgresql://localhost:5432/thearc";
+const connectionString =
+  process.env.DATABASE_URL ??
+  process.env.DIRECT_URL ??
+  "postgresql://localhost:5432/thearc";
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }

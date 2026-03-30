@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# webpack dev cache (redirected out of `.next` — see next.config.ts)
+/.webpack-cache/
+
 # production
 /build
 

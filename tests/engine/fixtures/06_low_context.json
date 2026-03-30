@@ -1,0 +1,16 @@
+{
+  "_fixture": "low_context",
+  "_description": "Minimal answers provided. Should trigger SIG_LOW_CONTEXT_PATTERN and fall back to HERO_BASELINE.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 27
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_LOW_CONTEXT_PATTERN"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_SLEEP_DISRUPTION", "SIG_STRESS_LOAD"],
+    "hero_code": "HERO_BASELINE",
+    "key_area_attention": [],
+    "confidence_band": "low"
+  }
+}

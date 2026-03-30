@@ -7,7 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDummyPayloadByTimeRange } from "@/data/dashboardDummy";
-import { spawnSync } from "child_process";
+import { spawn } from "child_process";
 import path from "path";
 
 const TIME_WINDOW = "7d";
@@ -26,32 +26,55 @@ function buildEngineInputPayload(
   };
 }
 
-function runEngineSync(payload: Record<string, unknown>): unknown {
+function runEngine(payload: Record<string, unknown>): Promise<unknown> {
   const scriptPath = path.join(process.cwd(), "scripts", "run_engine_stdin.py");
   const env = { ...process.env, PYTHONPATH: process.cwd() };
-  const run = (pythonCmd: string) =>
-    spawnSync(pythonCmd, [scriptPath], {
-      input: JSON.stringify(payload),
-      encoding: "utf-8",
-      env,
-      timeout: 30000,
+  const runWithCmd = (pythonCmd: string) =>
+    new Promise<unknown>((resolve, reject) => {
+      const cp = spawn(pythonCmd, [scriptPath], { env, stdio: ["pipe", "pipe", "pipe"] });
+      const timeout = setTimeout(() => {
+        cp.kill("SIGKILL");
+        reject(new Error("Engine timed out after 30000ms"));
+      }, 30000);
+
+      let stdout = "";
+      let stderr = "";
+      cp.stdout.setEncoding("utf8");
+      cp.stderr.setEncoding("utf8");
+      cp.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      cp.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      cp.on("error", (err: NodeJS.ErrnoException) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+      cp.on("close", (code) => {
+        clearTimeout(timeout);
+        if (code !== 0) {
+          const msg = stderr.trim() || `Engine exited with code ${code}`;
+          reject(new Error(`Engine failed: ${msg}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(stdout || "{}"));
+        } catch {
+          reject(new Error("Invalid JSON from engine"));
+        }
+      });
+
+      cp.stdin.write(JSON.stringify(payload));
+      cp.stdin.end();
     });
-  let result = run("python3");
-  if (result.error?.message?.includes("ENOENT") || result.status === 127) {
-    result = run("python");
-  }
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.status !== 0) {
-    const stderr = result.stderr?.trim() || "Unknown error";
-    throw new Error(`Engine failed: ${stderr}`);
-  }
-  try {
-    return JSON.parse(result.stdout || "{}");
-  } catch {
-    throw new Error("Invalid JSON from engine");
-  }
+
+  return runWithCmd("python3").catch((err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Fallback for environments where python3 is unavailable.
+    if (msg.includes("ENOENT")) return runWithCmd("python");
+    throw err;
+  });
 }
 
 export async function GET(request: Request) {
@@ -85,7 +108,7 @@ export async function GET(request: Request) {
 
   try {
     const payload = buildEngineInputPayload(session.user.email, surveyResponses);
-    const output = runEngineSync(payload);
+    const output = await runEngine(payload);
     return Response.json({
       _source: "survey",
       timeRange,

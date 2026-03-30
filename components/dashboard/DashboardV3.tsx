@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardPayload } from "@/lib/dashboard/types";
+import type { StartingLineViewModel } from "@/lib/dashboard/startingLineTypes";
+import { StartingLineSection } from "./StartingLineSection";
 import { TodayThisWeekCard } from "./TodayThisWeekCard";
 import { HeroHealthBaseline } from "./HeroHealthBaseline";
 import { BodySystemsOverview } from "./BodySystemsOverview";
@@ -11,6 +14,19 @@ import { LabAwarenessSection } from "./LabAwarenessSection";
 import { RecommendedForYou } from "./RecommendedForYou";
 import { PreventiveStrategiesToExplore } from "./PreventiveStrategiesToExplore";
 import { UnderlyingPatternsAdvanced } from "./UnderlyingPatternsAdvanced";
+import { TrackTheseOverTime } from "./TrackTheseOverTime";
+
+const KEY_LEVER_LABELS: Record<string, string> = {
+  sleep_consistency: "Improve sleep consistency",
+  recovery: "Prioritize recovery first",
+  stress_reduction: "Reduce overall stress load",
+  energy_stability: "Support energy stability",
+  metabolic_stability: "Support metabolic stability",
+  nutrition_timing: "Optimize nutrition timing",
+  cycle_alignment: "Align activity with your cycle",
+  hormonal_balance: "Support hormonal balance",
+  iron_support: "Support iron and energy levels",
+};
 
 function RightRailCard({
   title,
@@ -37,16 +53,44 @@ function RightRailCard({
   );
 }
 
-export function DashboardV3() {
+type Props = {
+  payload: DashboardPayload | null;
+  startingLine?: StartingLineViewModel | null;
+};
+
+export function DashboardV3({ payload, startingLine }: Props) {
+  const keyAreas = payload?.keyAreas ?? [];
+  const signals = payload?.signals ?? [];
+  const hero = payload?.hero ?? null;
+
+  // Build right-rail "priorities" copy — prefer engine-resolved startingLine over old payload.
+  const resolvedFocusLabel = startingLine?.debug.source === "resolved_run"
+    ? startingLine.focus?.label
+    : (hero?.keyLever ? (KEY_LEVER_LABELS[hero.keyLever] ?? hero.keyLever) : null);
+
+  const resolvedTopAreas = startingLine?.debug.source === "resolved_run" && startingLine.keyAreas.length > 0
+    ? startingLine.keyAreas.slice(0, 3).map((ka) => ka.title || ka.code).join(" · ")
+    : keyAreas.slice(0, 3).map((a) => a.title || a.area).join(" · ");
+
+  const prioritiesBody = resolvedFocusLabel
+    ? `If you do only one thing this week: ${resolvedFocusLabel.toLowerCase()}.`
+    : "Focus on consistent sleep and recovery this week.";
+
+  const startWith3Body = resolvedTopAreas.length > 0
+    ? resolvedTopAreas
+    : "Sleep consistency · Recovery / HRV · Energy";
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-section-stack pt-6 md:pt-8">
+        <StartingLineSection payload={payload} startingLine={startingLine ?? null} />
+
         {/* Top row: left stack (8/12) + right rail (4/12) */}
         <div className="dashboard-grid-12 items-start">
           <div className="col-span-12 lg:col-span-8">
             <div className="flex flex-col gap-7">
-              <TodayThisWeekCard />
-              <HeroHealthBaseline />
+              <TodayThisWeekCard keyAreas={keyAreas} />
+              <HeroHealthBaseline hero={hero} keyAreas={keyAreas} />
             </div>
           </div>
           <aside className="col-span-12 lg:col-span-4">
@@ -58,22 +102,22 @@ export function DashboardV3() {
               />
               <RightRailCard
                 title="Your priorities this week"
-                body="If you do only one thing this week: improve sleep consistency. Keep recovery ahead of intensity."
+                body={prioritiesBody}
               />
               <RightRailCard
-                title="Start with these 3"
-                body="Sleep consistency · Recovery / HRV · Energy"
+                title="Start with these"
+                body={startWith3Body}
               />
             </div>
           </aside>
         </div>
 
-        <BodySystemsOverview />
+        <BodySystemsOverview keyAreas={keyAreas} />
 
-        {/* Watch + weekly row (7/12 + 5/12) — use existing sections for now */}
+        {/* Watch + weekly row (7/12 + 5/12) */}
         <div className="dashboard-grid-12">
           <div className="col-span-12 lg:col-span-7">
-            <WhatToWatchNow />
+            <WhatToWatchNow keyAreas={keyAreas} signals={signals} />
           </div>
           <div className="col-span-12 lg:col-span-5">
             <WeeklyInsightsSummary />
@@ -81,8 +125,9 @@ export function DashboardV3() {
         </div>
 
         <PrioritiesRightNow />
+        <TrackTheseOverTime />
 
-        {/* Progress + labs row — use tracking module as progress placeholder */}
+        {/* Progress + labs row */}
         <div className="dashboard-grid-12">
           <div className="col-span-12 lg:col-span-7">
             <ProgressTrendsCard />
@@ -99,4 +144,3 @@ export function DashboardV3() {
     </div>
   );
 }
-

@@ -1,0 +1,27 @@
+{
+  "_fixture": "perimenopause_pattern",
+  "_description": "Perimenopause life stage with cycle variability, sleep disruption, hormonal symptoms, stress sensitivity.",
+  "survey": {
+    "life_stage": "Perimenopause",
+    "age_years": 46,
+    "cycle_regularity": "Somewhat irregular",
+    "cycle_linked_symptoms": "Significant",
+    "hormone_symptoms": "Significant",
+    "sleep_quality": 2,
+    "night_waking": "Most nights",
+    "unrefreshing_sleep": "Often",
+    "stress_level": 3,
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 4,
+    "skin_hair_changes": "Moderate"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_HORMONAL_VARIABILITY", "SIG_CYCLE_LINKED_PATTERN", "SIG_SLEEP_DISRUPTION", "SIG_PERSISTENT_FATIGUE"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY"],
+    "hero_code": "HERO_HORMONAL_VARIABILITY",
+    "key_area_attention": ["hormones", "sleep", "energy"],
+    "life_stage": "perimenopause",
+    "confidence_band": "high"
+  }
+}
