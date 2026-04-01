@@ -3,6 +3,7 @@ import { DesignConceptSection } from "@/components/sections/DesignConceptSection
 import { PersonalizationSection } from "@/components/sections/PersonalizationSection";
 import { MirrorSection } from "@/components/sections/MirrorSection";
 import { ReframeSection } from "@/components/sections/ReframeSection";
+import { HealthIntelligenceReelSection } from "@/components/sections/HealthIntelligenceReelSection";
 import { ProductIntroSection } from "@/components/sections/ProductIntroSection";
 import { JourneySection } from "@/components/sections/JourneySection";
 import { KnowledgeSection } from "@/components/home/KnowledgeSection";
@@ -22,6 +23,7 @@ export default function Home() {
       <PersonalizationSection />
       <KnowledgeSection />
       <JourneySection />
+      <HealthIntelligenceReelSection />
       <ProductIntroSection />
       <HowItWorksSection />
       <IdentitySection />

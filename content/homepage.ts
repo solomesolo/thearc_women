@@ -724,6 +724,22 @@ export const homepageContent = {
     founderTitle: "Founder",
     imageSrc: "/images/IMG_8091-modified.JPG",
     imageAlt: "Portrait of Anna Solovyova",
+    secondary: {
+      label: "FOUNDER'S NOTE",
+      headline: "Health restored. Spaces humanized. Midlife redefined.",
+      paragraphs: [
+        "For over two decades, I moved through the high-octane worlds of L'Oréal, McKinsey, and Bertelsmann. I understood the language of strategy, leadership, and relentless drive.",
+        "But along the way, I rediscovered a fundamental truth we often overlook in our pursuit of “success”: we are 100% sensory beings. Our wellbeing is not just a matter of nutrition or movement; it is shaped by the invisible architecture of our lives—the light, the scent, the sound, and the very spaces we inhabit.",
+        "My work now sits at the intersection of longevity science, female health, and this “invisible architecture”. I believe midlife is not a decline to be managed, but a threshold to be crossed with intention. It is a time to redefine what it means to thrive.",
+        "My journey from the boardroom to the yoga mat—and through the rigorous training of the Institute for Integrative Nutrition—has led me to a singular mission. I want to contribute to a world where preventive health is the new normal and where the spaces we occupy quietly support our longevity.",
+        "Whether through my private practice or my research into the wellness dimension of spaces, I am here to help you return to yourself. Let’s stop forgetting how much our environment shapes us and start building a life that feels genuinely aligned.",
+        "With warmth and curiosity,",
+      ],
+      founderName: "Babette Frommeyer",
+      founderTitle: "Founder",
+      imageSrc: "/images/babette-frommeyer.png",
+      imageAlt: "Portrait of Babette Frommeyer",
+    },
   },
   finalCta: {
     headline:

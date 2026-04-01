@@ -14,6 +14,15 @@ type FounderMessageSectionProps = {
   founderTitle: string;
   imageSrc: string;
   imageAlt: string;
+  secondary?: {
+    label: string;
+    headline: string;
+    paragraphs: readonly string[];
+    founderName: string;
+    founderTitle: string;
+    imageSrc: string;
+    imageAlt: string;
+  };
 };
 
 const defaultContent = (homepageContent as any).founderMessage ?? {
@@ -39,6 +48,7 @@ export function FounderMessageSection({
   founderTitle = defaultContent.founderTitle,
   imageSrc = defaultContent.imageSrc,
   imageAlt = defaultContent.imageAlt,
+  secondary = (defaultContent as any).secondary,
 }: FounderMessageSectionProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -64,7 +74,7 @@ export function FounderMessageSection({
           viewport={{ once: true, amount: 0.3 }}
           variants={containerVariants}
         >
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-14 lg:gap-16 md:items-center">
+          <div className="grid grid-cols-1 gap-14 md:grid-cols-12 md:gap-14 lg:gap-16 md:items-center">
             {/* Image left on desktop, top on mobile */}
             <div className="md:col-span-5">
               <div className="overflow-hidden rounded-[22px] md:rounded-[24px]">
@@ -107,6 +117,54 @@ export function FounderMessageSection({
               </div>
             </div>
           </div>
+
+          {secondary && (
+            <div className="mt-16 md:mt-20">
+              <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-14 lg:gap-16 md:items-center">
+                {/* Text left */}
+                <div className="md:col-span-7 md:order-1">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-[rgba(0,0,0,0.55)]">
+                    {secondary.label}
+                  </p>
+                  <h2 className="mt-3 text-[1.9rem] font-semibold leading-[1.1] tracking-tight text-[var(--text-primary)] md:text-[2.25rem] lg:text-[2.5rem]">
+                    {secondary.headline}
+                  </h2>
+                  <div className="mt-6 space-y-4 md:space-y-4.5 max-w-[38.75rem]">
+                    {secondary.paragraphs.map((p, i) => (
+                      <p
+                        key={i}
+                        className="text-[0.98rem] leading-[1.75] text-[rgba(0,0,0,0.78)] md:text-[1.05rem]"
+                      >
+                        {p}
+                      </p>
+                    ))}
+                  </div>
+                  <div className="mt-6">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {secondary.founderName}
+                    </p>
+                    <p className="mt-0.5 text-[0.9rem] text-[rgba(0,0,0,0.6)]">
+                      {secondary.founderTitle}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Image right */}
+                <div className="md:col-span-5 md:order-2">
+                  <div className="overflow-hidden rounded-[22px] md:rounded-[24px]">
+                    <Image
+                      src={secondary.imageSrc}
+                      alt={secondary.imageAlt}
+                      width={700}
+                      height={880}
+                      className="h-full w-full object-cover grayscale"
+                      priority={false}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
       </Container>
     </Section>
