@@ -89,9 +89,21 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeRange = (searchParams.get("timeRange") as "today" | "7d" | "30d") || "7d";
 
-  const profile = await prisma.userProfile.findUnique({
-    where: { email: session.user.email },
-  });
+  let profile: Awaited<ReturnType<typeof prisma.userProfile.findUnique>> = null;
+  try {
+    profile = await prisma.userProfile.findUnique({
+      where: { email: session.user.email },
+    });
+  } catch (e) {
+    console.error("Dashboard API: profile lookup failed:", e);
+    return Response.json({
+      _source: "dummy",
+      timeRange,
+      payload: getDummyPayloadByTimeRange(timeRange),
+      _surveyDataPresent: false,
+      _profileError: true,
+    });
+  }
 
   const surveyResponses = profile?.surveyResponses as Record<string, unknown> | null | undefined;
   const hasSurveyData =

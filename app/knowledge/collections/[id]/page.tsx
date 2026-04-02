@@ -17,7 +17,15 @@ export default async function CollectionDetailPage({
     redirect(`/login?callbackUrl=${encodeURIComponent(`/knowledge/collections/${id}`)}`);
   }
 
-  const collection = await getCollection(email, Number(id));
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId)) notFound();
+
+  let collection: Awaited<ReturnType<typeof getCollection>> = null;
+  try {
+    collection = await getCollection(email, numericId);
+  } catch (err) {
+    console.error("[collection detail] getCollection failed", err);
+  }
   if (!collection) notFound();
 
   return (

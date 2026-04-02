@@ -25,12 +25,31 @@ export default async function KnowledgePage() {
     );
   }
 
-  const [recentlyViewed, saved, collections, unreadNotifications] = await Promise.all([
-    getRecentlyViewed(email, 8),
-    getSavedArticles(email),
-    getCollections(email),
-    getUnreadCount(email),
-  ]);
+  let recentlyViewed: Awaited<ReturnType<typeof getRecentlyViewed>> = [];
+  let saved: Awaited<ReturnType<typeof getSavedArticles>> = [];
+  let collections: Awaited<ReturnType<typeof getCollections>> = [];
+  let unreadNotifications = 0;
+
+  try {
+    recentlyViewed = await getRecentlyViewed(email, 8);
+  } catch (err) {
+    console.error("[knowledge page] getRecentlyViewed failed", err);
+  }
+  try {
+    saved = await getSavedArticles(email);
+  } catch (err) {
+    console.error("[knowledge page] getSavedArticles failed", err);
+  }
+  try {
+    collections = await getCollections(email);
+  } catch (err) {
+    console.error("[knowledge page] getCollections failed", err);
+  }
+  try {
+    unreadNotifications = await getUnreadCount(email);
+  } catch (err) {
+    console.error("[knowledge page] getUnreadCount failed", err);
+  }
 
   return (
     <Container className="py-10 md:py-14">

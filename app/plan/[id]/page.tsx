@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Container } from "@/components/ui/Container";
@@ -12,12 +12,21 @@ export default async function PlanDetailPage({
 }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  const email = session!.user!.email!;
+  const email = session?.user?.email;
+  if (!email) redirect(`/login?callbackUrl=${encodeURIComponent(`/plan/${id}`)}`);
 
-  const [plan, recentLogs] = await Promise.all([
-    getPlan(email, Number(id)),
-    getRecentLogs(email, 10),
-  ]);
+  let plan: Awaited<ReturnType<typeof getPlan>> = null;
+  let recentLogs: Awaited<ReturnType<typeof getRecentLogs>> = [];
+  try {
+    plan = await getPlan(email, Number(id));
+  } catch (err) {
+    console.error("[plan detail] getPlan failed", err);
+  }
+  try {
+    recentLogs = await getRecentLogs(email, 10);
+  } catch (err) {
+    console.error("[plan detail] getRecentLogs failed", err);
+  }
 
   if (!plan) notFound();
 

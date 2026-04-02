@@ -4,14 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { getNotifications, getUnreadCount } from "@/lib/notifications/queries";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const filter = (new URL(req.url).searchParams.get("filter") ?? "all") as "all" | "unread";
-  const [notifications, unreadCount] = await Promise.all([
-    getNotifications(session.user.email, filter),
-    getUnreadCount(session.user.email),
-  ]);
+    const filter = (new URL(req.url).searchParams.get("filter") ?? "all") as "all" | "unread";
+    const [notifications, unreadCount] = await Promise.all([
+      getNotifications(session.user.email, filter),
+      getUnreadCount(session.user.email),
+    ]);
 
-  return NextResponse.json({ notifications, unreadCount });
+    return NextResponse.json({ notifications, unreadCount });
+  } catch (err) {
+    console.error("[GET /api/notifications]", err);
+    return NextResponse.json({ notifications: [], unreadCount: 0 });
+  }
 }

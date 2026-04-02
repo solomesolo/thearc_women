@@ -50,28 +50,27 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.email = token.email as string;
-        const disableLookup = process.env.DISABLE_SUBSCRIBER_LOOKUP === "1";
-        const lookupTimeoutMs = Number(process.env.SUBSCRIBER_LOOKUP_TIMEOUT_MS ?? 1500);
-        if (disableLookup) {
-          (session.user as { isSubscriber?: boolean }).isSubscriber = false;
-          return session;
-        }
+      if (!session?.user) return session;
+      session.user.email = token.email as string;
+      const disableLookup = process.env.DISABLE_SUBSCRIBER_LOOKUP === "1";
+      const lookupTimeoutMs = Number(process.env.SUBSCRIBER_LOOKUP_TIMEOUT_MS ?? 1500);
+      if (disableLookup) {
+        (session.user as { isSubscriber?: boolean }).isSubscriber = false;
+        return session;
+      }
 
-        try {
-          const sub = await withTimeout(
-            prisma.subscriber.findUnique({
-              where: { email: token.email as string },
-            }),
-            lookupTimeoutMs,
-            `subscriber_lookup_timeout_${lookupTimeoutMs}ms`
-          );
-          (session.user as { isSubscriber?: boolean }).isSubscriber = sub?.isActive ?? false;
-        } catch {
-          // Keep auth/session fast and resilient; subscriber status is optional UI personalization.
-          (session.user as { isSubscriber?: boolean }).isSubscriber = false;
-        }
+      try {
+        const sub = await withTimeout(
+          prisma.subscriber.findUnique({
+            where: { email: token.email as string },
+          }),
+          lookupTimeoutMs,
+          `subscriber_lookup_timeout_${lookupTimeoutMs}ms`
+        );
+        (session.user as { isSubscriber?: boolean }).isSubscriber = sub?.isActive ?? false;
+      } catch {
+        // Keep auth/session fast and resilient; subscriber status is optional UI personalization.
+        (session.user as { isSubscriber?: boolean }).isSubscriber = false;
       }
       return session;
     },
