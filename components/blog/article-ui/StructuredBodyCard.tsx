@@ -12,6 +12,16 @@
 import * as React from "react";
 
 import { stripMarkdownBoldMarkers } from "@/lib/stripMarkdownBoldMarkers";
+import type { ActionCardData } from "@/lib/blog/parseActionProtocol";
+import {
+  blockText,
+  parseActionCards,
+  parseBullets,
+  parseMarkdownHeadingBlocks,
+  pickBlock,
+  pickKeyActionsBlock,
+  stripActionCard,
+} from "@/lib/blog/parseActionProtocol";
 
 const SECTION_META: Record<
   number,
@@ -40,156 +50,6 @@ function parseSteps(body: string): string[] {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
-}
-
-type HeadingBlock = {
-  heading: string;
-  level: number;
-  content: string;
-};
-
-function parseMarkdownHeadingBlocks(body: string): HeadingBlock[] {
-  const lines = body.replace(/\r\n/g, "\n").split("\n");
-  const blocks: HeadingBlock[] = [];
-  let current: { heading: string; level: number; contentLines: string[] } | null = null;
-
-  const flush = () => {
-    if (!current) return;
-    blocks.push({
-      heading: current.heading,
-      level: current.level,
-      content: current.contentLines.join("\n").trim(),
-    });
-    current = null;
-  };
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-    const m = /^(#{2,4})\s+(.+?)\s*$/.exec(line.trim());
-    if (m) {
-      flush();
-      current = { heading: m[2], level: m[1].length, contentLines: [] };
-      continue;
-    }
-    if (!current) continue;
-    current.contentLines.push(line);
-  }
-
-  flush();
-  return blocks;
-}
-
-function pickBlock(blocks: HeadingBlock[], name: string): HeadingBlock | null {
-  const norm = (s: string) => s.trim().toLowerCase();
-  const needle = norm(name);
-  return blocks.find((b) => norm(b.heading) === needle) ?? null;
-}
-
-function parseBullets(text: string): string[] {
-  return text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .filter((l) => /^[-*]\s+/.test(l))
-    .map((l) => stripMarkdownBoldMarkers(l.replace(/^[-*]\s+/, "").trim()));
-}
-
-type ActionCardData = {
-  title: string;
-  why: string | null;
-  practiceBullets: string[];
-  who: string | null;
-  mistake: string | null;
-  rawRemainder: string | null;
-};
-
-function blockText(block: HeadingBlock | null | undefined): string {
-  return stripMarkdownBoldMarkers(block?.content?.trim() ?? "");
-}
-
-function stripActionCard(action: ActionCardData): ActionCardData {
-  return {
-    title: stripMarkdownBoldMarkers(action.title),
-    why: action.why ? stripMarkdownBoldMarkers(action.why) : null,
-    practiceBullets: action.practiceBullets.map(stripMarkdownBoldMarkers),
-    who: action.who ? stripMarkdownBoldMarkers(action.who) : null,
-    mistake: action.mistake ? stripMarkdownBoldMarkers(action.mistake) : null,
-    rawRemainder: action.rawRemainder ? stripMarkdownBoldMarkers(action.rawRemainder) : null,
-  };
-}
-
-function parseActionCards(keyActionsContent: string): ActionCardData[] {
-  const src = keyActionsContent.replace(/\r\n/g, "\n").trim();
-  if (!src) return [];
-
-  // Prefer "### Action title" splits if present.
-  const byH3 = src.split(/\n(?=###\s+)/g).map((s) => s.trim()).filter(Boolean);
-  const chunks =
-    byH3.length > 1 || byH3[0]?.startsWith("### ")
-      ? byH3
-      : // Fallback: split by bold title lines like "**Balanced diet**"
-        src.split(/\n(?=\*\*[^*\n]{3,80}\*\*\s*$)/g).map((s) => s.trim()).filter(Boolean);
-
-  return chunks
-    .map((chunk) => {
-      let title = "Action";
-      let rest = chunk;
-
-      const h3 = /^###\s+(.+?)\s*$/m.exec(chunk);
-      if (h3) {
-        title = h3[1].trim();
-        rest = chunk.replace(/^###\s+(.+?)\s*$/m, "").trim();
-      } else {
-        const boldTitle = /^\*\*([^*\n]+)\*\*\s*$/m.exec(chunk);
-        if (boldTitle) {
-          title = boldTitle[1].trim();
-          rest = chunk.replace(/^\*\*([^*\n]+)\*\*\s*$/m, "").trim();
-        }
-      }
-
-      const section = (label: string): string | null => {
-        const re = new RegExp(
-          String.raw`(?:^|\n)\s*(?:\*\*)?${label}(?:\*\*)?\s*:?\s*(.+?)(?=\n\s*(?:\*\*)?(?:Why it matters|What it looks like in practice|Who this helps most|Who it may be especially useful for|Common mistake|Common mistake or caution)(?:\*\*)?\s*:?\s*|\n###\s+|\n\*\*[^*\n]+\*\*\s*$|$)`,
-          "is"
-        );
-        const m = re.exec(rest);
-        return m ? m[1].trim() : null;
-      };
-
-      const why =
-        section("Why it matters") ??
-        section("Why this matters");
-      const practice =
-        section("What it looks like in practice") ??
-        section("What it looks like") ??
-        null;
-      const who =
-        section("Who this helps most") ??
-        section("Who it may be especially useful for") ??
-        null;
-      const mistake =
-        section("Common mistake") ??
-        section("Common mistake or caution") ??
-        section("Caution") ??
-        null;
-
-      const practiceBullets = practice ? parseBullets(practice) : [];
-
-      // Preserve any leftover text for safety (maintain information).
-      const consumedParts = [why, practice, who, mistake].filter(Boolean).join("\n");
-      const rawRemainder =
-        consumedParts.length === 0 ? rest : rest.replace(consumedParts, "").trim() || null;
-
-      return {
-        title,
-        why: why ? why.split(/\n{2,}/)[0].trim() : null,
-        practiceBullets,
-        who: who ? who.split(/\n{2,}/)[0].trim() : null,
-        mistake: mistake ? mistake.split(/\n{2,}/)[0].trim() : null,
-        rawRemainder,
-      } satisfies ActionCardData;
-    })
-    .filter((a) => a.title && (a.why || a.practiceBullets.length > 0 || a.who || a.mistake || a.rawRemainder));
 }
 
 function clampToLines(text: string, maxParagraphs: number): string {
@@ -341,7 +201,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
   const who = pickBlock(blocks, "Who this is most relevant for");
   const priorityOrder = pickBlock(blocks, "Priority order");
   const prioritizeFirst = pickBlock(blocks, "What to prioritize first");
-  const keyActions = pickBlock(blocks, "Key actions");
+  const keyActions = pickKeyActionsBlock(blocks);
   const clarify = pickBlock(blocks, "What may help clarify this pattern");
   const clinician = pickBlock(blocks, "When clinician discussion may make sense");
   const notAssume = pickBlock(blocks, "What not to assume");

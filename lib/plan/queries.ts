@@ -133,6 +133,49 @@ export async function createPlanItem(
   return toPlanItemRow(item);
 }
 
+const BATCH_MAX = 30;
+
+export async function createPlanItemsBatch(
+  email: string,
+  planId: number,
+  data: {
+    articleId: number | null;
+    items: { title: string; description?: string | null; timing?: string }[];
+  }
+): Promise<PlanItemRow[]> {
+  const plan = await prisma.healthPlan.findFirst({
+    where: { id: planId, email },
+    select: { id: true },
+  });
+  if (!plan) throw new Error("Plan not found");
+
+  const slice = data.items.slice(0, BATCH_MAX).filter((i) => i.title.trim().length > 0);
+  if (slice.length === 0) throw new Error("No items");
+
+  const maxRow = await prisma.planItem.aggregate({
+    where: { planId },
+    _max: { sortOrder: true },
+  });
+  let order = (maxRow._max.sortOrder ?? -1) + 1;
+
+  const created: PlanItemRow[] = [];
+  for (const item of slice) {
+    const row = await prisma.planItem.create({
+      data: {
+        planId,
+        title: item.title.trim().slice(0, 500),
+        description: item.description?.trim() ? item.description.trim().slice(0, 16000) : null,
+        timing: item.timing ?? "anytime",
+        sortOrder: order++,
+        articleId: data.articleId,
+      },
+      include: { article: { select: { slug: true, title: true } } },
+    });
+    created.push(toPlanItemRow(row));
+  }
+  return created;
+}
+
 export async function updatePlanItem(
   email: string,
   itemId: number,

@@ -9,7 +9,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { InsightCard } from "./InsightCard";
-import { ARTICLE_SAVE_EVENT, dispatchArticleSaved, type ArticleSaveDetail } from "@/lib/articleSaveSync";
+import {
+  ARTICLE_SAVE_EVENT,
+  dispatchArticleSaved,
+  dispatchPostSaveProtocolPrompt,
+  type ArticleSaveDetail,
+} from "@/lib/articleSaveSync";
 
 type TagItem = { slug: string; label: string; type: string };
 
@@ -93,6 +98,7 @@ export function SignalSummaryCard({
   }, [articleId]);
 
   async function handleSave() {
+    const priorSaved = saved;
     setSaveLoading(true);
     try {
       const res = await fetch("/api/saved-articles", {
@@ -107,6 +113,9 @@ export function SignalSummaryCard({
       const data = await res.json();
       setSaved(data.saved);
       dispatchArticleSaved({ articleId, saved: data.saved });
+      if (data.saved && !priorSaved && isLoggedIn) {
+        dispatchPostSaveProtocolPrompt({ articleId });
+      }
     } finally {
       setSaveLoading(false);
     }

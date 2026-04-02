@@ -181,7 +181,7 @@ async function fetchAndCleanArticleBody(articleUrl: string): Promise<string | nu
     clearTimeout(timeout);
     if (!res.ok) return null;
     const html = await res.text();
-    const $ = cheerio.load(html, { decodeEntities: true });
+    const $ = cheerio.load(html);
 
     // Remove navigation, ads, references, footnotes, sidebars
     const removeSelectors = [

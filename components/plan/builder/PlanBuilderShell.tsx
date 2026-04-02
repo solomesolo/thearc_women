@@ -41,6 +41,7 @@ export function PlanBuilderShell() {
   const sourceArticleId = searchParams.get("sourceArticleId");
 
   const [step, setStep] = useState(0);
+  const [step2Key, setStep2Key] = useState(0);
   const [state, setState] = useState<BuilderState>({
     name: "",
     sourceType: "manual",
@@ -51,6 +52,35 @@ export function PlanBuilderShell() {
   function next(partial: Partial<BuilderState>) {
     setState((prev) => ({ ...prev, ...partial }));
     setStep((s) => s + 1);
+  }
+
+  async function completeStep1(data: Partial<BuilderState>) {
+    let items: PlanBuilderItem[] = [];
+
+    if (data.sourceType === "articles" && sourceArticleId) {
+      const aid = Number(sourceArticleId);
+      if (Number.isFinite(aid) && aid > 0) {
+        try {
+          const r = await fetch(`/api/articles/${aid}/action-protocol`);
+          const j = await r.json();
+          const parsed = (j.items ?? []) as { title: string; description: string }[];
+          if (parsed.length > 0) {
+            items = parsed.map((i) => ({
+              title: i.title,
+              description: i.description,
+              timing: "anytime",
+              articleId: aid,
+            }));
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    setState((prev) => ({ ...prev, ...data, items }));
+    setStep2Key((k) => k + 1);
+    setStep(1);
   }
 
   function back() {
@@ -106,11 +136,12 @@ export function PlanBuilderShell() {
       {step === 0 && (
         <Step1SourceSelection
           initialSourceArticleId={sourceArticleId ? Number(sourceArticleId) : null}
-          onNext={(data) => next(data)}
+          onNext={completeStep1}
         />
       )}
       {step === 1 && (
         <Step2ItemBuilder
+          key={step2Key}
           initialItems={state.items}
           onNext={(items) => next({ items })}
           onBack={back}

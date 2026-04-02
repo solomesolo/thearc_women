@@ -6,7 +6,7 @@ import type { BuilderState } from "./PlanBuilderShell";
 
 type Props = {
   initialSourceArticleId: number | null;
-  onNext: (data: Partial<BuilderState>) => void;
+  onNext: (data: Partial<BuilderState>) => void | Promise<void>;
 };
 
 const SOURCE_OPTIONS = [
@@ -35,10 +35,16 @@ export function Step1SourceSelection({ initialSourceArticleId, onNext }: Props) 
     initialSourceArticleId ? "articles" : "manual"
   );
   const [planName, setPlanName] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function handleNext() {
-    if (!planName.trim()) return;
-    onNext({ name: planName.trim(), sourceType });
+  async function handleNext() {
+    if (!planName.trim() || busy) return;
+    setBusy(true);
+    try {
+      await onNext({ name: planName.trim(), sourceType });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -93,10 +99,10 @@ export function Step1SourceSelection({ initialSourceArticleId, onNext }: Props) 
       <button
         type="button"
         onClick={handleNext}
-        disabled={!planName.trim()}
+        disabled={!planName.trim() || busy}
         className="w-full rounded-[14px] bg-black/90 py-3 text-[14px] font-semibold text-white disabled:opacity-40 hover:opacity-85 transition-opacity"
       >
-        Next — Add items
+        {busy ? "Loading…" : "Next — Add items"}
       </button>
     </div>
   );

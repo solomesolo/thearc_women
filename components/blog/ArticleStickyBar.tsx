@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ARTICLE_SAVE_EVENT, dispatchArticleSaved, type ArticleSaveDetail } from "@/lib/articleSaveSync";
+import {
+  ARTICLE_SAVE_EVENT,
+  POST_SAVE_PROTOCOL_EVENT,
+  dispatchArticleSaved,
+  type ArticleSaveDetail,
+} from "@/lib/articleSaveSync";
 import type { PlanSummary } from "@/lib/knowledge/types";
+import { PostSaveProtocolModal } from "@/components/blog/PostSaveProtocolModal";
 
 type Props = {
   articleId: number;
@@ -34,11 +40,30 @@ function PlanPickerPopover({
   }, []);
 
   async function addToPlan(planId: number) {
-    await fetch(`/api/plans/${planId}/items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: articleTitle, articleId, timing: "anytime" }),
-    });
+    const protoRes = await fetch(`/api/articles/${articleId}/action-protocol`);
+    const proto = await protoRes.json().catch(() => ({}));
+    const items = Array.isArray(proto.items) ? proto.items : [];
+
+    if (items.length > 0) {
+      await fetch(`/api/plans/${planId}/items/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId,
+          items: items.map((i: { title: string; description: string }) => ({
+            title: i.title,
+            description: i.description,
+            timing: "anytime",
+          })),
+        }),
+      });
+    } else {
+      await fetch(`/api/plans/${planId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: articleTitle, articleId, timing: "anytime" }),
+      });
+    }
     setAdded((prev) => new Set(prev).add(planId));
   }
 
@@ -97,13 +122,29 @@ function PlanPickerPopover({
   );
 }
 
+type ProtocolItem = { title: string; description: string };
+
 export function ArticleStickyBar({ articleId, articleTitle, initialSaved, isLoggedIn }: Props) {
   const [saved, setSaved] = useState(initialSaved);
   const [saveLoading, setSaveLoading] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const [protocolModalOpen, setProtocolModalOpen] = useState(false);
+  const [protocolItems, setProtocolItems] = useState<ProtocolItem[]>([]);
   const popoverRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  const checkProtocolAndOpen = useCallback(() => {
+    fetch(`/api/articles/${articleId}/action-protocol`)
+      .then((r) => r.json())
+      .then((d: { items?: ProtocolItem[] }) => {
+        const list = d.items ?? [];
+        if (list.length === 0) return;
+        setProtocolItems(list);
+        setProtocolModalOpen(true);
+      })
+      .catch(() => {});
+  }, [articleId]);
 
   // Track view on mount
   useEffect(() => {
@@ -123,6 +164,16 @@ export function ArticleStickyBar({ articleId, articleTitle, initialSaved, isLogg
     return () => window.removeEventListener(ARTICLE_SAVE_EVENT, onSynced);
   }, [articleId]);
 
+  useEffect(() => {
+    function onPostSave(e: Event) {
+      const ce = e as CustomEvent<{ articleId: number }>;
+      if (ce.detail?.articleId !== articleId) return;
+      checkProtocolAndOpen();
+    }
+    window.addEventListener(POST_SAVE_PROTOCOL_EVENT, onPostSave);
+    return () => window.removeEventListener(POST_SAVE_PROTOCOL_EVENT, onPostSave);
+  }, [articleId, checkProtocolAndOpen]);
+
   // Close popover on outside click
   useEffect(() => {
     if (!planOpen) return;
@@ -136,6 +187,7 @@ export function ArticleStickyBar({ articleId, articleTitle, initialSaved, isLogg
   }, [planOpen]);
 
   async function handleSave() {
+    const priorSaved = saved;
     setSaveLoading(true);
     try {
       const res = await fetch("/api/saved-articles", {
@@ -151,12 +203,16 @@ export function ArticleStickyBar({ articleId, articleTitle, initialSaved, isLogg
       const data = await res.json();
       setSaved(data.saved);
       dispatchArticleSaved({ articleId, saved: data.saved });
+      if (data.saved && !priorSaved && isLoggedIn) {
+        checkProtocolAndOpen();
+      }
     } finally {
       setSaveLoading(false);
     }
   }
 
   return (
+    <>
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/[0.07] bg-white/95 backdrop-blur-md px-4 py-3 print:hidden">
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
         <p className="hidden sm:block text-[13px] text-[var(--text-secondary)] truncate max-w-xs">
@@ -200,5 +256,13 @@ export function ArticleStickyBar({ articleId, articleTitle, initialSaved, isLogg
         </div>
       </div>
     </div>
+    <PostSaveProtocolModal
+      open={protocolModalOpen}
+      onClose={() => setProtocolModalOpen(false)}
+      articleId={articleId}
+      articleTitle={articleTitle}
+      items={protocolItems}
+    />
+    </>
   );
 }
