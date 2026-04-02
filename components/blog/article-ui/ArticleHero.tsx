@@ -15,6 +15,8 @@ type Section = { sectionIndex: number; title: string | null; isGated: boolean };
 type TagItem = { slug: string; label: string; type: string };
 
 type ArticleHeroProps = {
+  articleId: number;
+  articleSlug: string;
   title: string;
   excerpt: string;
   category: string | null;
@@ -23,6 +25,8 @@ type ArticleHeroProps = {
   readingTimeMinutes?: number | null;
   tags: TagItem[];
   sections: Section[];
+  isLoggedIn: boolean;
+  initialSaved: boolean;
   isSubscriber?: boolean;
 };
 
@@ -69,7 +73,7 @@ function ContentMap({
   return (
     <div className="rounded-[14px] border border-black/[0.07] bg-[#f8f7f5] px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-widest text-black/40 mb-2.5">
-        This insight includes
+        This article includes
       </p>
       <ul className="space-y-1.5">
         <li className="flex items-center gap-2.5 text-[13px] text-black/75">
@@ -115,6 +119,8 @@ function ContentMap({
 }
 
 export function ArticleHero({
+  articleId,
+  articleSlug,
   title,
   excerpt,
   category,
@@ -123,6 +129,8 @@ export function ArticleHero({
   readingTimeMinutes,
   tags,
   sections,
+  isLoggedIn,
+  initialSaved,
   isSubscriber = false,
 }: ArticleHeroProps) {
   const hasGated = sections.some((s) => s.isGated);
@@ -137,7 +145,7 @@ export function ArticleHero({
         className="inline-flex items-center gap-1.5 text-[13px] font-medium text-black/45 hover:text-black/75 transition-colors"
       >
         <span aria-hidden>←</span>
-        All insights
+        Knowledge Base
       </Link>
 
       {/* Two-column grid */}
@@ -211,8 +219,12 @@ export function ArticleHero({
         {/* ── Right: Signal summary card ── */}
         <div className="lg:col-span-5">
           <SignalSummaryCard
+            articleId={articleId}
+            articleSlug={articleSlug}
             evidenceLevel={evidenceLevel}
             tags={tags}
+            isLoggedIn={isLoggedIn}
+            initialSaved={initialSaved}
             isSubscriber={isSubscriber}
             hasGatedContent={hasGated}
           />

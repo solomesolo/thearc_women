@@ -59,6 +59,9 @@ type RelatedArticle = {
 
 type ArticleTemplateProps = {
   slug: string;
+  articleId: number;
+  isLoggedIn: boolean;
+  initialSaved: boolean;
   title: string;
   excerpt: string;
   category: string | null;
@@ -81,7 +84,10 @@ function byIndex(sections: Section[], idx: number): Section | undefined {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ArticleTemplate({
-  slug: _slug,
+  slug,
+  articleId,
+  isLoggedIn,
+  initialSaved,
   title,
   excerpt,
   category,
@@ -120,6 +126,8 @@ export function ArticleTemplate({
       <article className="pb-20">
         {/* ── Above-the-fold hero ── */}
         <ArticleHero
+          articleId={articleId}
+          articleSlug={slug}
           title={title}
           excerpt={excerpt}
           category={category}
@@ -128,6 +136,8 @@ export function ArticleTemplate({
           readingTimeMinutes={readingTimeMinutes}
           tags={tags}
           sections={navSections}
+          isLoggedIn={isLoggedIn}
+          initialSaved={initialSaved}
           isSubscriber={isSubscriber}
         />
 
@@ -244,7 +254,7 @@ export function ArticleTemplate({
         <aside className="border-t border-[var(--color-border-hairline)] pt-10 pb-20">
           <div className="mb-6">
             <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-              Related insights
+              Related in the Knowledge Base
             </h2>
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
               By shared focus and tags

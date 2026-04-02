@@ -11,6 +11,8 @@
 
 import * as React from "react";
 
+import { stripMarkdownBoldMarkers } from "@/lib/stripMarkdownBoldMarkers";
+
 const SECTION_META: Record<
   number,
   { frameLabel: string; accentColor: string; dotColor: string }
@@ -89,7 +91,7 @@ function parseBullets(text: string): string[] {
     .map((l) => l.trim())
     .filter(Boolean)
     .filter((l) => /^[-*]\s+/.test(l))
-    .map((l) => l.replace(/^[-*]\s+/, "").trim());
+    .map((l) => stripMarkdownBoldMarkers(l.replace(/^[-*]\s+/, "").trim()));
 }
 
 type ActionCardData = {
@@ -100,6 +102,21 @@ type ActionCardData = {
   mistake: string | null;
   rawRemainder: string | null;
 };
+
+function blockText(block: HeadingBlock | null | undefined): string {
+  return stripMarkdownBoldMarkers(block?.content?.trim() ?? "");
+}
+
+function stripActionCard(action: ActionCardData): ActionCardData {
+  return {
+    title: stripMarkdownBoldMarkers(action.title),
+    why: action.why ? stripMarkdownBoldMarkers(action.why) : null,
+    practiceBullets: action.practiceBullets.map(stripMarkdownBoldMarkers),
+    who: action.who ? stripMarkdownBoldMarkers(action.who) : null,
+    mistake: action.mistake ? stripMarkdownBoldMarkers(action.mistake) : null,
+    rawRemainder: action.rawRemainder ? stripMarkdownBoldMarkers(action.rawRemainder) : null,
+  };
+}
 
 function parseActionCards(keyActionsContent: string): ActionCardData[] {
   const src = keyActionsContent.replace(/\r\n/g, "\n").trim();
@@ -336,19 +353,19 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
   const priority3 =
     blocks.find((b) => b.level === 3 && /^priority 3\b/i.test(b.heading)) ?? null;
 
-  const actions = React.useMemo(() => parseActionCards(keyActions?.content ?? ""), [keyActions?.content]);
+  const actions = React.useMemo(
+    () => parseActionCards(keyActions?.content ?? "").map(stripActionCard),
+    [keyActions?.content],
+  );
 
   const [goalExpanded, setGoalExpanded] = React.useState(false);
-  const goalText = goal?.content?.trim() ?? "";
+  const goalText = blockText(goal);
   const goalPreview = clampToLines(goalText, 2);
   const goalNeedsMore = goalPreview.length > 0 && goalPreview.length < goalText.length;
 
   const whoItems = parseBullets(who?.content ?? "");
 
-  const startHereContent = [
-    prioritizeFirst?.content?.trim(),
-    priority1?.content?.trim(),
-  ]
+  const startHereContent = [blockText(prioritizeFirst), blockText(priority1)]
     .filter(Boolean)
     .join("\n\n")
     .trim();
@@ -395,7 +412,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
             </div>
           ) : (
             <div className="text-[14px] leading-[1.75] text-[var(--text-secondary)] whitespace-pre-wrap">
-              {body}
+              {stripMarkdownBoldMarkers(body)}
             </div>
           )}
         </CollapsibleModule>
@@ -420,7 +437,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
             </div>
           ) : who?.content ? (
             <div className="text-[14px] leading-[1.75] text-[var(--text-secondary)] whitespace-pre-wrap">
-              {who.content}
+              {blockText(who)}
             </div>
           ) : null}
         </CollapsibleModule>
@@ -454,7 +471,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
               actions.map((a) => <ActionExpandableCard key={a.title} action={a} />)
             ) : keyActions?.content ? (
               <div className="text-[14px] leading-[1.75] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {keyActions.content}
+                {blockText(keyActions)}
               </div>
             ) : null}
           </div>
@@ -473,13 +490,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
                 Refine your approach
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {[
-                  priority2?.content?.trim(),
-                  priority3?.content?.trim(),
-                  clarify?.content?.trim(),
-                ]
-                  .filter(Boolean)
-                  .join("\n\n")}
+                {[blockText(priority2), blockText(priority3), blockText(clarify)].filter(Boolean).join("\n\n")}
               </div>
             </div>
 
@@ -488,7 +499,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
                 When to consider extra support
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {clinician?.content?.trim() ?? ""}
+                {blockText(clinician)}
               </div>
             </div>
 
@@ -497,7 +508,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
                 Important context
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {notAssume?.content?.trim() ?? ""}
+                {blockText(notAssume)}
               </div>
             </div>
           </div>
@@ -506,7 +517,7 @@ function ActionProtocolModules({ sectionIndex, title, body }: StructuredBodyCard
         {/* Safety: preserve any leftover "Priority order" content if present and not otherwise shown */}
         {priorityOrder?.content && !priority1 && !priority2 && !priority3 && (
           <div className="text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-            {priorityOrder.content}
+            {blockText(priorityOrder)}
           </div>
         )}
       </div>
@@ -533,9 +544,12 @@ function parsePairsFromBullets(text: string): PairItem[] {
       /^(\*\*.+?\*\*)\s*[:—-]\s+(.+)$/.exec(b);
     if (m) {
       const rawTitle = m[1].replace(/^\*\*|\*\*$/g, "").trim();
-      pairs.push({ title: rawTitle, description: m[2].trim() });
+      pairs.push({
+        title: stripMarkdownBoldMarkers(rawTitle),
+        description: stripMarkdownBoldMarkers(m[2].trim()),
+      });
     } else {
-      pairs.push({ title: b.trim(), description: "" });
+      pairs.push({ title: stripMarkdownBoldMarkers(b.trim()), description: "" });
     }
   }
   return pairs;
@@ -550,7 +564,12 @@ function parsePairsFromParagraphs(text: string): PairItem[] {
   for (const p of paras) {
     const oneLine = p.replace(/\s+/g, " ").trim();
     const m = /^(.+?)\s*[:—-]\s+(.+)$/.exec(oneLine);
-    if (m) pairs.push({ title: m[1].trim(), description: m[2].trim() });
+    if (m) {
+      pairs.push({
+        title: stripMarkdownBoldMarkers(m[1].trim()),
+        description: stripMarkdownBoldMarkers(m[2].trim()),
+      });
+    }
   }
   return pairs;
 }
@@ -608,7 +627,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
   const pitfalls = pickBlock(blocks, "Tracking pitfalls");
   const onlyThree = pickBlock(blocks, "If you only track three things");
 
-  const whyText = why?.content?.trim() ?? "";
+  const whyText = blockText(why);
   const whyPreview = clampToLines(whyText, 2);
   const whyNeedsMore = whyPreview.length > 0 && whyPreview.length < whyText.length;
   const [whyExpanded, setWhyExpanded] = React.useState(false);
@@ -621,7 +640,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
     pickNonEmpty(parsePairsFromBullets(patterns?.content ?? "")) ||
     pickNonEmpty(parsePairsFromParagraphs(patterns?.content ?? ""));
 
-  const howRaw = howToTrack?.content?.trim() ?? "";
+  const howRaw = blockText(howToTrack);
   const howOneLine = firstLine(howRaw);
   const howLines = howRaw.split("\n").map((l) => l.trim()).filter(Boolean);
   const formatHint =
@@ -633,15 +652,15 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
   const timingHint =
     howLines.find((l) => /\btime\b/i.test(l) || /\bevening\b/i.test(l) || /\bmorning\b/i.test(l) || /\bpost-?meal\b/i.test(l)) ?? "";
 
-  const minText = minPeriod?.content?.trim() ?? "";
+  const minText = blockText(minPeriod);
 
   const reassure = "This doesn’t need to be perfect. Even simple notes can reveal patterns. Start with 1–2 signals if this feels like too much.";
 
   const combinedAdjust = [
-    improvement?.content?.trim(),
-    reevaluate?.content?.trim(),
-    pitfalls?.content?.trim(),
-    onlyThree?.content?.trim(),
+    blockText(improvement),
+    blockText(reevaluate),
+    blockText(pitfalls),
+    blockText(onlyThree),
   ]
     .filter(Boolean)
     .join("\n\n")
@@ -716,7 +735,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
             </div>
           ) : whatToTrack?.content ? (
             <div className="text-[14px] leading-[1.75] text-[var(--text-secondary)] whitespace-pre-wrap">
-              {whatToTrack.content}
+              {blockText(whatToTrack)}
             </div>
           ) : null}
         </CollapsibleModule>
@@ -805,7 +824,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
             </div>
           ) : patterns?.content ? (
             <div className="text-[14px] leading-[1.75] text-[var(--text-secondary)] whitespace-pre-wrap">
-              {patterns.content}
+              {blockText(patterns)}
             </div>
           ) : null}
         </CollapsibleModule>
@@ -823,7 +842,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
                 Signs things are improving
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {improvement?.content?.trim() ?? ""}
+                {blockText(improvement)}
               </div>
             </div>
             <div className="rounded-[16px] border border-[#eadfd8] bg-white px-5 py-5">
@@ -831,7 +850,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
                 When to reassess
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {reevaluate?.content?.trim() ?? ""}
+                {blockText(reevaluate)}
               </div>
             </div>
             <div className="rounded-[16px] border border-[#eadfd8] bg-white px-5 py-5">
@@ -839,7 +858,7 @@ function TrackingFrameworkModules({ sectionIndex, title, body }: StructuredBodyC
                 Keep it simple
               </div>
               <div className="mt-2 text-[13px] leading-[1.7] text-[var(--text-secondary)] whitespace-pre-wrap">
-                {[pitfalls?.content?.trim(), onlyThree?.content?.trim()].filter(Boolean).join("\n\n")}
+                {[blockText(pitfalls), blockText(onlyThree)].filter(Boolean).join("\n\n")}
               </div>
             </div>
           </div>

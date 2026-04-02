@@ -9,18 +9,32 @@ declare global {
 let prismaSingleton: PrismaClient | null = null;
 
 function createPrismaClient() {
-  // Prefer DIRECT_URL for serverless/API (avoids pgbouncer transaction limits with Prisma)
-const connectionString =
-  process.env.DATABASE_URL ??
-  process.env.DIRECT_URL ??
-  "postgresql://localhost:5432/thearc";
+  // Prefer DIRECT_URL first: pooler URLs (often DATABASE_URL on Supabase) can break @prisma/adapter-pg
+  // and surface misleading errors like column "(not available)" does not exist.
+  const connectionString =
+    process.env.DIRECT_URL ??
+    process.env.DATABASE_URL ??
+    "postgresql://localhost:5432/thearc";
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 
+/** True if this client was built from the current schema (ArticleView is required for /knowledge). */
+function clientHasArticleView(client: unknown): boolean {
+  return typeof (client as Record<string, unknown>).articleView !== "undefined";
+}
+
 export function getPrisma(): PrismaClient {
-  if (prismaSingleton) return prismaSingleton;
-  prismaSingleton = global.prisma ?? createPrismaClient();
+  if (prismaSingleton && clientHasArticleView(prismaSingleton)) {
+    return prismaSingleton;
+  }
+  prismaSingleton = null;
+
+  const candidate = global.prisma ?? createPrismaClient();
+  // Do not reuse a global singleton that predates ArticleView — savedArticle alone is not enough.
+  const client = clientHasArticleView(candidate) ? candidate : createPrismaClient();
+  prismaSingleton = client;
+
   if (process.env.NODE_ENV !== "production") {
     global.prisma = prismaSingleton;
   }

@@ -10,6 +10,8 @@
 
 import { clsx } from "clsx";
 
+import { stripMarkdownBoldMarkers } from "@/lib/stripMarkdownBoldMarkers";
+
 const PREVIEW_LENGTH = 220;
 const WHAT_YOU_GET = [
   "Full evidence breakdown and limitations",
@@ -54,10 +56,12 @@ export function GatedSection({
   isSubscriber = false,
 }: GatedSectionProps) {
   const showFull = !isGated || isSubscriber;
+  const bodyDisplay = stripMarkdownBoldMarkers(body);
   const preview =
     previewProp && previewProp.trim()
-      ? previewProp
-      : body.slice(0, PREVIEW_LENGTH) + (body.length > PREVIEW_LENGTH ? "…" : "");
+      ? stripMarkdownBoldMarkers(previewProp)
+      : bodyDisplay.slice(0, PREVIEW_LENGTH) +
+        (bodyDisplay.length > PREVIEW_LENGTH ? "…" : "");
 
   const isActionSection = sectionIndex >= 7;
 
@@ -78,7 +82,7 @@ export function GatedSection({
           <h2 className={headingClass(sectionIndex)}>{title}</h2>
         )}
         <div className="whitespace-pre-wrap text-[15px] leading-[1.75] text-[var(--text-secondary)] max-w-prose">
-          {body}
+          {bodyDisplay}
         </div>
       </section>
     );

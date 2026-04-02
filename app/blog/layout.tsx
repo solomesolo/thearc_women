@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description:
     "We curate emerging research and translate it into relevance. Evidence-based articles for female physiology, performance, and preventive health.",
   openGraph: {
-    title: "Knowledge | The Arc",
+    title: "Knowledge Base | The Arc",
     description:
       "We curate emerging research and translate it into relevance. Evidence-based articles for female physiology and health.",
     type: "website",

@@ -72,7 +72,7 @@ export function MonitoringAreasSection({ vm }: { vm: DashboardVM }) {
 
 export function KnowledgeCardsSection({ vm }: { vm: DashboardVM }) {
   return (
-    <SectionShell id="knowledge" title="Knowledge cards">
+    <SectionShell id="knowledge" title="Article recommendations">
       <ul className="list-inside list-disc space-y-1">
         {vm.knowledgeCards.map((k) => (
           <li key={k.id}>{k.title}</li>

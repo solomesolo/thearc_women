@@ -6,7 +6,7 @@ import { scoreArticle } from "@/lib/scoreArticle";
 /**
  * GET /api/home/feed
  * Returns title + 3 articles for the homepage knowledge block.
- * If user has a profile with generatedTags → "Your Knowledge Feed" + recommended (sort=relevant).
+ * If user has a profile with generatedTags → personalized title + recommended (sort=relevant).
  * Else → "Clarity in a world of health noise" + latest 3.
  */
 export async function GET() {
@@ -58,7 +58,7 @@ export async function GET() {
     }));
     return Response.json({
       hasProfile: true,
-      title: "Your Knowledge Feed",
+      title: "My Health Dashboard — picks for you",
       articles: data,
     });
   }

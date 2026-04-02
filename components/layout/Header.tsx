@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { AuthNav } from "@/components/layout/AuthNav";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export function Header() {
   return (
@@ -20,23 +21,30 @@ export function Header() {
             Home
           </Link>
           <Link
-            href="/blog"
-            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-          >
-            Knowledge
-          </Link>
-          <Link
-            href="/system"
-            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-          >
-            Health System
-          </Link>
-          <Link
             href="/system2"
             className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
           >
             How The Arc works
           </Link>
+          <Link
+            href="/blog"
+            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
+          >
+            Knowledge Base
+          </Link>
+          <Link
+            href="/knowledge"
+            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
+          >
+            My Health Dashboard
+          </Link>
+          <Link
+            href="/plan"
+            className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
+          >
+            My Plan
+          </Link>
+          <NotificationBell />
           <AuthNav />
           <Link
             href="/survey"

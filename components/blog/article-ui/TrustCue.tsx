@@ -14,7 +14,7 @@ export function TrustCue() {
         aria-hidden
       />
       <p className="text-[12px] leading-[1.6] text-black/45">
-        This insight is for informational purposes only. It is not a diagnosis,
+        This article is for informational purposes only. It is not a diagnosis,
         treatment recommendation, or substitute for care from a qualified health
         professional. Individual responses vary.
       </p>
