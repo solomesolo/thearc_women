@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev --webpack -p 3000 -H 127.0.0.1",
     "dev:bootstrap": "prisma migrate deploy && prisma db seed && npm run backfill:sections-8-9",
     "dev:full": "npm run dev:bootstrap && npm run dev",
