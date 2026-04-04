@@ -1,21 +1,43 @@
 "use client";
 
 import Link from "next/link";
+import { clsx } from "clsx";
 import { useSession, signOut } from "next-auth/react";
 
-export function AuthNav() {
+const baseClass =
+  "text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]";
+
+type AuthNavProps = {
+  className?: string;
+  /** Called before navigation (e.g. close mobile menu). */
+  onNavigate?: () => void;
+};
+
+export function AuthNav({ className, onNavigate }: AuthNavProps) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <span className="text-sm text-[var(--text-secondary)]">…</span>;
+    return (
+      <span className={clsx("text-sm text-[var(--text-secondary)]", className)}>
+        …
+      </span>
+    );
   }
 
   if (session?.user) {
     return (
       <button
         type="button"
-        onClick={() => signOut({ callbackUrl: "/" })}
-        className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        onClick={() => {
+          onNavigate?.();
+          signOut({ callbackUrl: "/" });
+        }}
+        className={clsx(
+          baseClass,
+          "cursor-pointer border-0 bg-transparent text-left",
+          !className && "p-0",
+          className
+        )}
       >
         Sign out
       </button>
@@ -25,7 +47,8 @@ export function AuthNav() {
   return (
     <Link
       href="/login"
-      className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
+      className={clsx(baseClass, !className && "inline-block", className)}
+      onClick={() => onNavigate?.()}
     >
       Log in
     </Link>
