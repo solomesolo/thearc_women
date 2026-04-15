@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { ArticleTemplate } from "@/components/blog/ArticleTemplate";
@@ -59,9 +58,7 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
       },
     });
 
-  const article = isAdminPreview
-    ? await getArticle()
-    : await unstable_cache(getArticle, ["blog-article", slug], { revalidate: 60 })();
+  const article = await getArticle();
 
   if (!article) notFound();
 
@@ -88,9 +85,7 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
         })
       : Promise.resolve([]);
 
-  const related = isAdminPreview
-    ? await getRelated()
-    : await unstable_cache(getRelated, ["blog-related", slug], { revalidate: 60 })();
+  const related = await getRelated();
 
   const sections = article.sections.map((s) => ({
     sectionIndex: s.sectionIndex,

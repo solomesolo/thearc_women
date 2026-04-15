@@ -1,16 +1,51 @@
 export const homepageContent = {
   hero: {
-    headline:
-      "Your biology is a performance system. Not a mystery.",
-    subline:
-      "Understand, anticipate, and optimize how your body actually operates across work, training, and life.",
-    ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/survey",
-    microtext:
-      "Created for women who expect reliability from themselves and from their physiology.",
+    eyebrow: "Personalized women’s health",
+    headline: "Design your health around your biology",
+    supporting:
+      "Take a guided survey to understand your health patterns, predispositions, and priorities. Explore research-backed insights, discover protocols you may want to try, and track how your body responds over time — all in one private workspace designed for women’s health self-navigation.",
+    secondarySupport:
+      "For women who want more than generic advice: a clearer way to learn, decide, test, and track.",
+    ctaPrimaryLabel: "Start your health profile",
+    ctaPrimaryHref: "/survey",
+    ctaSecondaryLabel: "See how it works",
+    ctaSecondaryHref: "/system2",
+    trustLine:
+      "Research-guided, privacy-aware, and built for personal experimentation.",
+    flowTitle: "How it works",
+    flowSteps: [
+      { title: "Survey", line: "Build your baseline" },
+      { title: "Insights", line: "Understand what matters" },
+      { title: "Protocols", line: "Explore what to try" },
+      { title: "Tracking", line: "Monitor your response" },
+      { title: "Results", line: "Learn what works" },
+    ],
+    whatsIncludedLabel: "What’s included?",
+    whatsIncludedItems: [
+      "A guided survey across symptoms, habits, life stage, and health priorities",
+      "Research-connected insights translated into practical understanding",
+      "A personal dashboard to test, track, and refine protocols over time",
+    ],
     imageSrc: "/images/Hero.avif",
     imageAlt:
       "Premium editorial visual showing focus and calm competence",
+  },
+  whatThisIs: {
+    label: "What this is",
+    headline: "Not another wellness app. A system for self-directed health.",
+    main:
+      "Most health advice is generic, fragmented, or not built around female biology.\n\nThis platform helps you understand your own patterns, explore relevant research, and make informed decisions about what to try — without relying on one-size-fits-all recommendations.",
+    supporting:
+      "Instead of passively consuming advice, you build your own approach: guided by data, informed by science, and adapted to how your body responds over time.",
+    secondaryLine:
+      "A more structured way to navigate complex health information — without losing personal context.",
+    differentLabel: "How is this different?",
+    differentItems: [
+      "You don’t just read content — you apply it to your own health profile",
+      "Insights are connected to your inputs, not generic recommendations",
+      "You choose what to test, instead of following fixed programs",
+      "You track outcomes and adjust based on your own data",
+    ],
   },
   personalization: {
     headline: "Your starting lens, in 30 seconds.",
@@ -657,22 +692,206 @@ export const homepageContent = {
     ctaHref: "/survey",
   },
   howItWorks: {
-    headline: "Clarity without noise.",
+    label: "How it works",
+    headline: "A guided process — built around your body",
+    intro:
+      "Start with your own data, explore what may be relevant for you, and build a system that evolves as you learn what works.",
     steps: [
       {
-        title: "Map your biology",
+        phase: "Survey",
+        title: "Understand your baseline",
         description:
-          "A deep physiological and behavioral assessment builds your personal model.",
+          "Complete a guided survey covering symptoms, lifestyle, life stage, and health priorities.",
+        supporting:
+          "This creates your personal starting point — not a generic profile, but a structured view of your current state.",
+        hint: "survey" as const,
+        learnMore: [
+          "Covers cycle, energy, sleep, nutrition, symptoms, and family history",
+          "Adapts based on your responses as you go",
+          "Builds a structured baseline you can return to and refine",
+        ],
       },
       {
-        title: "Reveal hidden patterns",
+        phase: "Insights",
+        title: "See what may matter for you",
         description:
-          "See how cycles, recovery, and stress interact.",
+          "Your inputs are translated into structured insights connected to relevant research and patterns.",
+        supporting:
+          "Instead of broad advice, you get areas to explore based on your own data.",
+        hint: "insights" as const,
+        learnMore: [
+          "Connects your inputs to research themes and pattern libraries",
+          "Highlights possible areas of attention worth exploring next",
+          "Avoids deterministic conclusions — insight, not diagnosis",
+        ],
       },
       {
-        title: "Adjust with precision",
+        phase: "Protocols",
+        title: "Choose what to try",
         description:
-          "Make better decisions around workload, training, and restoration.",
+          "Explore potential interventions and approaches derived from research and tailored to your context.",
+        supporting:
+          "You decide what to test — from lifestyle adjustments to structured protocols.",
+        hint: "protocols" as const,
+        learnMore: [
+          "Options are framed with evidence and your profile in mind",
+          "You choose priorities, pace, and what feels realistic to test",
+          "Protocols can be adjusted as you learn from your own data",
+        ],
+      },
+      {
+        phase: "Tracking",
+        title: "Monitor your response",
+        description:
+          "Track symptoms, habits, and changes over time in your personal dashboard.",
+        supporting:
+          "This helps you understand how your body reacts, not just what you are doing.",
+        hint: "tracking" as const,
+        learnMore: [
+          "Log the signals and habits you decide matter for your questions",
+          "See trends over time next to the plans you are running",
+          "Keeps context on what changed, when, and how you felt",
+        ],
+      },
+      {
+        phase: "Results",
+        title: "Learn what works for your body",
+        description:
+          "Identify patterns, refine your approach, and build a system that evolves with you.",
+        supporting:
+          "Your health becomes something you actively understand and shape over time.",
+        hint: "results" as const,
+        learnMore: [
+          "Compare what you tried to what you observed in your own data",
+          "Refine protocols based on patterns that show up for you",
+          "Your workspace becomes a living record of what works",
+        ],
+      },
+    ],
+  },
+  coreFeatures: {
+    label: "Core features",
+    headline: "Everything you need to understand and navigate your health",
+    intro:
+      "A structured environment to explore, test, and track — without losing personal context.",
+    features: [
+      {
+        id: "profile" as const,
+        title: "Your health profile",
+        description:
+          "A dynamic overview of your inputs, patterns, and potential areas of attention.",
+        supporting:
+          "Not static — it evolves as you add data and learn more about your body.",
+        learnMore: [
+          "Integrates survey inputs and ongoing tracking in one view",
+          "Updates as you log new data and refine priorities",
+          "Highlights areas worth monitoring next",
+        ],
+      },
+      {
+        id: "research" as const,
+        title: "Research, translated",
+        description:
+          "Access scientific insights connected to your profile without needing to interpret raw studies.",
+        supporting: "Relevant, contextual, and continuously expandable.",
+        learnMore: [
+          "Curated themes and findings tied to your context",
+          "Plain-language framing with room to go deeper",
+          "Grows as your profile and questions evolve",
+        ],
+      },
+      {
+        id: "protocols" as const,
+        title: "Protocol exploration",
+        description:
+          "Turn insights into action by selecting and testing approaches that fit your goals and context.",
+        supporting: "Flexible, not prescriptive — you decide what to try.",
+        learnMore: [
+          "Shape protocols around goals you choose",
+          "Mark what’s active, paused, or done as you learn",
+          "Adjust over time instead of fixed programs",
+        ],
+      },
+      {
+        id: "tracking" as const,
+        title: "Personal tracking system",
+        description:
+          "Monitor symptoms, habits, and outcomes in one place to understand what changes over time.",
+        supporting: "See patterns, not just isolated data points.",
+        learnMore: [
+          "Symptom, habit, and experiment logging in one workspace",
+          "Helps correlate actions with how you feel",
+          "Supports iterative refinement, not one-off check-ins",
+        ],
+      },
+      {
+        id: "privacy" as const,
+        title: "Private by design",
+        description:
+          "Explore sensitive topics and personal data with full control, including optional incognito usage.",
+        supporting: "Your data remains yours — exploration without exposure.",
+        learnMore: [
+          "You choose what to keep in your workspace",
+          "Optional private modes where available for sensitive exploration",
+          "Nothing is shared unless you take a clear action to do so",
+        ],
+      },
+    ],
+  },
+  whyThisMatters: {
+    label: "Why this matters",
+    headline: "Women’s health is not one-size-fits-all",
+    main:
+      "Most medical research and health recommendations are not built around female biology or individual variation. As a result, many women are left navigating fragmented information, unclear guidance, and generic advice that doesn’t reflect their reality.",
+    supporting:
+      "This platform is designed to bridge that gap — not by replacing medical care, but by giving you a structured way to understand your body, explore relevant knowledge, and make more informed decisions over time.",
+    secondaryLine: "A shift from passive advice to active understanding.",
+    credibilityTitle: "Built around how women actually experience health",
+    credibilityBullets: [
+      "Accounts for life stages, hormonal patterns, and changing conditions",
+      "Supports ongoing learning, not one-time recommendations",
+      "Connects personal data with evolving research",
+      "Encourages careful experimentation, not blind optimization",
+    ],
+    researchGuidedLabel: "What does “research-guided” mean?",
+    researchGuidedItems: [
+      "Insights are informed by existing scientific literature, not trends",
+      "Information is translated into understandable, contextual guidance",
+      "No deterministic claims — only areas to explore and evaluate",
+      "Users remain in control of decisions and interpretation",
+    ],
+  },
+  mentalModel: {
+    label: "How to think about it",
+    headline: "A personal health system — not just an app",
+    positioningIntro: "Think of it as a combination of:",
+    positioningEmphasis:
+      "An intelligent guide, a structured workspace, and a personal health lab — designed for your body.",
+    shorthand:
+      "Jasper × Notion × a personal health lab",
+    shorthandNote: "An optional shorthand — not the full story, but a quick mental map.",
+    supportingLead: "Instead of following fixed programs or consuming generic advice, you:",
+    supportingActions: [
+      "Explore what may be relevant for you",
+      "Organize and apply what you learn",
+      "Test approaches in a structured way",
+      "Track and refine based on real outcomes",
+    ],
+    supportingClosing:
+      "You don’t just follow recommendations — you build your own system.",
+    pillarsCaption: "Three layers, one system",
+    pillars: [
+      {
+        title: "Intelligent guidance",
+        sublabel: "Insights, research, interpretation",
+      },
+      {
+        title: "Structured workspace",
+        sublabel: "Profile, protocols, organization",
+      },
+      {
+        title: "Personal experimentation",
+        sublabel: "Tracking, iteration, results",
       },
     ],
   },
@@ -742,12 +961,25 @@ export const homepageContent = {
     },
   },
   finalCta: {
-    headline:
-      "Stop guessing. Start understanding your biology.",
-    ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/survey",
-    microtext:
-      "A structured entry experience designed to build your personal biological performance model.",
-    variant: "subtleSurface",
+    headline: "Start understanding your body — in a more structured way",
+    supporting:
+      "Build your health profile, explore what may be relevant for you, and begin tracking what actually works — all in one place designed for personal, research-guided exploration.",
+    ctaPrimaryLabel: "Start your health profile",
+    ctaPrimaryHref: "/survey",
+    ctaSecondaryLabel: "See example dashboard",
+    ctaSecondaryHref: "/dashboard",
+    primaryMicrocopy: "Takes a few minutes to get started",
+    trustSignals: [
+      "No medical claims or fixed prescriptions",
+      "Private by design and fully controlled by you",
+      "Built to support exploration, not replace care",
+    ],
+    afterStartLabel: "What happens after I start?",
+    afterStartItems: [
+      "You complete a guided health survey",
+      "You receive structured insights based on your inputs",
+      "You can explore protocols and decide what to try",
+      "You begin tracking and refining over time",
+    ],
   },
 } as const;

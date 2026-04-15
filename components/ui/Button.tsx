@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 type ButtonProps = {
   href: string;
   children: React.ReactNode;
-  variant?: "primary" | "hero";
+  variant?: "primary" | "hero" | "outline";
   className?: string;
 };
 
@@ -27,6 +27,8 @@ export function Button({
           "px-6 py-3.5 text-base font-medium",
         variant === "hero" &&
           "h-[52px] px-6 text-base font-medium tracking-tight md:px-[26px]",
+        variant === "outline" &&
+          "min-h-[52px] border-2 border-[#0c0c0c] !bg-transparent px-6 text-base font-medium tracking-tight !text-[#0c0c0c] hover:!brightness-100 hover:bg-[#0c0c0c]/[0.05] md:px-[26px]",
         className
       )}
     >

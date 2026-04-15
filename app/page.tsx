@@ -1,13 +1,12 @@
 import { HeroSection } from "@/components/sections/HeroSection";
-import { DesignConceptSection } from "@/components/sections/DesignConceptSection";
-import { PersonalizationSection } from "@/components/sections/PersonalizationSection";
-import { MirrorSection } from "@/components/sections/MirrorSection";
+import { WhatThisIsSection } from "@/components/sections/WhatThisIsSection";
+import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { CoreFeaturesSection } from "@/components/sections/CoreFeaturesSection";
+import { WhyThisMattersSection } from "@/components/sections/WhyThisMattersSection";
+import { MentalModelSection } from "@/components/sections/MentalModelSection";
 import { ReframeSection } from "@/components/sections/ReframeSection";
 import { HealthIntelligenceReelSection } from "@/components/sections/HealthIntelligenceReelSection";
-import { ProductIntroSection } from "@/components/sections/ProductIntroSection";
-import { JourneySection } from "@/components/sections/JourneySection";
 import { KnowledgeSection } from "@/components/home/KnowledgeSection";
-import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { IdentitySection } from "@/components/sections/IdentitySection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { FounderMessageSection } from "@/components/sections/FounderMessageSection";
@@ -17,15 +16,14 @@ export default function Home() {
   return (
     <main>
       <HeroSection />
-      <DesignConceptSection />
-      <MirrorSection />
-      <ReframeSection />
-      <PersonalizationSection />
-      <KnowledgeSection />
-      <JourneySection />
-      <HealthIntelligenceReelSection />
-      <ProductIntroSection />
+      <WhatThisIsSection />
       <HowItWorksSection />
+      <CoreFeaturesSection />
+      <WhyThisMattersSection />
+      <MentalModelSection />
+      <ReframeSection />
+      <KnowledgeSection />
+      <HealthIntelligenceReelSection />
       <IdentitySection />
       <FounderMessageSection
         label={homepageContent.founderMessage.label}

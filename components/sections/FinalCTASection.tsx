@@ -1,8 +1,8 @@
 "use client";
 
+import { Fragment } from "react";
 import { useReducedMotion } from "framer-motion";
 import { motion } from "framer-motion";
-import { clsx } from "clsx";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Button } from "@/components/ui/Button";
@@ -14,115 +14,137 @@ const easeOut = [0, 0, 0.2, 1] as const;
 
 type FinalCTASectionProps = {
   headline?: string;
-  ctaLabel?: string;
-  ctaHref?: string;
-  microtext?: string;
-  variant?: "default" | "subtleSurface";
+  supporting?: string;
+  ctaPrimaryLabel?: string;
+  ctaPrimaryHref?: string;
+  ctaSecondaryLabel?: string;
+  ctaSecondaryHref?: string;
+  primaryMicrocopy?: string;
+  trustSignals?: readonly string[];
+  afterStartLabel?: string;
+  afterStartItems?: readonly string[];
 };
 
 export function FinalCTASection({
   headline = defaultContent.headline,
-  ctaLabel = defaultContent.ctaLabel,
-  ctaHref = defaultContent.ctaHref,
-  microtext = defaultContent.microtext,
-  variant = defaultContent.variant,
+  supporting = defaultContent.supporting,
+  ctaPrimaryLabel = defaultContent.ctaPrimaryLabel,
+  ctaPrimaryHref = defaultContent.ctaPrimaryHref,
+  ctaSecondaryLabel = defaultContent.ctaSecondaryLabel,
+  ctaSecondaryHref = defaultContent.ctaSecondaryHref,
+  primaryMicrocopy = defaultContent.primaryMicrocopy,
+  trustSignals = defaultContent.trustSignals,
+  afterStartLabel = defaultContent.afterStartLabel,
+  afterStartItems = defaultContent.afterStartItems,
 }: FinalCTASectionProps) {
   const prefersReducedMotion = useReducedMotion();
-
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: prefersReducedMotion ? 0.08 : 0.13,
-        delayChildren: 0,
-      },
-    },
-  };
-
-  const headlineVariants = prefersReducedMotion
-    ? {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.26 } },
-      }
-    : {
-        hidden: { opacity: 0, y: 6 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.62, ease: easeOut },
-        },
-      };
-
-  const buttonVariants = prefersReducedMotion
-    ? {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.26 } },
-      }
-    : {
-        hidden: { opacity: 0, y: 6 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.5, ease: easeOut },
-        },
-      };
-
-  const microtextVariants = prefersReducedMotion
-    ? {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.24 } },
-      }
-    : {
-        hidden: { opacity: 0, y: 4 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.45, ease: easeOut },
-        },
-      };
-
-  const useSurface = variant === "subtleSurface";
 
   return (
     <Section
       id="cta"
       variant="default"
-      className="py-20 md:py-28"
+      className="relative scroll-mt-20 border-t border-black/[0.06] bg-[linear-gradient(180deg,#f4f4f2_0%,var(--background)_22%,#fafaf9_100%)] py-[4.5rem] md:py-28 lg:py-32"
     >
       <Container>
         <motion.div
-          className={clsx(
-            "mx-auto w-full max-w-[45rem] text-center lg:max-w-[51.25rem]",
-            useSurface &&
-              "rounded-[26px] border border-[var(--color-border-hairline)] bg-[var(--color-surface)]/60 px-7 py-8 md:px-10 md:py-10"
-          )}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.4 }}
-          variants={containerVariants}
+          className="mx-auto max-w-[40rem] text-center"
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.55, ease: easeOut }}
         >
-          <motion.h2
-            variants={headlineVariants}
-            className="text-[2rem] font-medium leading-[1.18] tracking-tight text-[var(--text-primary)] md:text-[2.5rem] md:leading-[1.15] lg:text-[3.5rem]"
-          >
+          <h2 className="text-[1.75rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] sm:text-[1.95rem] md:text-[2.25rem] lg:text-[2.5rem]">
             {headline}
-          </motion.h2>
+          </h2>
 
-          <motion.div variants={buttonVariants} className="mt-6 md:mt-7">
-            <Button
-              href={ctaHref}
-              className="h-12 min-h-[48px] max-h-[54px] rounded-[14px] px-6 md:rounded-[16px]"
-            >
-              {ctaLabel}
-            </Button>
-          </motion.div>
+          <p className="mx-auto mt-7 max-w-[38rem] text-[1rem] leading-[1.68] text-[#404040] md:mt-8 md:text-[1.0625rem]">
+            {supporting}
+          </p>
 
-          <motion.p
-            variants={microtextVariants}
-            className="mx-auto mt-3 max-w-[38ch] text-center text-[13px] leading-[1.55] text-[var(--text-secondary)] md:mt-4 md:text-sm md:leading-[1.6]"
+          <div className="mx-auto mt-10 flex w-full max-w-md flex-col items-stretch justify-center gap-4 sm:mt-11 sm:max-w-2xl sm:flex-row sm:items-start sm:justify-center sm:gap-5 md:max-w-none">
+            <div className="flex w-full flex-col items-center sm:w-auto sm:min-w-[min(100%,280px)] sm:items-stretch">
+              <Button
+                href={ctaPrimaryHref}
+                variant="hero"
+                className="h-[56px] w-full px-8 text-[1.05rem] font-semibold sm:w-auto sm:min-w-[280px]"
+              >
+                {ctaPrimaryLabel}
+              </Button>
+              <p className="mt-2.5 text-center text-[0.8125rem] leading-snug text-[#737373] sm:text-left md:text-sm">
+                {primaryMicrocopy}
+              </p>
+            </div>
+            <div className="flex w-full justify-center sm:w-auto sm:shrink-0">
+              <Button
+                href={ctaSecondaryHref}
+                variant="outline"
+                className="h-[52px] min-h-[52px] w-full sm:w-auto sm:min-w-[220px]"
+              >
+                {ctaSecondaryLabel}
+              </Button>
+            </div>
+          </div>
+
+          <ul className="mx-auto mt-10 max-w-[38rem] space-y-2.5 text-left text-[0.8125rem] leading-[1.5] text-[#525252] sm:mt-12 md:flex md:flex-wrap md:justify-center md:gap-x-1 md:space-y-0 md:text-center md:text-[0.84375rem]">
+            {trustSignals.map((line, i) => (
+              <Fragment key={line}>
+                {i > 0 && (
+                  <li className="hidden list-none md:inline md:text-[#d4d4d4]" aria-hidden>
+                    ·
+                  </li>
+                )}
+                <li className="relative flex pl-5 md:inline md:pl-0 md:pr-1">
+                  <span
+                    className="absolute left-0 top-[0.45em] h-1 w-1 shrink-0 rounded-full bg-[#bfbfbf] md:hidden"
+                    aria-hidden
+                  />
+                  <span className="md:whitespace-nowrap">{line}</span>
+                </li>
+              </Fragment>
+            ))}
+          </ul>
+
+          <motion.div
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.08, ease: easeOut }}
+            className="mx-auto mt-10 max-w-[34rem] text-left sm:mt-12"
           >
-            {microtext}
-          </motion.p>
+            <details className="group/after rounded-[16px] border border-black/[0.08] bg-white/[0.5] px-4 py-1 shadow-[0_1px_0_rgba(0,0,0,0.03)] open:bg-white/[0.65] md:px-5">
+              <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-3 py-2 text-left [&::-webkit-details-marker]:hidden">
+                <span className="text-[0.9375rem] font-medium text-[#404040] underline decoration-black/25 decoration-dotted underline-offset-4">
+                  {afterStartLabel}
+                </span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="shrink-0 text-[#737373] transition-transform duration-200 group-open/after:rotate-180"
+                  aria-hidden
+                >
+                  <path
+                    d="M4 6l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.25"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </summary>
+              <ol className="mt-1 space-y-2.5 border-t border-black/[0.06] pb-4 pt-4 text-[0.8125rem] leading-[1.55] text-[#525252] md:text-[0.84375rem]">
+                {afterStartItems.map((item, idx) => (
+                  <li key={item} className="flex gap-3 pl-0">
+                    <span className="mt-0.5 w-5 shrink-0 text-right font-mono text-[11px] font-semibold tabular-nums text-[#a3a3a3]">
+                      {idx + 1}.
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          </motion.div>
         </motion.div>
       </Container>
     </Section>
