@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/blog", label: "Knowledge Base" },
   { href: "/knowledge", label: "My Health Dashboard" },
   { href: "/plan", label: "My Plan" },
+  { href: "/upload", label: "Upload Health Data" },
 ] as const;
 
 const linkClass =
