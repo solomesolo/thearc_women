@@ -1,0 +1,24 @@
+{
+  "_fixture": "hormonal_cycle_variability",
+  "_description": "Significant cycle-linked symptoms and hormonal variability. Irregular cycle, moderate skin/hair changes.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 31,
+    "cycle_regularity": "Irregular",
+    "cycle_linked_symptoms": "Significant",
+    "hormone_symptoms": "Moderate",
+    "skin_hair_changes": "Moderate",
+    "fatigue_freq": "Weekly",
+    "fatigue_sev": 2,
+    "stress_level": 3,
+    "sleep_quality": 3
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_HORMONAL_VARIABILITY", "SIG_CYCLE_LINKED_PATTERN", "SIG_SKIN_HAIR_PATTERN"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_GUT_DISRUPTION"],
+    "hero_code": "HERO_HORMONAL_VARIABILITY",
+    "key_area_attention": ["hormones", "cycle"],
+    "confidence_band": "medium"
+  }
+}

@@ -2,7 +2,9 @@
 
 import { DashboardCard } from "./DashboardCard";
 
-export function TodayThisWeekCard() {
+// keyAreas is reserved for future cycle-phase personalization
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function TodayThisWeekCard({ keyAreas: _keyAreas = [] }: { keyAreas?: import("@/lib/dashboard/types").DashboardKeyArea[] }) {
   return (
     <DashboardCard
       as="section"

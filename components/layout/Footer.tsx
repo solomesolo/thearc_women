@@ -1,9 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 
 const CONTACT_EMAIL = "info@thearcwomen.com";
 
+// Legal links that have DE equivalents
+const LEGAL_LINKS = [
+  { href: "/privacy",      label: "Privacy Policy",    labelDE: "Datenschutz"        },
+  { href: "/terms",        label: "Terms of Service",  labelDE: "Nutzungsbedingungen" },
+  { href: "/cookies",      label: "Cookie Policy",     labelDE: "Cookie-Richtlinie"  },
+  { href: "/data-request", label: "Data Request",      labelDE: "Datenschutzanfrage" },
+];
+
+const linkClass =
+  "text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]";
+
 export function Footer() {
+  const pathname = usePathname();
+  const isDE = pathname.startsWith("/de");
   const currentYear = new Date().getFullYear();
 
   return (
@@ -11,51 +27,32 @@ export function Footer() {
       <Container className="py-10 md:py-12">
         <div className="flex flex-col gap-6">
           <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
-            <Link
-              href="/blog"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Blog
+            {/* Blog — always English */}
+            <Link href="/blog" className={linkClass}>
+              {isDE ? "Knowledge Base" : "Blog"}
             </Link>
-            <Link
-              href="/survey"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Get My Personalized Health Map
-            </Link>
-            <Link
-              href="/privacy"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href="/cookies"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Cookie Policy
-            </Link>
-            <Link
-              href="/data-request"
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Data Request
-            </Link>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]"
-            >
-              Contact
+
+            {/* Legal links — language-aware */}
+            {LEGAL_LINKS.map(({ href, label, labelDE }) => (
+              <Link
+                key={href}
+                href={isDE ? `/de${href}` : href}
+                className={linkClass}
+              >
+                {isDE ? labelDE : label}
+              </Link>
+            ))}
+
+            {/* Contact — same email, label translates */}
+            <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
+              {isDE ? "Kontakt" : "Contact"}
             </a>
           </nav>
+
           <p className="text-sm text-[var(--text-secondary)]">
-            © {currentYear} The Arc. All rights reserved.
+            {isDE
+              ? `© ${currentYear} The Arc. Alle Rechte vorbehalten.`
+              : `© ${currentYear} The Arc. All rights reserved.`}
           </p>
         </div>
       </Container>

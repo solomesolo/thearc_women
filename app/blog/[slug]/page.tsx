@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { ArticleTemplate } from "@/components/blog/ArticleTemplate";
+import { ArticleStickyBar } from "@/components/blog/ArticleStickyBar";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getUserAccess } from "@/lib/auth";
+import { isSaved } from "@/lib/knowledge/queries";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -57,11 +58,16 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
       },
     });
 
-  const article = isAdminPreview
-    ? await getArticle()
-    : await unstable_cache(getArticle, ["blog-article", slug], { revalidate: 60 })();
+  const article = await getArticle();
 
   if (!article) notFound();
+
+  // Fetch save state and track view in parallel (non-blocking)
+  const sessionForUser = await getServerSession(authOptions);
+  const userEmail = sessionForUser?.user?.email ?? null;
+  const [articleIsSaved] = await Promise.all([
+    userEmail ? isSaved(userEmail, article.id).catch(() => false) : Promise.resolve(false),
+  ]);
 
   const tagIds = article.tagJoins.map((j) => j.tagId);
   const getRelated = () =>
@@ -79,9 +85,7 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
         })
       : Promise.resolve([]);
 
-  const related = isAdminPreview
-    ? await getRelated()
-    : await unstable_cache(getRelated, ["blog-related", slug], { revalidate: 60 })();
+  const related = await getRelated();
 
   const sections = article.sections.map((s) => ({
     sectionIndex: s.sectionIndex,
@@ -126,6 +130,9 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
     <Container className="py-10 md:py-14">
       <ArticleTemplate
         slug={article.slug}
+        articleId={article.id}
+        isLoggedIn={!!userEmail}
+        initialSaved={articleIsSaved}
         title={article.title}
         excerpt={article.excerpt}
         category={article.category}
@@ -137,6 +144,12 @@ export default async function BlogArticlePage({ params, searchParams }: Props) {
         sources={sources}
         relatedArticles={relatedArticles}
         isSubscriber={isSubscriber}
+      />
+      <ArticleStickyBar
+        articleId={article.id}
+        articleTitle={article.title}
+        initialSaved={articleIsSaved}
+        isLoggedIn={!!userEmail}
       />
     </Container>
   );

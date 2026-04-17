@@ -428,6 +428,6 @@ export const SYSTEM2_CTA: SystemCTAData = {
   headline: "Ready to see your signals in context?",
   lead: "Explore how the Arc connects sleep, hormones, stress, metabolism, and recovery over time.",
   primaryCta: { label: "Start exploring", href: "/survey" },
-  secondaryCta: { label: "Learn more", href: "/system" },
+  secondaryCta: { label: "Browse Knowledge Base", href: "/blog" },
   microNote: "Understanding your biology should not feel complicated.",
 };

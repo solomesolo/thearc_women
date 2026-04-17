@@ -1,0 +1,26 @@
+{
+  "_fixture": "blood_sugar_instability",
+  "_description": "Strong blood sugar / metabolic pattern: frequent afternoon crashes, post-meal crashes, high sugar cravings, moderate fatigue. Low stress.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 30,
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 4,
+    "fatigue_timing": "Afternoon",
+    "energy_crash": "Often",
+    "crash_post_meal": "Often",
+    "sugar_cravings": 4,
+    "stress_level": 2,
+    "sleep_quality": 3,
+    "night_waking": "Occasionally",
+    "unrefreshing_sleep": "Sometimes"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_PERSISTENT_FATIGUE", "SIG_ENERGY_VARIABILITY"],
+    "inactive_signals": ["SIG_STRESS_LOAD", "SIG_SLEEP_DISRUPTION"],
+    "hero_code": "HERO_BLOOD_SUGAR_INSTAB",
+    "key_area_attention": ["energy", "metabolism"],
+    "confidence_band": "medium"
+  }
+}

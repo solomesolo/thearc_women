@@ -1,0 +1,26 @@
+{
+  "_fixture": "recovery_strain_iron",
+  "_description": "Poor exercise tolerance, persistent fatigue, micronutrient pattern. Lab: low ferritin context.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 33,
+    "fatigue_freq": "Daily",
+    "fatigue_sev": 4,
+    "fatigue_timing": "All day",
+    "exercise_tolerance": "Very poor",
+    "energy_crash": "Often",
+    "stress_level": 2,
+    "sleep_quality": 3,
+    "night_waking": "Occasionally"
+  },
+  "labs": {
+    "lab_glucose_value": 88
+  },
+  "_expected": {
+    "active_signals": ["SIG_PERSISTENT_FATIGUE", "SIG_RECOVERY_STRAIN", "SIG_ENERGY_VARIABILITY", "SIG_MICRONUTRIENT_PATTERN"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_STRESS_LOAD"],
+    "hero_code": "HERO_IRON_DEPLETION",
+    "key_area_attention": ["energy", "recovery"],
+    "confidence_band": "medium"
+  }
+}

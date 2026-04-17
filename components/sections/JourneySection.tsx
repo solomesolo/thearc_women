@@ -148,9 +148,12 @@ export function JourneySection({
               <svg
                 className="pointer-events-none absolute left-0 top-0 h-full w-full md:left-[200px] md:w-[calc(100%-200px)]"
                 aria-hidden
+                viewBox="0 0 100 100"
               >
                 <path
-                  d="M 0 85 Q 35% 25%, 70% 40% T 100% 20%"
+                  // Avoid percent signs inside `d` to prevent SVG path parser errors.
+                  // The SVG `viewBox` normalizes these coordinates.
+                  d="M 0 85 Q 35 25 70 40 T 100 20"
                   fill="none"
                   stroke="var(--text-primary, #0c0c0c)"
                   strokeWidth="1"

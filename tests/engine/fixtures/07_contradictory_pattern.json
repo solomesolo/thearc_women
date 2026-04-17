@@ -1,0 +1,22 @@
+{
+  "_fixture": "contradictory_pattern",
+  "_description": "Conflicting signals: reports never tired but also daily crashes. Should trigger SIG_CONTRADICTORY_PATTERN.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 28,
+    "fatigue_freq": "Never",
+    "fatigue_sev": 0,
+    "energy_crash": "Often",
+    "crash_post_meal": "Often",
+    "stress_level": 1,
+    "sleep_quality": 5,
+    "night_waking": "Never"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_CONTRADICTORY_PATTERN", "SIG_BLOOD_SUGAR_INSTABILITY"],
+    "inactive_signals": ["SIG_PERSISTENT_FATIGUE"],
+    "hero_code": "HERO_BLOOD_SUGAR_INSTAB",
+    "confidence_band": "low"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "_fixture": "sleep_disruption",
+  "_description": "Strong sleep pattern: very long latency, nightly waking, unrefreshing sleep. High fatigue. Low stress.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 32,
+    "fatigue_freq": "Daily",
+    "fatigue_sev": 5,
+    "fatigue_timing": "Morning",
+    "sleep_quality": 1,
+    "sleep_latency": "Over 45 min",
+    "night_waking": "Every night",
+    "unrefreshing_sleep": "Almost always",
+    "energy_crash": "Sometimes",
+    "stress_level": 2,
+    "sugar_cravings": 1
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_SLEEP_DISRUPTION", "SIG_NIGHT_WAKING_PATTERN", "SIG_SLEEP_LATENCY_PATTERN", "SIG_UNREFRESHING_SLEEP", "SIG_PERSISTENT_FATIGUE", "SIG_RECOVERY_STRAIN"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_STRESS_LOAD"],
+    "hero_code": "HERO_SLEEP_DISRUPTION",
+    "key_area_attention": ["sleep", "recovery", "energy"],
+    "confidence_band": "high"
+  }
+}

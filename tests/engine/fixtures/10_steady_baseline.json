@@ -1,0 +1,26 @@
+{
+  "_fixture": "steady_baseline",
+  "_description": "Mostly healthy profile: good sleep, low stress, occasional mild fatigue. Should resolve to stable states.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 28,
+    "fatigue_freq": "Occasionally",
+    "fatigue_sev": 1,
+    "fatigue_timing": "Afternoon",
+    "energy_crash": "No",
+    "stress_level": 2,
+    "sleep_quality": 4,
+    "night_waking": "Occasionally",
+    "unrefreshing_sleep": "Sometimes",
+    "gut_symptoms": "Occasionally",
+    "cycle_regularity": "Regular"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": [],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_SLEEP_DISRUPTION", "SIG_STRESS_LOAD", "SIG_GUT_DISRUPTION"],
+    "hero_code": "HERO_BASELINE",
+    "key_area_attention": [],
+    "confidence_band": "low"
+  }
+}

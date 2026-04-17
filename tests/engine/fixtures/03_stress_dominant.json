@@ -1,0 +1,26 @@
+{
+  "_fixture": "stress_dominant",
+  "_description": "High stress load, multiple types, poor recovery, moderate sleep disruption secondary to stress.",
+  "survey": {
+    "life_stage": "Reproductive (26–35)",
+    "age_years": 34,
+    "stress_level": 5,
+    "stress_type": "Multiple",
+    "fatigue_freq": "Most days",
+    "fatigue_sev": 3,
+    "fatigue_timing": "Evening",
+    "sleep_quality": 2,
+    "night_waking": "Most nights",
+    "unrefreshing_sleep": "Often",
+    "energy_crash": "Sometimes",
+    "exercise_tolerance": "Poor"
+  },
+  "labs": {},
+  "_expected": {
+    "active_signals": ["SIG_STRESS_LOAD", "SIG_STRESS_SENSITIVITY", "SIG_RECOVERY_STRAIN", "SIG_SLEEP_DISRUPTION"],
+    "inactive_signals": ["SIG_BLOOD_SUGAR_INSTABILITY", "SIG_GUT_DISRUPTION"],
+    "hero_code": "HERO_STRESS_LOAD",
+    "key_area_attention": ["stress", "recovery", "sleep"],
+    "confidence_band": "high"
+  }
+}

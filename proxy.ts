@@ -1,14 +1,19 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   if (pathname === "/admin" || pathname === "/admin/") {
     return NextResponse.redirect(new URL("/admin/articles", req.url));
   }
+  const authSecret =
+    process.env.NEXTAUTH_SECRET ||
+    (process.env.NODE_ENV === "development"
+      ? "dev-secret-change-in-production"
+      : undefined);
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: authSecret,
   });
   if (!token) {
     const login = new URL("/login", req.url);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { ComingSoonProvider } from "@/components/providers/ComingSoonProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
@@ -20,10 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen font-sans antialiased text-[var(--foreground)]">
         <SessionProvider>
-          <Header />
-          {children}
-          <Footer />
-          <CookieConsentBanner />
+          <ComingSoonProvider>
+            <Header />
+            {children}
+            <Footer />
+            <CookieConsentBanner />
+          </ComingSoonProvider>
         </SessionProvider>
       </body>
     </html>

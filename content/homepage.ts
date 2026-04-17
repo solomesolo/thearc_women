@@ -1,16 +1,45 @@
 export const homepageContent = {
   hero: {
-    headline:
-      "Your biology is a performance system. Not a mystery.",
-    subline:
-      "Understand, anticipate, and optimize how your body actually operates across work, training, and life.",
-    ctaLabel: "Get My Personalized Health Map",
-    ctaHref: "/survey",
-    microtext:
-      "Created for women who expect reliability from themselves and from their physiology.",
+    eyebrow: "Personalized women's health",
+    headline: "Know what health tests you need—and actually get them done.",
+    supporting:
+      "Your preventive health system for women. See what you're missing, track your results, and take action—all in one place.",
+    secondarySupport:
+      "See what you might be missing in under 2 minutes",
+    ctaPrimaryLabel: "Start free check",
+    ctaPrimaryHref: "/survey",
+    ctaSecondaryLabel: "Upload your lab results",
+    ctaSecondaryHref: "/upload",
+    trustLine:
+      "No medical advice—just structured insights to support your decisions",
+    flowTitle: "How it works",
+    flowSteps: [
+      { title: "Take a quick health check", line: "Get your personalized test roadmap" },
+      { title: "Upload your lab results (optional)", line: "We organize and match them automatically" },
+      { title: "Act on your plan", line: "Book, track, and never miss important checks again" },
+    ],
+    whatsIncludedLabel: "What’s included?",
+    whatsIncludedItems: [
+      "Health completeness score",
+      "Personalized test recommendations",
+      "Lab result parsing (OCR)",
+      "Timeline of upcoming checks",
+      "Action links (book or order tests)",
+      "Simple progress tracking",
+    ],
     imageSrc: "/images/Hero.avif",
     imageAlt:
       "Premium editorial visual showing focus and calm competence",
+  },
+  whatThisIs: {
+    label: "The problem",
+    headline: "Most women are missing important health checks",
+    main:
+      "Test results are scattered across PDFs and emails\n\nNo clear overview of what's done vs. missing\n\nYou don't know what to check next—or when\n\nEven if you know, booking and follow-through is a hassle\n\nSo things get delayed, forgotten, or never done.",
+    supporting: "",
+    secondaryLine: "",
+    differentLabel: "",
+    differentItems: [],
   },
   personalization: {
     headline: "Your starting lens, in 30 seconds.",
@@ -579,8 +608,8 @@ export const homepageContent = {
       "Not every protocol is designed for your biology.",
       "Preventive care requires discernment — not volume.",
     ],
-    feedTitleDefault: "Latest Insights",
-    feedTitlePersonalized: "Your Knowledge Feed",
+    feedTitleDefault: "Latest from the Knowledge Base",
+    feedTitlePersonalized: "My Health Dashboard — picks for you",
     feedSublinePersonalized: "Curated for your current focus:",
     ctaLabel: "Get My Personalized Health Map",
     ctaHref: "/survey",
@@ -657,24 +686,92 @@ export const homepageContent = {
     ctaHref: "/survey",
   },
   howItWorks: {
-    headline: "Clarity without noise.",
+    label: "The solution",
+    headline: "One system to manage your preventive health",
+    intro: "",
     steps: [
       {
-        title: "Map your biology",
-        description:
-          "A deep physiological and behavioral assessment builds your personal model.",
+        phase: "Know",
+        title: "Personalized test recommendations",
+        description: "Based on your profile",
+        supporting: "",
+        hint: "survey" as const,
+        learnMore: [],
       },
       {
-        title: "Reveal hidden patterns",
-        description:
-          "See how cycles, recovery, and stress interact.",
+        phase: "Track",
+        title: "Upload lab results → structured overview",
+        description: "",
+        supporting: "",
+        hint: "insights" as const,
+        learnMore: [],
       },
       {
-        title: "Adjust with precision",
-        description:
-          "Make better decisions around workload, training, and restoration.",
+        phase: "Act",
+        title: "Book tests, order kits, and track progress",
+        description: "",
+        supporting: "",
+        hint: "protocols" as const,
+        learnMore: [],
       },
     ],
+  },
+  coreFeatures: {
+    label: "Product preview",
+    headline: "Your health, clearly organized",
+    intro: "",
+    features: [
+      {
+        id: "profile" as const,
+        title: "Health completeness score (75%)",
+        description: "Missing: Vitamin D, Iron",
+        supporting: "",
+        learnMore: [],
+      },
+      {
+        id: "research" as const,
+        title: "Timeline",
+        description: "April → Blood test\nJune → Gynecologist\nSeptember → Follow-up",
+        supporting: "",
+        learnMore: [],
+      },
+    ],
+  },
+  whyThisMatters: {
+    label: "Differentiation",
+    headline: "Not another AI explanation tool",
+    main: "",
+    supporting: "",
+    secondaryLine: "",
+    credibilityTitle: "ChatGPT / generic AI",
+    credibilityBullets: [
+      "One-time answers",
+      "No tracking",
+      "No follow-up",
+    ],
+    researchGuidedLabel: "Your product",
+    researchGuidedItems: [
+      "Tracks over time",
+      "Shows what's missing",
+      "Helps you take action",
+    ],
+  },
+  mentalModel: {
+    label: "Trust",
+    headline: "Your data stays yours",
+    positioningIntro: "",
+    positioningEmphasis: "",
+    shorthand: "",
+    shorthandNote: "",
+    supportingLead: "",
+    supportingActions: [
+      "Upload only if you want",
+      "No selling of personal data",
+      "GDPR-first approach",
+    ],
+    supportingClosing: "Built for awareness, not diagnosis",
+    pillarsCaption: "",
+    pillars: [],
   },
   identity: {
     headline:
@@ -724,14 +821,256 @@ export const homepageContent = {
     founderTitle: "Founder",
     imageSrc: "/images/IMG_8091-modified.JPG",
     imageAlt: "Portrait of Anna Solovyova",
+    secondary: {
+      label: "FOUNDER'S NOTE",
+      headline: "Health restored. Spaces humanized. Midlife redefined.",
+      paragraphs: [
+        "For over two decades, I moved through the high-octane worlds of L'Oréal, McKinsey, and Bertelsmann. I understood the language of strategy, leadership, and relentless drive.",
+        "But along the way, I rediscovered a fundamental truth we often overlook in our pursuit of “success”: we are 100% sensory beings. Our wellbeing is not just a matter of nutrition or movement; it is shaped by the invisible architecture of our lives—the light, the scent, the sound, and the very spaces we inhabit.",
+        "My work now sits at the intersection of longevity science, female health, and this “invisible architecture”. I believe midlife is not a decline to be managed, but a threshold to be crossed with intention. It is a time to redefine what it means to thrive.",
+        "My journey from the boardroom to the yoga mat—and through the rigorous training of the Institute for Integrative Nutrition—has led me to a singular mission. I want to contribute to a world where preventive health is the new normal and where the spaces we occupy quietly support our longevity.",
+        "Whether through my private practice or my research into the wellness dimension of spaces, I am here to help you return to yourself. Let’s stop forgetting how much our environment shapes us and start building a life that feels genuinely aligned.",
+        "With warmth and curiosity,",
+      ],
+      founderName: "Babette Frommeyer",
+      founderTitle: "Founder",
+      imageSrc: "/images/babette-frommeyer.png",
+      imageAlt: "Portrait of Babette Frommeyer",
+    },
   },
   finalCta: {
-    headline:
-      "Stop guessing. Start understanding your biology.",
-    ctaLabel: "Get My Personalized Health Map",
+    headline: "Take control of your health — before something is missed",
+    supporting: "See your personalized health roadmap in under 2 minutes.",
+    ctaPrimaryLabel: "Start free check",
+    ctaPrimaryHref: "/survey",
+    ctaSecondaryLabel: "Upload your lab results",
+    ctaSecondaryHref: "/upload",
+    primaryMicrocopy: "No account required to start",
+    trustSignals: [
+      "No medical advice — just structured insights",
+      "You're in control of your data",
+      "Built for awareness, not diagnosis",
+    ],
+    afterStartLabel: "What happens after I start?",
+    afterStartItems: [
+      "You answer a few health questions",
+      "You get a personalized test roadmap",
+      "You upload lab results if you choose",
+      "You see what's covered and what's missing",
+    ],
+  },
+  problem: {
+    label: "The problem",
+    headline: "Most women are missing important health checks",
+    cards: [
+      {
+        icon: "scatter" as const,
+        title: "Scattered data",
+        body: "Lab results across PDFs, emails, and portals — no single place to see them.",
+      },
+      {
+        icon: "overview" as const,
+        title: "No clear overview",
+        body: "You don't know what's been done vs what's still missing.",
+      },
+      {
+        icon: "unclear" as const,
+        title: "Unclear next steps",
+        body: "No idea what to check next, or when it should happen.",
+      },
+      {
+        icon: "followthrough" as const,
+        title: "No follow-through",
+        body: "Even when you know what's needed, booking and follow-through is a hassle.",
+      },
+    ],
+    punchline: "So things get delayed, forgotten, or never done.",
+  },
+  solution: {
+    label: "The solution",
+    headline: "One system to manage your preventive health",
+    pillars: [
+      {
+        num: "1",
+        title: "Know",
+        subtitle: "Personalized test recommendations",
+        body: "Answer a few questions and get a personalized list of recommended tests based on your profile.",
+      },
+      {
+        num: "2",
+        title: "Track",
+        subtitle: "Upload lab results — structured overview",
+        body: "Upload your lab results and instantly see what's covered and what's not.",
+      },
+      {
+        num: "3",
+        title: "Act",
+        subtitle: "Book tests, order kits, track progress",
+        body: "Book tests, order home kits, and track your progress in one place.",
+      },
+    ],
+  },
+  howItWorksSimple: {
+    label: "How it works",
+    headline: "Three steps. That's it.",
+    steps: [
+      {
+        num: "01",
+        title: "Take a quick health check",
+        body: "Get your personalized test roadmap",
+      },
+      {
+        num: "02",
+        title: "Upload your lab results",
+        body: "We organize and match them automatically (optional)",
+      },
+      {
+        num: "03",
+        title: "Take action",
+        body: "Book, track, and never miss important checks again",
+      },
+    ],
+  },
+  productPreview: {
+    label: "Product preview",
+    headline: "Your health, clearly organized",
+    scoreLabel: "Health completeness score",
+    scoreValue: 75,
+    missingLabel: "Missing",
+    missing: ["Vitamin D", "Iron panel", "Thyroid (TSH)"],
+    timelineLabel: "Upcoming checks",
+    timeline: [
+      { month: "April", item: "Blood test" },
+      { month: "June", item: "Gynecologist" },
+      { month: "September", item: "Follow-up" },
+    ],
+    ctaLabel: "Try it now",
     ctaHref: "/survey",
-    microtext:
-      "A structured entry experience designed to build your personal biological performance model.",
-    variant: "subtleSurface",
+  },
+  actionLayer: {
+    label: "Your action layer",
+    headline: "We don't just tell you — we help you act",
+    card: {
+      testName: "Vitamin D Test",
+      statusBadge: "Missing",
+      sublabel: "Recommended now for your profile",
+      whyTitle: "Why this matters now",
+      whyBody:
+        "Based on your profile, this test may be worth checking now — you reported fatigue, limited sun exposure, and no recent Vitamin D result in your records.",
+      labsTitle: "Book at a lab",
+      labs: [
+        {
+          name: "Labor Berlin",
+          price: "€25",
+          address: "Invalidenstraße 115, Berlin",
+          note: "Fastest option",
+          mapsHref: "/survey",
+        },
+        {
+          name: "SYNLAB",
+          price: "€30",
+          address: "Alexanderplatz 3, Berlin",
+          note: "",
+          mapsHref: "/survey",
+        },
+      ],
+      homeTitle: "Home test",
+      homeTests: [
+        {
+          name: "Cerascreen Vitamin D Test",
+          price: "€29",
+          descriptor: "Sample from home",
+          orderHref: "/survey",
+        },
+        {
+          name: "Verisana",
+          price: "€35",
+          descriptor: "At-home kit",
+          orderHref: "/survey",
+        },
+      ],
+      doctorTitle: "Through doctor / insurance",
+      doctorLines: [
+        "May be covered if medically justified",
+        "Ask your doctor: \"Can we include Vitamin D in my blood test?\"",
+        "Typical interval: every 6–12 months depending on context",
+        "Private / self-paid route also available if not covered",
+      ],
+      mapsLabel: "Open in Maps",
+      orderOnlineLabel: "Order online",
+      ctaBook: "Book at lab",
+      ctaBookHref: "/survey",
+      ctaOrder: "Order home test",
+      ctaOrderHref: "/survey",
+      ctaPlanned: "Mark as planned",
+      ctaDone: "Mark as done",
+    },
+    microcopy: "No medical advice — structured information to support your next steps.",
+  },
+  knowledgeHub: {
+    label: "Personalized Health Knowledge",
+    headline: "Stay informed about your health — without searching for it",
+    subheadline:
+      "Get relevant research, practical protocols, and expert insights tailored to your profile — all in one place.",
+    blocks: [
+      {
+        title: "Curated research that matters to you",
+        items: [
+          "Discover the latest research in areas like hormones, metabolism, cardiovascular health, and mental well-being",
+          "See what is actually relevant for your age, symptoms, and health profile",
+          "No noise — only structured, understandable insights",
+        ],
+      },
+      {
+        title: "Practical protocols you can follow",
+        items: [
+          "Understand what actions are typically recommended based on research",
+          "See structured approaches — testing frequency, follow-ups, lifestyle adjustments",
+          "Save what is relevant to your personal health plan",
+        ],
+      },
+      {
+        title: "Your personal knowledge library",
+        items: [
+          "Save articles and insights you want to revisit",
+          "Build your own health knowledge base over time",
+          "Everything connected to your tests, results, and progress",
+        ],
+      },
+    ],
+    personalizationLabel: "Always relevant to you",
+    personalizationBody:
+      "We notify you when new research, recommendations, or insights appear that match your profile — so you stay up to date without actively searching.",
+    expertHeadline: "Learn directly from doctors and researchers",
+    expertItems: [
+      "Join webinars with medical experts and researchers",
+      "Get answers to your questions — including anonymous ones",
+      "Attend curated offline events focused on women's health",
+    ],
+    ctaLabel: "Start your personalized health journey",
+    ctaHref: "/survey",
+  },
+  differentiationNew: {
+    label: "Why this is different",
+    headline: "Not another AI explanation tool",
+    intro: "Tools like ChatGPT can explain results. We help you:",
+    left: {
+      title: "ChatGPT / generic AI",
+      items: ["One-time answers", "No tracking", "No follow-up"],
+    },
+    right: {
+      title: "The Arc Woman",
+      items: ["Track your health over time", "See what's missing", "Actually get things done"],
+    },
+  },
+  trust: {
+    label: "Privacy",
+    headline: "Your data stays yours",
+    items: [
+      "Upload only if you want",
+      "No selling of personal data",
+      "GDPR-first approach",
+    ],
+    microcopy: "Built for awareness, not diagnosis.",
   },
 } as const;
