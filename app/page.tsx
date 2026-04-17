@@ -1,32 +1,27 @@
 import { HeroSection } from "@/components/sections/HeroSection";
-import { DesignConceptSection } from "@/components/sections/DesignConceptSection";
-import { PersonalizationSection } from "@/components/sections/PersonalizationSection";
-import { MirrorSection } from "@/components/sections/MirrorSection";
-import { ReframeSection } from "@/components/sections/ReframeSection";
-import { HealthIntelligenceReelSection } from "@/components/sections/HealthIntelligenceReelSection";
-import { ProductIntroSection } from "@/components/sections/ProductIntroSection";
-import { JourneySection } from "@/components/sections/JourneySection";
-import { KnowledgeSection } from "@/components/home/KnowledgeSection";
-import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
-import { IdentitySection } from "@/components/sections/IdentitySection";
-import { FinalCTASection } from "@/components/sections/FinalCTASection";
+import { ProblemSection } from "@/components/sections/ProblemSection";
+import { SolutionSection } from "@/components/sections/SolutionSection";
+import { HowItWorksSimpleSection } from "@/components/sections/HowItWorksSimpleSection";
+import { ProductPreviewSection } from "@/components/sections/ProductPreviewSection";
+import { ActionLayerSection } from "@/components/sections/ActionLayerSection";
+import { KnowledgeHubSection } from "@/components/sections/KnowledgeHubSection";
+import { DifferentiationNewSection } from "@/components/sections/DifferentiationNewSection";
 import { FounderMessageSection } from "@/components/sections/FounderMessageSection";
+import { TrustSection } from "@/components/sections/TrustSection";
+import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { homepageContent } from "@/content/homepage";
 
 export default function Home() {
   return (
     <main>
       <HeroSection />
-      <DesignConceptSection />
-      <MirrorSection />
-      <ReframeSection />
-      <PersonalizationSection />
-      <KnowledgeSection />
-      <JourneySection />
-      <HealthIntelligenceReelSection />
-      <ProductIntroSection />
-      <HowItWorksSection />
-      <IdentitySection />
+      <ProblemSection />
+      <SolutionSection />
+      <HowItWorksSimpleSection />
+      <ProductPreviewSection />
+      <ActionLayerSection />
+      <KnowledgeHubSection />
+      <DifferentiationNewSection />
       <FounderMessageSection
         label={homepageContent.founderMessage.label}
         headline={homepageContent.founderMessage.headline}
@@ -35,7 +30,9 @@ export default function Home() {
         founderTitle={homepageContent.founderMessage.founderTitle}
         imageSrc={homepageContent.founderMessage.imageSrc}
         imageAlt={homepageContent.founderMessage.imageAlt}
+        secondary={undefined}
       />
+      <TrustSection />
       <FinalCTASection />
     </main>
   );

@@ -17,41 +17,39 @@ function fadeUp(delay = 0, reduced: boolean) {
   };
 }
 
-export default function HowArcWorksPage() {
+export default function WieArcFunktioniertPage() {
   const reduced = useReducedMotion() ?? false;
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
+    <main className="min-h-screen bg-[var(--background)]" lang="de">
 
       {/* ── 1. HERO ──────────────────────────────────────────────────────── */}
       <section className="border-b border-black/[0.06] py-16 md:py-24 lg:py-28">
         <Container>
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            {/* Mobile: text first */}
             <motion.div
               {...fadeUp(0, reduced)}
               className="order-1 lg:order-2"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-                Transparency
+                Transparenz
               </p>
               <h1 className="mt-3 text-balance text-[2rem] font-medium leading-[1.1] tracking-tight text-[#0c0c0c] sm:text-[2.25rem] md:text-[2.5rem] lg:text-[2.75rem]">
-                How The Arc works
+                Wie The Arc funktioniert
               </h1>
               <p className="mt-5 max-w-[36rem] text-[1.0625rem] leading-[1.7] text-[#404040]">
-                Understand how your health data is structured, how insights are generated, and how your privacy is protected.
+                Verstehe, wie deine Gesundheitsdaten strukturiert werden, wie Erkenntnisse entstehen und wie deine Privatsphäre geschützt wird.
               </p>
               <div className="mt-8">
                 <Link
                   href="/survey"
                   className="inline-flex rounded-[14px] bg-[#0c0c0c] px-5 py-2.5 text-[0.9375rem] font-medium text-white transition-[filter] duration-[180ms] hover:brightness-[0.9]"
                 >
-                  Explore your health overview
+                  Deine Gesundheitsübersicht erkunden
                 </Link>
               </div>
             </motion.div>
 
-            {/* Image */}
             <motion.div
               {...fadeUp(0.06, reduced)}
               className="order-2 lg:order-1"
@@ -59,7 +57,7 @@ export default function HowArcWorksPage() {
               <div className="overflow-hidden rounded-[24px] border border-black/[0.08] bg-[#f5f5f3]">
                 <Image
                   src="/images/background_image.avif"
-                  alt="Health data structure and privacy — The Arc"
+                  alt="Gesundheitsdaten strukturiert und sicher — The Arc"
                   width={720}
                   height={540}
                   className="h-auto w-full object-cover"
@@ -79,49 +77,47 @@ export default function HowArcWorksPage() {
             className="mx-auto max-w-[42rem] text-center"
           >
             <h2 className="text-balance text-[1.5rem] font-medium leading-[1.2] tracking-tight text-[#0c0c0c] sm:text-[1.625rem] md:text-[1.75rem]">
-              The Arc helps you understand, organize, and act on your health data — in a structured and transparent way.
+              The Arc hilft dir, deine Gesundheitsdaten besser zu verstehen, zu strukturieren und daraus sinnvolle nächste Schritte abzuleiten.
             </h2>
             <p className="mt-5 text-[1rem] leading-[1.7] text-[#525252] md:text-[1.0625rem]">
-              It is designed to support awareness and decision-making, not to replace medical care.
+              Die Plattform dient zur Orientierung und Unterstützung — nicht als Ersatz für ärztliche Beratung.
             </p>
           </motion.div>
         </Container>
       </section>
 
-      {/* ── 3. SCIENTIFIC FOUNDATION ─────────────────────────────────────── */}
+      {/* ── 3. WISSENSCHAFTLICHE GRUNDLAGE ───────────────────────────────── */}
       <section className="border-t border-black/[0.06] bg-[#fafaf9] py-16 md:py-20 lg:py-24">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-            {/* Left */}
             <motion.div {...fadeUp(0, reduced)}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-                Scientific foundation
+                Wissenschaftliche Grundlage
               </p>
               <h2 className="mt-3 text-balance text-[1.625rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] md:text-[1.875rem]">
-                Built on publicly available medical guidelines
+                Basierend auf öffentlich zugänglichen medizinischen Leitlinien
               </h2>
               <p className="mt-4 text-[0.9375rem] leading-[1.7] text-[#525252]">
-                The Arc is built on publicly available medical guidelines, preventive care recommendations, and peer-reviewed research.
+                The Arc basiert auf öffentlich zugänglichen medizinischen Leitlinien, Vorsorgeempfehlungen und wissenschaftlichen Studien.
               </p>
               <p className="mt-3 text-[0.9375rem] leading-[1.7] text-[#525252]">
-                We combine established screening recommendations, commonly monitored biomarkers, and structured interpretation frameworks.
+                Dabei werden etablierte Vorsorge- und Screening-Empfehlungen, häufig gemessene Laborwerte und strukturierte Bewertungsansätze berücksichtigt.
               </p>
             </motion.div>
 
-            {/* Right */}
             <motion.div {...fadeUp(0.08, reduced)} className="space-y-4">
               {[
                 {
-                  title: "What has already been checked",
-                  body: "The Arc maps your existing data against known screening benchmarks to show what is already covered.",
+                  title: "Welche Werte bereits erfasst wurden",
+                  body: "The Arc ordnet deine vorhandenen Daten bekannten Screening-Standards zu und zeigt, was bereits abgedeckt ist.",
                 },
                 {
-                  title: "What may be missing or outdated",
-                  body: "Gaps and overdue checks are surfaced clearly so nothing important is overlooked.",
+                  title: "Was möglicherweise fehlt oder veraltet ist",
+                  body: "Lücken und fällige Checks werden klar sichtbar gemacht, damit nichts Wichtiges übersehen wird.",
                 },
                 {
-                  title: "What could be worth discussing",
-                  body: "Findings that may warrant a conversation with a healthcare professional are highlighted — not prescribed.",
+                  title: "Welche Themen besprochen werden könnten",
+                  body: "Befunde, die ein Gespräch mit Fachpersonal sinnvoll machen könnten, werden hervorgehoben — nicht vorgeschrieben.",
                 },
               ].map((item, i) => (
                 <motion.div
@@ -134,39 +130,38 @@ export default function HowArcWorksPage() {
                 </motion.div>
               ))}
               <p className="pt-1 text-[0.8125rem] leading-[1.55] text-[#a3a3a3]">
-                All insights are presented in a simplified, structured format to support understanding.
+                Alle Inhalte werden vereinfacht und verständlich dargestellt.
               </p>
             </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* ── 4. GUIDANCE — NOT DIAGNOSIS ──────────────────────────────────── */}
+      {/* ── 4. ORIENTIERUNG STATT DIAGNOSE ───────────────────────────────── */}
       <section className="py-16 md:py-20 lg:py-24">
         <Container>
           <motion.div {...fadeUp(0, reduced)} className="mx-auto max-w-[44rem] text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-              Guidance, not diagnosis
+              Orientierung statt Diagnose
             </p>
             <h2 className="mt-3 text-balance text-[1.625rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] md:text-[1.875rem]">
-              The Arc does not diagnose, treat, or provide medical advice
+              The Arc stellt keine Diagnosen und gibt keine Behandlungen vor
             </h2>
           </motion.div>
 
           <div className="mx-auto mt-10 grid max-w-[52rem] grid-cols-1 gap-5 sm:grid-cols-2 md:mt-12">
-            {/* What The Arc does */}
             <motion.div
               {...fadeUp(0.04, reduced)}
               className="rounded-[20px] border border-black/[0.08] bg-white/[0.55] p-6 md:p-7"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                What The Arc does
+                Was The Arc tut
               </p>
               <ul className="mt-5 space-y-3.5">
                 {[
-                  "Organizes your health information",
-                  "Identifies potential gaps",
-                  "Helps you understand possible next steps",
+                  "Deine Gesundheitsdaten strukturieren und ordnen",
+                  "Mögliche Lücken sichtbar machen",
+                  "Nächste Schritte besser einordnen helfen",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span
@@ -183,19 +178,18 @@ export default function HowArcWorksPage() {
               </ul>
             </motion.div>
 
-            {/* What The Arc is not */}
             <motion.div
               {...fadeUp(0.1, reduced)}
               className="rounded-[20px] border border-black/[0.07] bg-[#fafaf9] p-6 md:p-7"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a3a3a3]">
-                What The Arc is not
+                Was The Arc nicht ist
               </p>
               <ul className="mt-5 space-y-3.5">
                 {[
-                  "No diagnosis",
-                  "No treatment recommendations",
-                  "No replacement for a qualified healthcare professional",
+                  "Keine Diagnose",
+                  "Keine Behandlungsempfehlung",
+                  "Kein Ersatz für qualifiziertes Fachpersonal",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span
@@ -209,37 +203,37 @@ export default function HowArcWorksPage() {
                 ))}
               </ul>
               <p className="mt-5 text-[0.8125rem] leading-[1.55] text-[#a3a3a3]">
-                Any medical decisions should always be made together with a qualified healthcare professional.
+                Medizinische Entscheidungen sollten immer gemeinsam mit qualifiziertem Fachpersonal getroffen werden.
               </p>
             </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* ── 5. DATA USAGE ────────────────────────────────────────────────── */}
+      {/* ── 5. UMGANG MIT DEINEN DATEN ───────────────────────────────────── */}
       <section className="border-t border-black/[0.06] bg-[#fafaf9] py-16 md:py-20 lg:py-24">
         <Container>
           <motion.div {...fadeUp(0, reduced)} className="mx-auto max-w-[44rem]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-              How your data is used
+              Umgang mit deinen Daten
             </p>
             <h2 className="mt-3 text-balance text-[1.625rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] md:text-[1.875rem]">
-              You stay in control of your data at all times
+              Du behältst jederzeit die Kontrolle über deine Daten
             </h2>
 
             <ul className="mt-8 space-y-5">
               {[
                 {
-                  title: "Uploading documents is optional",
-                  body: "You choose what to share. The Arc works without any uploads — they only add more context if you want.",
+                  title: "Das Hochladen von Befunden ist optional",
+                  body: "Du entscheidest selbst, was du teilst. The Arc funktioniert auch ohne Uploads — sie liefern nur zusätzlichen Kontext, wenn du das möchtest.",
                 },
                 {
-                  title: "Used only for your personal overview",
-                  body: "Your data is used only to generate the insights and overview shown to you.",
+                  title: "Ausschließlich für deine persönliche Übersicht",
+                  body: "Deine Daten werden nur verwendet, um die Erkenntnisse und die Übersicht zu erstellen, die dir angezeigt werden.",
                 },
                 {
-                  title: "No selling or sharing for advertising",
-                  body: "We do not sell or share your personal health data for advertising or commercial purposes.",
+                  title: "Keine Weitergabe zu Werbezwecken",
+                  body: "Wir verkaufen oder teilen deine persönlichen Gesundheitsdaten nicht für Werbung oder kommerzielle Zwecke.",
                 },
               ].map((item, i) => (
                 <motion.li
@@ -259,40 +253,40 @@ export default function HowArcWorksPage() {
               ))}
             </ul>
             <p className="mt-7 text-[0.8125rem] leading-[1.55] text-[#a3a3a3]">
-              We aim to process only what is necessary to provide the service.
+              Wir verarbeiten nur die Daten, die für die Funktion der Plattform notwendig sind.
             </p>
           </motion.div>
         </Container>
       </section>
 
-      {/* ── 6. DATA SECURITY ─────────────────────────────────────────────── */}
+      {/* ── 6. DATENSCHUTZ & SICHERHEIT ──────────────────────────────────── */}
       <section className="py-16 md:py-20 lg:py-24">
         <Container>
           <motion.div {...fadeUp(0, reduced)} className="mx-auto max-w-[44rem] text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-              Data security and privacy
+              Datenschutz und Sicherheit
             </p>
             <h2 className="mt-3 text-balance text-[1.625rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] md:text-[1.875rem]">
-              Protecting your data is a core priority
+              Der Schutz deiner Daten hat höchste Priorität
             </h2>
             <p className="mt-4 text-[0.9375rem] leading-[1.7] text-[#525252]">
-              The Arc is designed with privacy-first principles from the ground up.
+              The Arc wird von Grund auf nach datenschutzorientierten Prinzipien entwickelt.
             </p>
           </motion.div>
 
           <div className="mx-auto mt-10 grid max-w-[56rem] grid-cols-1 gap-5 sm:grid-cols-3 md:mt-12 md:gap-6">
             {[
               {
-                title: "Secure storage",
-                body: "Data is stored securely with restricted access at every level.",
+                title: "Sichere Speicherung",
+                body: "Daten werden sicher gespeichert, mit eingeschränktem Zugriff auf allen Ebenen.",
               },
               {
-                title: "Restricted access",
-                body: "Only the minimum necessary access is granted to internal systems and personnel.",
+                title: "Eingeschränkter Zugriff",
+                body: "Nur der unbedingt notwendige Zugriff wird internen Systemen und Personen gewährt.",
               },
               {
-                title: "GDPR principles",
-                body: "Systems are built with GDPR requirements in mind and continuously improved.",
+                title: "DSGVO-Ausrichtung",
+                body: "Systeme werden gemäß den DSGVO-Anforderungen entwickelt und kontinuierlich verbessert.",
               },
             ].map((card, i) => (
               <motion.div
@@ -308,23 +302,23 @@ export default function HowArcWorksPage() {
         </Container>
       </section>
 
-      {/* ── 7. TRANSPARENCY ──────────────────────────────────────────────── */}
+      {/* ── 7. TRANSPARENZ ───────────────────────────────────────────────── */}
       <section className="border-t border-black/[0.06] bg-[#fafaf9] py-16 md:py-20 lg:py-24">
         <Container>
           <motion.div {...fadeUp(0, reduced)} className="mx-auto max-w-[44rem] text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-              Transparency
+              Transparenz
             </p>
             <h2 className="mt-3 text-balance text-[1.625rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] md:text-[1.875rem]">
-              We believe that trust comes from clarity
+              Vertrauen entsteht durch Nachvollziehbarkeit
             </h2>
           </motion.div>
 
           <ul className="mx-auto mt-10 max-w-[38rem] space-y-4">
             {[
-              "Clearly explain how insights are generated",
-              "Avoid hidden logic or opaque decision-making",
-              "Communicate limitations openly",
+              "Verständlich erklären, wie Ergebnisse zustande kommen",
+              "Keine intransparenten Entscheidungslogiken verwenden",
+              "Grenzen der Plattform offen kommunizieren",
             ].map((item, i) => (
               <motion.li
                 key={item}
@@ -342,7 +336,7 @@ export default function HowArcWorksPage() {
         </Container>
       </section>
 
-      {/* ── 8. CLOSING CTA ───────────────────────────────────────────────── */}
+      {/* ── 8. ABSCHLUSS ─────────────────────────────────────────────────── */}
       <section className="border-t border-black/[0.06] py-20 md:py-28 lg:py-32">
         <Container>
           <motion.div
@@ -350,23 +344,23 @@ export default function HowArcWorksPage() {
             className="mx-auto max-w-[40rem] text-center"
           >
             <h2 className="text-balance text-[1.75rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] sm:text-[1.95rem] md:text-[2.1rem]">
-              The Arc is here to help you stay informed, organized, and proactive
+              The Arc unterstützt dich dabei, informiert und strukturiert mit deiner Gesundheit umzugehen
             </h2>
             <p className="mt-4 text-[1rem] leading-[1.7] text-[#525252] md:text-[1.0625rem]">
-              So you can have more meaningful conversations about your health.
+              Und bessere Gespräche mit medizinischem Fachpersonal zu führen.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/survey"
                 className="rounded-[14px] bg-[#0c0c0c] px-6 py-3 text-[0.9375rem] font-medium text-white transition-[filter] duration-[180ms] hover:brightness-[0.9]"
               >
-                Get started
+                Jetzt starten
               </Link>
               <Link
-                href="/"
+                href="/de"
                 className="rounded-[14px] border border-black/[0.14] px-6 py-3 text-[0.9375rem] font-medium text-[#404040] transition-colors hover:bg-[#f5f5f4]"
               >
-                Back to home
+                Zur Startseite
               </Link>
             </div>
           </motion.div>

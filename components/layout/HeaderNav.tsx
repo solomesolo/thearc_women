@@ -2,17 +2,45 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { AuthNav } from "@/components/layout/AuthNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 
-const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/system2", label: "How The Arc works" },
+// hasDE: true = page exists in /de/... as well
+const LINKS: { href: string; label: string; hasDE?: boolean }[] = [
+  { href: "/", label: "Home", hasDE: true },
+  { href: "/system2", label: "How The Arc works", hasDE: true },
   { href: "/blog", label: "Knowledge Base" },
   { href: "/knowledge", label: "My Health Dashboard" },
-  { href: "/plan", label: "My Plan" },
-] as const;
+  { href: "/upload", label: "Upload Health Data" },
+];
+
+function LanguageSwitcher({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const isDE = pathname.startsWith("/de");
+  const enHref = isDE ? pathname.replace(/^\/de/, "") || "/" : null;
+  const deHref = !isDE ? "/de" + (pathname === "/" ? "" : pathname) : null;
+
+  return (
+    <div className={clsx("flex items-center gap-1 rounded-[10px] border border-black/[0.1] p-0.5 text-[0.8125rem] font-medium", className)}>
+      {enHref ? (
+        <Link href={enHref} className="rounded-[8px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+          EN
+        </Link>
+      ) : (
+        <span className="rounded-[8px] bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]">EN</span>
+      )}
+      {deHref ? (
+        <Link href={deHref} className="rounded-[8px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+          DE
+        </Link>
+      ) : (
+        <span className="rounded-[8px] bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]">DE</span>
+      )}
+    </div>
+  );
+}
 
 const linkClass =
   "text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]";
@@ -25,6 +53,13 @@ const ctaClass =
 
 export function HeaderNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isDE = pathname.startsWith("/de");
+
+  const resolvedLinks = LINKS.map(({ href, label, hasDE }) => ({
+    label,
+    href: isDE && hasDE ? "/de" + (href === "/" ? "" : href) : href,
+  }));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,11 +83,12 @@ export function HeaderNav() {
         className="hidden flex-1 flex-wrap items-center justify-end gap-4 md:flex md:gap-6"
         aria-label="Main"
       >
-        {LINKS.map(({ href, label }) => (
+        {resolvedLinks.map(({ href, label }) => (
           <Link key={href} href={href} className={linkClass}>
             {label}
           </Link>
         ))}
+        <LanguageSwitcher />
         <NotificationBell />
         <AuthNav />
         <Link href="/survey" className={ctaClass}>
@@ -111,7 +147,7 @@ export function HeaderNav() {
           >
             <div className="mx-auto w-full max-w-[80rem] px-6 py-4">
               <ul className="flex flex-col gap-0.5">
-                {LINKS.map(({ href, label }) => (
+                {resolvedLinks.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
@@ -124,6 +160,7 @@ export function HeaderNav() {
                 ))}
               </ul>
               <div className="mt-4 flex flex-col gap-3 border-t border-black/[0.08] pt-4">
+                <LanguageSwitcher className="self-start" />
                 <AuthNav
                   className="-mx-2 block w-fit max-w-full rounded-[12px] px-2 py-3 text-[15px] text-[var(--text-primary)] hover:bg-black/[0.04]"
                   onNavigate={() => setOpen(false)}
