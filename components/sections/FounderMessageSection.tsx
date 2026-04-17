@@ -48,7 +48,7 @@ export function FounderMessageSection({
   founderTitle = defaultContent.founderTitle,
   imageSrc = defaultContent.imageSrc,
   imageAlt = defaultContent.imageAlt,
-  secondary = (defaultContent as any).secondary,
+  secondary = undefined,
 }: FounderMessageSectionProps) {
   const prefersReducedMotion = useReducedMotion();
 
