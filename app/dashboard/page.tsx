@@ -1,6 +1,7 @@
 import { DashboardV3 } from "@/components/dashboard/DashboardV3";
 import { getLatestDashboard } from "@/lib/dashboard/getLatestDashboard";
 import { getStartingLineForUser } from "@/lib/dashboard/getStartingLineForUser";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ function isNextDynamicUsageError(err: unknown): boolean {
 }
 
 export default async function DashboardPage() {
+  // Canonical dashboard lives under `/app/dashboard` (Engine H + locale-aware UI).
+  redirect("/app/dashboard");
+
   let payload: Awaited<ReturnType<typeof getLatestDashboard>> = null;
   let startingLine: Awaited<ReturnType<typeof getStartingLineForUser>> | null = null;
   try {

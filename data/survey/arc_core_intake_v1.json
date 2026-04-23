@@ -69,6 +69,15 @@
       },
       "items": [
         {
+          "id": "q_country",
+          "kind": "question",
+          "variable_id": "country",
+          "question": "Where are you based?",
+          "type": "multiple_choice",
+          "options": ["Germany", "United Kingdom"],
+          "support": "This helps us show you the right information about accessing tests through your healthcare system."
+        },
+        {
           "id": "q_age_years",
           "kind": "question",
           "variable_id": "age_years",

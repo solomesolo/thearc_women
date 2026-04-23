@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { AuthNav } from "@/components/layout/AuthNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { setStoredLocale } from "@/lib/i18n/locale";
+import { isDePrefixedPathSupported, shouldStripDePrefix } from "@/lib/i18n/deRouting";
+import { useLocale } from "@/lib/i18n/useLocale";
 
 // hasDE: true = page exists in /de/... as well
 const LINKS: { href: string; label: string; hasDE?: boolean }[] = [
@@ -17,26 +20,66 @@ const LINKS: { href: string; label: string; hasDE?: boolean }[] = [
 ];
 
 function LanguageSwitcher({ className }: { className?: string }) {
+  const router = useRouter();
   const pathname = usePathname();
   const isDE = pathname.startsWith("/de");
-  const enHref = isDE ? pathname.replace(/^\/de/, "") || "/" : null;
-  const deHref = !isDE ? "/de" + (pathname === "/" ? "" : pathname) : null;
+  const locale = useLocale();
+
+  // Compute "base" path without /de prefix.
+  const basePath = isDE ? pathname.replace(/^\/de/, "") || "/" : pathname;
+  const supportsDePrefix = useMemo(() => isDePrefixedPathSupported(basePath), [basePath]);
+
+  const enHref = isDE ? basePath : null;
+  const deHref = !isDE && supportsDePrefix ? "/de" + (basePath === "/" ? "" : basePath) : null;
+
+  const activeClass = "rounded-[8px] bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]";
+  const inactiveClass =
+    "rounded-[8px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors";
 
   return (
     <div className={clsx("flex items-center gap-1 rounded-[10px] border border-black/[0.1] p-0.5 text-[0.8125rem] font-medium", className)}>
       {enHref ? (
-        <Link href={enHref} className="rounded-[8px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+        <Link
+          href={enHref}
+          onClick={() => setStoredLocale("en")}
+          className={locale === "en" ? activeClass : inactiveClass}
+        >
           EN
         </Link>
       ) : (
-        <span className="rounded-[8px] bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]">EN</span>
+        <button
+          type="button"
+          onClick={() => {
+            setStoredLocale("en");
+            if (isDE) router.replace(basePath);
+          }}
+          className={locale === "en" ? activeClass : inactiveClass}
+        >
+          EN
+        </button>
       )}
+
       {deHref ? (
-        <Link href={deHref} className="rounded-[8px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+        <Link
+          href={deHref}
+          onClick={() => setStoredLocale("de")}
+          className={locale === "de" ? activeClass : inactiveClass}
+        >
           DE
         </Link>
       ) : (
-        <span className="rounded-[8px] bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]">DE</span>
+        <button
+          type="button"
+          onClick={() => {
+            setStoredLocale("de");
+            // For non-prefixed app/onboarding/results routes: keep URL, just change locale.
+            // For DE-prefixed pages: if already on /de we might be on an unsupported route → hop back.
+            if (isDE) router.replace(basePath);
+          }}
+          className={locale === "de" ? activeClass : inactiveClass}
+        >
+          DE
+        </button>
       )}
     </div>
   );
@@ -53,8 +96,17 @@ const ctaClass =
 
 export function HeaderNav() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
   const isDE = pathname.startsWith("/de");
+
+  // If we ever land on `/de/...` for app/onboarding/results routes, strip the prefix to avoid 404s.
+  useEffect(() => {
+    if (!pathname.startsWith("/de")) return;
+    if (!shouldStripDePrefix(pathname)) return;
+    const base = pathname.replace(/^\/de/, "") || "/";
+    router.replace(base);
+  }, [pathname, router]);
 
   const resolvedLinks = LINKS.map(({ href, label, hasDE }) => ({
     label,

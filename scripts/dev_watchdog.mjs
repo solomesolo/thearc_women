@@ -4,7 +4,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import fs from "node:fs";
 import path from "node:path";
 
-const PORT = Number(process.env.DEV_WATCHDOG_PORT ?? 3000);
+const PORT = Number(process.env.DEV_WATCHDOG_PORT ?? 3008);
 const CHECK_URLS = [
   `http://127.0.0.1:${PORT}/`,
   `http://127.0.0.1:${PORT}/dashboard`,

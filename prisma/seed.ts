@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { TAXONOMY_LABELS } from "../content/taxonomy";
+import { ensureEngineASeed } from "../lib/profile-engine-a/seed";
 
 const connectionString = process.env.DATABASE_URL ?? "postgresql://localhost:5432/thearc";
 const adapter = new PrismaPg({ connectionString });
@@ -306,6 +307,9 @@ async function main() {
         });
     }
   }
+
+  console.log("Seeding Engine A (questionnaire + canonical bundles)...");
+  await ensureEngineASeed(prisma as any);
 
   console.log("Seed complete.");
 }

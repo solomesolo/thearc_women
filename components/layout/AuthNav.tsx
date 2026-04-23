@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useSession, signOut } from "next-auth/react";
+import { clearArcLocalState } from "@/lib/profile-engine-a/frontendClient";
 
 const baseClass =
   "text-sm text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)]";
@@ -30,6 +31,7 @@ export function AuthNav({ className, onNavigate }: AuthNavProps) {
         type="button"
         onClick={() => {
           onNavigate?.();
+          clearArcLocalState();
           signOut({ callbackUrl: "/" });
         }}
         className={clsx(

@@ -8,19 +8,19 @@ datasource db {
 
 /// Raw scraped medical articles from external sources (PubMed, guidelines, etc.)
 model RawMedicalArticle {
-  id               String   @id @default(uuid()) @db.Uuid
-  source           String
-  sourceUrl        String
-  title            String
-  authors          String?
-  journal          String?
-  publicationDate  DateTime?
-  abstract         String?
-  fullText         String?
-  keywords         String[] @default([]) // PostgreSQL text[]
-  doi              String?
-  scrapedAt        DateTime @default(now())
-  processed        Boolean  @default(false)
+  id              String    @id @default(uuid()) @db.Uuid
+  source          String
+  sourceUrl       String
+  title           String
+  authors         String?
+  journal         String?
+  publicationDate DateTime?
+  abstract        String?
+  fullText        String?
+  keywords        String[]  @default([]) // PostgreSQL text[]
+  doi             String?
+  scrapedAt       DateTime  @default(now())
+  processed       Boolean   @default(false)
 
   knowledgeArticles KnowledgeArticle[]
 
@@ -30,51 +30,51 @@ model RawMedicalArticle {
 /// Structured knowledge article derived from a raw medical article.
 /// approvalStatus: "pending" = needs admin approval; "approved" = shown on blog.
 model KnowledgeArticle {
-  id                 String   @id @default(uuid()) @db.Uuid
-  rawArticleId       String?  @db.Uuid
-  rawArticle         RawMedicalArticle? @relation(fields: [rawArticleId], references: [id])
+  id           String             @id @default(uuid()) @db.Uuid
+  rawArticleId String?            @db.Uuid
+  rawArticle   RawMedicalArticle? @relation(fields: [rawArticleId], references: [id])
 
-  title              String
-  summary            String?
-  keyFindings        String[] @default([])
-  biologicalSystems  String[] @default([])
-  symptoms           String[] @default([])
-  biomarkers         String[] @default([])
-  rootCauses         String[] @default([])
-  preventiveTopics   String[] @default([])
-  interventionTypes  String[] @default([])
-  lifeStages         String[] @default([])
-  evidenceLevel      String?
-  approvalStatus     String?  @default("pending") // "pending" | "approved" — only approved shown on blog
-  createdAt          DateTime @default(now())
+  title             String
+  summary           String?
+  keyFindings       String[] @default([])
+  biologicalSystems String[] @default([])
+  symptoms          String[] @default([])
+  biomarkers        String[] @default([])
+  rootCauses        String[] @default([])
+  preventiveTopics  String[] @default([])
+  interventionTypes String[] @default([])
+  lifeStages        String[] @default([])
+  evidenceLevel     String?
+  approvalStatus    String?  @default("pending") // "pending" | "approved" — only approved shown on blog
+  createdAt         DateTime @default(now())
 
-  contents           KnowledgeContent[]
-  labels             ArticleLabel[]
+  contents KnowledgeContent[]
+  labels   ArticleLabel[]
 
   @@map("knowledge_articles")
 }
 
 /// Rich narrative knowledge content attached to a knowledge article
 model KnowledgeContent {
-  id                   String   @id @default(uuid()) @db.Uuid
-  articleId            String   @db.Uuid
-  article              KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id        String           @id @default(uuid()) @db.Uuid
+  articleId String           @db.Uuid
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
-  scienceExplained     String?
+  scienceExplained      String?
   patternsAndRootCauses String?
-  preventiveInsights   String?
-  clinicalContext      String?
-  qualityScore         Float?
-  createdAt            DateTime @default(now())
+  preventiveInsights    String?
+  clinicalContext       String?
+  qualityScore          Float?
+  createdAt             DateTime @default(now())
 
   @@map("knowledge_content")
 }
 
 /// Flat label entries for flexible tagging and analytics
 model ArticleLabel {
-  id         String   @id @default(uuid()) @db.Uuid
-  articleId  String   @db.Uuid
-  article    KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id        String           @id @default(uuid()) @db.Uuid
+  articleId String           @db.Uuid
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   labelType  String
   labelValue String
@@ -86,9 +86,9 @@ model ArticleLabel {
 /// Pipeline event log (scrape errors, LLM failures, JSON errors, duplicates, label failures)
 model PipelineLog {
   id        String   @id @default(uuid()) @db.Uuid
-  event     String   // e.g. scrape_error, llm_failure, json_parse_error, duplicate_article, label_mapping_failure
+  event     String // e.g. scrape_error, llm_failure, json_parse_error, duplicate_article, label_mapping_failure
   message   String?
-  payload   Json?    // optional context (article_id, error detail, etc.)
+  payload   Json? // optional context (article_id, error detail, etc.)
   createdAt DateTime @default(now())
 
   @@map("pipeline_logs")
@@ -96,23 +96,23 @@ model PipelineLog {
 
 /// Top-level article metadata (editorial or pipeline-generated)
 model Article {
-  id             Int              @id @default(autoincrement())
-  slug           String           @unique
-  title          String
-  excerpt        String
-  pillar         String?
-  category       String?
-  evidenceLevel  String?
-  studyTypes     String?          // e.g. observational, randomized (comma or JSON)
-  consensusStatus String?
-  coverImageUrl  String?
-  lensMapping    String[]        @default([])  // tag slugs or IDs for "lens"
-  isPublished    Boolean          @default(false)
-  isArchived     Boolean          @default(false)
-  publishedAt    DateTime?
-  readingTimeMinutes Int?         // computed on save/publish from sections + excerpt
+  id                 Int       @id @default(autoincrement())
+  slug               String    @unique
+  title              String
+  excerpt            String
+  pillar             String?
+  category           String?
+  evidenceLevel      String?
+  studyTypes         String? // e.g. observational, randomized (comma or JSON)
+  consensusStatus    String?
+  coverImageUrl      String?
+  lensMapping        String[]  @default([]) // tag slugs or IDs for "lens"
+  isPublished        Boolean   @default(false)
+  isArchived         Boolean   @default(false)
+  publishedAt        DateTime?
+  readingTimeMinutes Int? // computed on save/publish from sections + excerpt
   /// When set, article was generated by the pipeline (scraper + LLM); admin approves by publishing
-  rawArticleId   String?          @db.Uuid
+  rawArticleId       String?   @db.Uuid
 
   sections        ArticleSection[]
   sources         ArticleSource[]
@@ -122,14 +122,14 @@ model Article {
   collectionJoins CollectionArticle[]
   planItems       PlanItem[]
 
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 /// Individual structured sections (1–9) for an article. 8 = Action protocol, 9 = Tracking framework.
 model ArticleSection {
-  id        Int      @id @default(autoincrement())
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int
 
   /// 1–9 position in the article (6–9 gated: 6–7 legacy, 8 Action protocol, 9 Tracking framework)
@@ -140,9 +140,9 @@ model ArticleSection {
   body         String
 
   /// Sections 6–9 gated by default in product experience
-  isGated      Boolean @default(false)
+  isGated Boolean @default(false)
   /// Preview text for gated sections (required when isGated)
-  preview      String?
+  preview String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,11 +152,11 @@ model ArticleSection {
 
 /// Source / citation for an article (e.g., paper, guideline)
 model ArticleSource {
-  id        Int      @id @default(autoincrement())
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int
 
-  label        String  // short label e.g. Lancet 2024 study
+  label        String // short label e.g. Lancet 2024 study
   url          String?
   evidenceNote String? // optional context on strength / limitations
 
@@ -191,11 +191,11 @@ model TaxonomyTag {
 
 /// Join table between Article and TaxonomyTag
 model ArticleTagJoin {
-  article   Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId Int
 
-  tag       TaxonomyTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId     Int
+  tag   TaxonomyTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId Int
 
   @@id([articleId, tagId])
   @@index([tagId])
@@ -203,25 +203,25 @@ model ArticleTagJoin {
 
 /// MVP: subscription status by email (no full User table required for credentials auth)
 model Subscriber {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  isActive Boolean @default(true)
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
 
 /// Health survey + personalization profile (linked by email from session)
 model UserProfile {
-  id             Int      @id @default(autoincrement())
-  email          String   @unique
-  lifeStage      String?
-  cyclePattern   String?
-  goals          String[] @default([])  // PostgreSQL text[]
-  symptoms       String[] @default([])
-  riskFactors    String[] @default([])
-  trainingVolume String?
-  stressLevel    String?
-  generatedTags   String[] @default([])  // rule-based from above
-  surveyResponses Json?                  // full Arc intake variable_id -> value
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  lifeStage       String?
+  cyclePattern    String?
+  goals           String[] @default([]) // PostgreSQL text[]
+  symptoms        String[] @default([])
+  riskFactors     String[] @default([])
+  trainingVolume  String?
+  stressLevel     String?
+  generatedTags   String[] @default([]) // rule-based from above
+  surveyResponses Json? // full Arc intake variable_id -> value
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -268,8 +268,8 @@ model Collection {
 
 /// Join table: articles inside a collection
 model CollectionArticle {
-  collectionId Int @map("collection_id")
-  articleId    Int @map("article_id")
+  collectionId Int        @map("collection_id")
+  articleId    Int        @map("article_id")
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
@@ -279,12 +279,12 @@ model CollectionArticle {
 
 /// User health plan
 model HealthPlan {
-  id         Int        @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   email      String
   name       String
-  status     String     @default("active")   // active | paused | completed
-  sourceType String?    @map("source_type") // protocol | articles | manual
-  createdAt  DateTime   @default(now()) @map("created_at")
+  status     String      @default("active") // active | paused | completed
+  sourceType String?     @map("source_type") // protocol | articles | manual
+  createdAt  DateTime    @default(now()) @map("created_at")
   items      PlanItem[]
   logs       ActionLog[]
 
@@ -294,16 +294,16 @@ model HealthPlan {
 
 /// Individual item inside a health plan
 model PlanItem {
-  id          Int        @id @default(autoincrement())
-  planId      Int        @map("plan_id")
-  plan        HealthPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  id          Int         @id @default(autoincrement())
+  planId      Int         @map("plan_id")
+  plan        HealthPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
   title       String
   description String?
-  timing      String     @default("anytime") // morning | evening | weekly | anytime
-  sortOrder   Int        @default(0) @map("sort_order")
-  isDone      Boolean    @default(false) @map("is_done")
-  articleId   Int?       @map("article_id")
-  article     Article?   @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  timing      String      @default("anytime") // morning | evening | weekly | anytime
+  sortOrder   Int         @default(0) @map("sort_order")
+  isDone      Boolean     @default(false) @map("is_done")
+  articleId   Int?        @map("article_id")
+  article     Article?    @relation(fields: [articleId], references: [id], onDelete: SetNull)
   logs        ActionLog[]
 
   @@map("plan_items")
@@ -341,28 +341,28 @@ model UserNotification {
 
 /// Health document uploaded by a user (PDF / image)
 model HealthUpload {
-  id               String   @id @default(uuid()) @db.Uuid
-  documentId       String   @unique @default(uuid()) @db.Uuid @map("document_id")
-  userEmail        String   @map("user_email")
-  fileName         String   @map("file_name")
-  mimeType         String   @map("mime_type")
-  fileSize         BigInt   @map("file_size")
-  storagePath      String   @map("storage_path")
-  uploadTimestamp  DateTime @default(now()) @map("upload_timestamp")
-  processingStatus String   @default("pending") @map("processing_status") // pending | queued | processing | completed | failed
-  pageCount        Int?     @map("page_count")
-  ocrJob              OcrJob?
-  ocrResult           OcrResult?
-  classification      DocumentClassification?
-  extraction          MedicalExtraction?
-  binAssignment       BinAssignment?
-  sensitivityProfile  SensitivityProfile?
-  accessLogs          DocumentAccessLog[]
-  normalizedResult    NormalizedResult?
-  healthObservations  HealthObservation[]
-  imagingRecord       ImagingRecord?
-  clinicalNoteRecord  ClinicalNoteRecord?
-  pipelineStepLogs    PipelineStepLog[]
+  id                 String                  @id @default(uuid()) @db.Uuid
+  documentId         String                  @unique @default(uuid()) @map("document_id") @db.Uuid
+  userEmail          String                  @map("user_email")
+  fileName           String                  @map("file_name")
+  mimeType           String                  @map("mime_type")
+  fileSize           BigInt                  @map("file_size")
+  storagePath        String                  @map("storage_path")
+  uploadTimestamp    DateTime                @default(now()) @map("upload_timestamp")
+  processingStatus   String                  @default("pending") @map("processing_status") // pending | queued | processing | completed | failed
+  pageCount          Int?                    @map("page_count")
+  ocrJob             OcrJob?
+  ocrResult          OcrResult?
+  classification     DocumentClassification?
+  extraction         MedicalExtraction?
+  binAssignment      BinAssignment?
+  sensitivityProfile SensitivityProfile?
+  accessLogs         DocumentAccessLog[]
+  normalizedResult   NormalizedResult?
+  healthObservations HealthObservation[]
+  imagingRecord      ImagingRecord?
+  clinicalNoteRecord ClinicalNoteRecord?
+  pipelineStepLogs   PipelineStepLog[]
 
   @@index([userEmail])
   @@map("health_uploads")
@@ -371,23 +371,23 @@ model HealthUpload {
 /// Clinical note record (one per document) for everything outside lab + imaging:
 /// consult notes, procedure summaries, screening letters, medication summaries, etc.
 model ClinicalNoteRecord {
-  id              String      @id @default(uuid()) @db.Uuid
-  documentId      String      @unique @map("document_id") @db.Uuid
-  upload          HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  userEmail       String      @map("user_email")
-  reportDate      DateTime?   @map("report_date") @db.Date
-  documentType    String      @map("document_type") // from document_classifications.document_type
+  id           String       @id @default(uuid()) @db.Uuid
+  documentId   String       @unique @map("document_id") @db.Uuid
+  upload       HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
+  userEmail    String       @map("user_email")
+  reportDate   DateTime?    @map("report_date") @db.Date
+  documentType String       @map("document_type") // from document_classifications.document_type
 
-  summary         String?     // short summary / key note
-  diagnoses       String[]    @default([])
-  recommendations String?     // plan / follow-up / next steps
-  medications     Json        @default("[]") @map("medications") // [{name,dose,units,frequency,route}]
-  rawNotes        String?     @map("raw_notes") // fallback narrative / combined notes
+  summary         String? // short summary / key note
+  diagnoses       String[] @default([])
+  recommendations String? // plan / follow-up / next steps
+  medications     Json     @default("[]") @map("medications") // [{name,dose,units,frequency,route}]
+  rawNotes        String?  @map("raw_notes") // fallback narrative / combined notes
 
-  source          String      @default("extraction") // extraction | heuristic
-  parsingWarnings String[]    @default([]) @map("parsing_warnings")
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
+  source          String   @default("extraction") // extraction | heuristic
+  parsingWarnings String[] @default([]) @map("parsing_warnings")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@index([userEmail, reportDate])
   @@map("clinical_notes_records")
@@ -396,23 +396,23 @@ model ClinicalNoteRecord {
 /// Imaging report record (one per document when document_type=imaging_report)
 /// Stores narrative sections (findings/impression/recommendations) for the user's health record.
 model ImagingRecord {
-  id              String      @id @default(uuid()) @db.Uuid
-  documentId      String      @unique @map("document_id") @db.Uuid
-  upload          HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  userEmail       String      @map("user_email")
-  reportDate      DateTime?   @map("report_date") @db.Date
-  modality        String?     // e.g. MRI, CT, X-ray, Ultrasound (best-effort)
-  bodyPart        String?     @map("body_part")  // best-effort
+  id         String       @id @default(uuid()) @db.Uuid
+  documentId String       @unique @map("document_id") @db.Uuid
+  upload     HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
+  userEmail  String       @map("user_email")
+  reportDate DateTime?    @map("report_date") @db.Date
+  modality   String? // e.g. MRI, CT, X-ray, Ultrasound (best-effort)
+  bodyPart   String?      @map("body_part") // best-effort
 
-  findings        String?     // narrative findings (Befund / Findings)
-  impression      String?     // impression / diagnosis (Beurteilung / Impression)
-  recommendations String?     // recommendations / follow-up (Empfehlung / Recommendation)
+  findings        String? // narrative findings (Befund / Findings)
+  impression      String? // impression / diagnosis (Beurteilung / Impression)
+  recommendations String? // recommendations / follow-up (Empfehlung / Recommendation)
 
-  diagnoses       String[]    @default([])       // extracted diagnosis strings (best-effort)
-  source          String      @default("extraction") // extraction | heuristic
-  parsingWarnings String[]    @default([]) @map("parsing_warnings")
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
+  diagnoses       String[] @default([]) // extracted diagnosis strings (best-effort)
+  source          String   @default("extraction") // extraction | heuristic
+  parsingWarnings String[] @default([]) @map("parsing_warnings")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@index([userEmail, reportDate])
   @@map("imaging_records")
@@ -439,17 +439,17 @@ model OcrJob {
 /// Per-step execution record for the processing pipeline
 /// One row per attempt — retries produce additional rows with attempt > 1
 model PipelineStepLog {
-  id           String    @id @default(uuid()) @db.Uuid
-  documentId   String    @map("document_id") @db.Uuid
+  id           String       @id @default(uuid()) @db.Uuid
+  documentId   String       @map("document_id") @db.Uuid
   upload       HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  step         String                        // ocr | classify | extract | bin_map | normalize | longitudinal | interventions
-  status       String                        // started | completed | failed | retrying | skipped
-  attempt      Int       @default(1)
-  durationMs   Int?      @map("duration_ms")
-  errorMessage String?   @map("error_message")
-  errorDetail  String?   @map("error_detail")
-  startedAt    DateTime  @default(now()) @map("started_at")
-  completedAt  DateTime? @map("completed_at")
+  step         String // ocr | classify | extract | bin_map | normalize | longitudinal | interventions
+  status       String // started | completed | failed | retrying | skipped
+  attempt      Int          @default(1)
+  durationMs   Int?         @map("duration_ms")
+  errorMessage String?      @map("error_message")
+  errorDetail  String?      @map("error_detail")
+  startedAt    DateTime     @default(now()) @map("started_at")
+  completedAt  DateTime?    @map("completed_at")
 
   @@index([documentId])
   @@index([documentId, step])
@@ -458,14 +458,14 @@ model PipelineStepLog {
 
 /// Aggregated OCR result for a document (one per document)
 model OcrResult {
-  id            String    @id @default(uuid()) @db.Uuid
-  documentId    String    @unique @map("document_id") @db.Uuid
+  id            String       @id @default(uuid()) @db.Uuid
+  documentId    String       @unique @map("document_id") @db.Uuid
   upload        HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  ocrStatus     String    @map("ocr_status")       // success | partial | failed
-  rawText       String    @default("") @map("raw_text")
-  pageCount     Int       @default(0) @map("page_count")
-  avgConfidence Float     @default(0) @map("avg_confidence")  // 0–100
-  processedAt   DateTime  @default(now()) @map("processed_at")
+  ocrStatus     String       @map("ocr_status") // success | partial | failed
+  rawText       String       @default("") @map("raw_text")
+  pageCount     Int          @default(0) @map("page_count")
+  avgConfidence Float        @default(0) @map("avg_confidence") // 0–100
+  processedAt   DateTime     @default(now()) @map("processed_at")
   pages         OcrPage[]
 
   @@map("ocr_results")
@@ -473,15 +473,15 @@ model OcrResult {
 
 /// Per-page OCR output
 model OcrPage {
-  id          Int       @id @default(autoincrement())
-  resultId    String    @map("result_id") @db.Uuid
-  result      OcrResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  pageNumber  Int       @map("page_number")
-  rawText     String    @default("") @map("raw_text")
-  confidence  Float     @default(0)   // 0–100
-  wordCount   Int       @default(0) @map("word_count")
-  isLowConf   Boolean   @default(false) @map("is_low_conf")  // confidence < 50
-  blocks      Json      @default("[]")  // [{block_num, text, conf, left, top, width, height}]
+  id         Int       @id @default(autoincrement())
+  resultId   String    @map("result_id") @db.Uuid
+  result     OcrResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  pageNumber Int       @map("page_number")
+  rawText    String    @default("") @map("raw_text")
+  confidence Float     @default(0) // 0–100
+  wordCount  Int       @default(0) @map("word_count")
+  isLowConf  Boolean   @default(false) @map("is_low_conf") // confidence < 50
+  blocks     Json      @default("[]") // [{block_num, text, conf, left, top, width, height}]
 
   @@index([resultId])
   @@map("ocr_pages")
@@ -489,70 +489,70 @@ model OcrPage {
 
 /// Health category bin assignment (one per document, auto-created after extraction)
 model BinAssignment {
-  id                      String   @id @default(uuid()) @db.Uuid
-  documentId              String   @unique @map("document_id") @db.Uuid
-  upload                  HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  assignedBins            String[] @default([]) @map("assigned_bins")   // e.g. ["general_labs","cardiovascular"]
-  entityBinMap            Json     @default("[]") @map("entity_bin_map") // per-entity mapping array
-  classificationConfidence Float   @default(0) @map("classification_confidence") // 0.0–1.0
-  methodSummary           Json     @default("{}") @map("method_summary") // {rule: N, model: N, ...}
-  assignedAt              DateTime @default(now()) @map("assigned_at")
+  id                       String       @id @default(uuid()) @db.Uuid
+  documentId               String       @unique @map("document_id") @db.Uuid
+  upload                   HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
+  assignedBins             String[]     @default([]) @map("assigned_bins") // e.g. ["general_labs","cardiovascular"]
+  entityBinMap             Json         @default("[]") @map("entity_bin_map") // per-entity mapping array
+  classificationConfidence Float        @default(0) @map("classification_confidence") // 0.0–1.0
+  methodSummary            Json         @default("{}") @map("method_summary") // {rule: N, model: N, ...}
+  assignedAt               DateTime     @default(now()) @map("assigned_at")
 
   @@map("bin_assignments")
 }
 
 /// Structured medical entity extraction result (one per document, auto-created after OCR)
 model MedicalExtraction {
-  id                   String   @id @default(uuid()) @db.Uuid
-  documentId           String   @unique @map("document_id") @db.Uuid
+  id                   String       @id @default(uuid()) @db.Uuid
+  documentId           String       @unique @map("document_id") @db.Uuid
   upload               HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  structuredEntities   Json     @default("[]") @map("structured_entities")  // array of entity objects
-  extractionConfidence Float    @default(0) @map("extraction_confidence")   // 0.0–1.0
-  missingFields        String[] @default([]) @map("missing_fields")
-  parsingWarnings      String[] @default([]) @map("parsing_warnings")
-  extractedAt          DateTime @default(now()) @map("extracted_at")
+  structuredEntities   Json         @default("[]") @map("structured_entities") // array of entity objects
+  extractionConfidence Float        @default(0) @map("extraction_confidence") // 0.0–1.0
+  missingFields        String[]     @default([]) @map("missing_fields")
+  parsingWarnings      String[]     @default([]) @map("parsing_warnings")
+  extractedAt          DateTime     @default(now()) @map("extracted_at")
 
   @@map("medical_extractions")
 }
 
 /// Document type classification result (one per document, auto-created after OCR)
 model DocumentClassification {
-  id                     String   @id @default(uuid()) @db.Uuid
-  documentId             String   @unique @map("document_id") @db.Uuid
+  id                     String       @id @default(uuid()) @db.Uuid
+  documentId             String       @unique @map("document_id") @db.Uuid
   upload                 HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  documentType           String   @map("document_type")        // primary type
-  secondaryDocumentTypes String[] @default([]) @map("secondary_document_types")
-  confidence             Float    @default(0) @map("confidence") // 0.0–1.0
-  allScores              Json     @default("{}") @map("all_scores")  // {type: score} for all types
-  classifiedAt           DateTime @default(now()) @map("classified_at")
+  documentType           String       @map("document_type") // primary type
+  secondaryDocumentTypes String[]     @default([]) @map("secondary_document_types")
+  confidence             Float        @default(0) @map("confidence") // 0.0–1.0
+  allScores              Json         @default("{}") @map("all_scores") // {type: score} for all types
+  classifiedAt           DateTime     @default(now()) @map("classified_at")
 
   @@map("document_classifications")
 }
 
 /// Sensitivity profile computed from bin assignment (one per document)
 model SensitivityProfile {
-  id               String   @id @default(uuid()) @db.Uuid
-  documentId       String   @unique @map("document_id") @db.Uuid
+  id               String       @id @default(uuid()) @db.Uuid
+  documentId       String       @unique @map("document_id") @db.Uuid
   upload           HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  sensitivityLevel String   @map("sensitivity_level")   // standard | sensitive | high_sensitivity
-  privacyTags      String[] @default([]) @map("privacy_tags")
-  flaggedBins      String[] @default([]) @map("flagged_bins")
-  tagReasons       Json     @default("{}") @map("tag_reasons")  // {bin: reason}
-  taggedAt         DateTime @default(now()) @map("tagged_at")
+  sensitivityLevel String       @map("sensitivity_level") // standard | sensitive | high_sensitivity
+  privacyTags      String[]     @default([]) @map("privacy_tags")
+  flaggedBins      String[]     @default([]) @map("flagged_bins")
+  tagReasons       Json         @default("{}") @map("tag_reasons") // {bin: reason}
+  taggedAt         DateTime     @default(now()) @map("tagged_at")
 
   @@map("sensitivity_profiles")
 }
 
 /// Audit log — every access to a sensitive or high-sensitivity document's content
 model DocumentAccessLog {
-  id               Int      @id @default(autoincrement())
-  documentId       String   @map("document_id") @db.Uuid
+  id               Int          @id @default(autoincrement())
+  documentId       String       @map("document_id") @db.Uuid
   upload           HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  userEmail        String   @map("user_email")
-  route            String                      // e.g. "/api/ocr/{id}/extract"
-  action           String   @default("read")  // read | export | re_run
-  sensitivityLevel String   @map("sensitivity_level")
-  accessedAt       DateTime @default(now()) @map("accessed_at")
+  userEmail        String       @map("user_email")
+  route            String // e.g. "/api/ocr/{id}/extract"
+  action           String       @default("read") // read | export | re_run
+  sensitivityLevel String       @map("sensitivity_level")
+  accessedAt       DateTime     @default(now()) @map("accessed_at")
 
   @@index([documentId])
   @@index([userEmail])
@@ -563,21 +563,21 @@ model DocumentAccessLog {
 /// Care gap and intervention flag — one row per (user_email, canonical_metric_name)
 /// Regenerated by intervention_planner.py each time a document is processed.
 model CareGapFlag {
-  id                    String    @id @default(uuid()) @db.Uuid
-  userEmail             String    @map("user_email")
-  canonicalMetricName   String    @map("canonical_metric_name")
-  category              String
-  label                 String
-  gapStatus             String    @map("gap_status")           // never_recorded | overdue | due_soon | current
-  priority              String    @default("routine")          // routine | surveillance | urgent
-  lastObservedDate      DateTime? @map("last_observed_date") @db.Date
-  expectedIntervalDays  Int       @map("expected_interval_days")
-  nextExpectedDate      DateTime? @map("next_expected_date") @db.Date
-  daysOverdue           Int?      @map("days_overdue")
-  daysUntilDue          Int?      @map("days_until_due")
-  suggestedAction       String    @map("suggested_action")
-  guidelineSource       String    @default("") @map("guideline_source")
-  computedAt            DateTime  @default(now()) @map("computed_at")
+  id                   String    @id @default(uuid()) @db.Uuid
+  userEmail            String    @map("user_email")
+  canonicalMetricName  String    @map("canonical_metric_name")
+  category             String
+  label                String
+  gapStatus            String    @map("gap_status") // never_recorded | overdue | due_soon | current
+  priority             String    @default("routine") // routine | surveillance | urgent
+  lastObservedDate     DateTime? @map("last_observed_date") @db.Date
+  expectedIntervalDays Int       @map("expected_interval_days")
+  nextExpectedDate     DateTime? @map("next_expected_date") @db.Date
+  daysOverdue          Int?      @map("days_overdue")
+  daysUntilDue         Int?      @map("days_until_due")
+  suggestedAction      String    @map("suggested_action")
+  guidelineSource      String    @default("") @map("guideline_source")
+  computedAt           DateTime  @default(now()) @map("computed_at")
 
   @@unique([userEmail, canonicalMetricName], name: "care_gap_flags_user_metric_key")
   @@index([userEmail])
@@ -589,32 +589,32 @@ model CareGapFlag {
 /// Longitudinal health observation — one row per (document_id, observation_id)
 /// observation_id is a 32-char SHA-256 prefix produced by normalizer.py
 model HealthObservation {
-  id                  String   @id @default(uuid()) @db.Uuid
-  observationId       String   @map("observation_id")          // 32-char hash
-  documentId          String   @map("document_id") @db.Uuid
+  id                  String       @id @default(uuid()) @db.Uuid
+  observationId       String       @map("observation_id") // 32-char hash
+  documentId          String       @map("document_id") @db.Uuid
   upload              HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  userEmail           String   @map("user_email")
-  bin                 String                                    // primary health bin slug
-  observationDate     DateTime? @map("observation_date") @db.Date
-  metricName          String?  @map("metric_name")
-  canonicalMetricName String?  @map("canonical_metric_name")
-  displayName         String?  @map("display_name")
-  category            String   @default("other")
-  valueText           String?  @map("value_text")
-  numericValue        Float?   @map("numeric_value")
+  userEmail           String       @map("user_email")
+  bin                 String // primary health bin slug
+  observationDate     DateTime?    @map("observation_date") @db.Date
+  metricName          String?      @map("metric_name")
+  canonicalMetricName String?      @map("canonical_metric_name")
+  displayName         String?      @map("display_name")
+  category            String       @default("other")
+  valueText           String?      @map("value_text")
+  numericValue        Float?       @map("numeric_value")
   unit                String?
-  originalUnit        String?  @map("original_unit")
-  referenceRange      String?  @map("reference_range")
-  flag                String?                                   // H | L | HH | LL
+  originalUnit        String?      @map("original_unit")
+  referenceRange      String?      @map("reference_range")
+  flag                String? // H | L | HH | LL
   interpretation      String?
-  confidenceScore     Float    @default(0.5) @map("confidence_score")
-  sensitivityLevel    String   @default("standard") @map("sensitivity_level")
-  sensitivityFlag     Boolean  @default(false) @map("sensitivity_flag")
-  privacyTags         String[] @default([]) @map("privacy_tags")
-  sourceEntityIndex   Int?     @map("source_entity_index")
-  conversionApplied   Boolean  @default(false) @map("conversion_applied")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  confidenceScore     Float        @default(0.5) @map("confidence_score")
+  sensitivityLevel    String       @default("standard") @map("sensitivity_level")
+  sensitivityFlag     Boolean      @default(false) @map("sensitivity_flag")
+  privacyTags         String[]     @default([]) @map("privacy_tags")
+  sourceEntityIndex   Int?         @map("source_entity_index")
+  conversionApplied   Boolean      @default(false) @map("conversion_applied")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
 
   @@unique([documentId, observationId], name: "health_observations_doc_obs_key")
   @@index([userEmail, canonicalMetricName, observationDate])
@@ -626,17 +626,926 @@ model HealthObservation {
 
 /// Normalised observation set — canonical test names, units, and values (one per document)
 model NormalizedResult {
-  id                     String   @id @default(uuid()) @db.Uuid
-  documentId             String   @unique @map("document_id") @db.Uuid
+  id                     String       @id @default(uuid()) @db.Uuid
+  documentId             String       @unique @map("document_id") @db.Uuid
   upload                 HealthUpload @relation(fields: [documentId], references: [documentId], onDelete: Cascade)
-  normalizedObservations Json     @default("[]") @map("normalized_observations")
-  totalObservations      Int      @default(0) @map("total_observations")
-  activeObservations     Int      @default(0) @map("active_observations")
-  supersededCount        Int      @default(0) @map("superseded_count")
-  conversionCount        Int      @default(0) @map("conversion_count")
-  missingCanonical       Int      @default(0) @map("missing_canonical")
-  normalizedAt           DateTime @default(now()) @map("normalized_at")
+  normalizedObservations Json         @default("[]") @map("normalized_observations")
+  totalObservations      Int          @default(0) @map("total_observations")
+  activeObservations     Int          @default(0) @map("active_observations")
+  supersededCount        Int          @default(0) @map("superseded_count")
+  conversionCount        Int          @default(0) @map("conversion_count")
+  missingCanonical       Int          @default(0) @map("missing_canonical")
+  normalizedAt           DateTime     @default(now()) @map("normalized_at")
 
   @@map("normalized_results")
 }
 
+/// Registered app users (email + hashed password, created via /auth/register)
+model AppUser {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  hashedPassword String
+  name           String?
+  onboardingDone Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("app_users")
+}
+
+// ─── Engine A: Questionnaire + Profile State Snapshots ───────────────────────
+
+model QuestionnaireDefinition {
+  id        String   @id @default(uuid()) @db.Uuid
+  version   String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  questions QuestionnaireQuestion[]
+  sessions  QuestionnaireSession[]
+
+  @@map("questionnaire_definitions")
+}
+
+model QuestionnaireQuestion {
+  id                        String                  @id @default(uuid()) @db.Uuid
+  questionnaireDefinitionId String                  @map("questionnaire_definition_id") @db.Uuid
+  questionnaireDefinition   QuestionnaireDefinition @relation(fields: [questionnaireDefinitionId], references: [id], onDelete: Cascade)
+
+  questionKey     String  @map("question_key")
+  questionType    String  @map("question_type") // single_select | multi_select | repeated_single_select
+  stepNumber      Int     @map("step_number")
+  displayOrder    Int     @map("display_order")
+  isRequired      Boolean @default(true) @map("is_required")
+  conditionalJson Json    @default("{}") @map("conditional_json")
+  uiSchema        Json    @default("{}") @map("ui_schema")
+
+  options QuestionnaireQuestionOption[]
+
+  @@unique([questionnaireDefinitionId, questionKey], name: "questionnaire_questions_def_key_unique")
+  @@index([questionnaireDefinitionId, stepNumber])
+  @@index([questionnaireDefinitionId, displayOrder])
+  @@map("questionnaire_questions")
+}
+
+model QuestionnaireQuestionOption {
+  id         String                @id @default(uuid()) @db.Uuid
+  questionId String                @map("question_id") @db.Uuid
+  question   QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  optionKey    String  @map("option_key")
+  labelEn      String  @map("label_en")
+  labelDe      String? @map("label_de")
+  displayOrder Int     @map("display_order")
+  metadata     Json    @default("{}")
+
+  @@unique([questionId, optionKey], name: "questionnaire_question_options_q_opt_unique")
+  @@index([questionId, displayOrder])
+  @@map("questionnaire_question_options")
+}
+
+model QuestionnaireSession {
+  id                        String                  @id @default(uuid()) @db.Uuid
+  userEmail                 String                  @map("user_email")
+  questionnaireDefinitionId String                  @map("questionnaire_definition_id") @db.Uuid
+  questionnaireDefinition   QuestionnaireDefinition @relation(fields: [questionnaireDefinitionId], references: [id])
+
+  status         String    @default("in_progress") // in_progress | completed | abandoned
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  abandonedAt    DateTime? @map("abandoned_at")
+  lastStepNumber Int?      @default(1) @map("last_step_number")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  answers   QuestionnaireAnswer[]
+  snapshots ProfileSnapshot[]
+
+  @@index([userEmail])
+  @@index([userEmail, status])
+  @@map("questionnaire_sessions")
+}
+
+model QuestionnaireAnswer {
+  id        String               @id @default(uuid()) @db.Uuid
+  sessionId String               @map("session_id") @db.Uuid
+  session   QuestionnaireSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  questionKey     String @map("question_key")
+  answerValue     Json   @map("answer_value")
+  normalizedValue Json?  @map("normalized_value")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([sessionId, questionKey], name: "questionnaire_answers_session_q_unique")
+  @@index([sessionId])
+  @@map("questionnaire_answers")
+}
+
+model ProfileSnapshot {
+  id                   String                @id @default(uuid()) @db.Uuid
+  userEmail            String                @map("user_email")
+  sessionId            String?               @map("session_id") @db.Uuid
+  session              QuestionnaireSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  questionnaireVersion String                @map("questionnaire_version")
+  isActive             Boolean               @default(true) @map("is_active")
+
+  country        String? @default("DE") @map("country")
+  userName       String? @map("user_name")
+  ageGroup       String? @map("age_group")
+  ageGroupLabel  String? @map("age_group_label")
+  lifeStage      String? @map("life_stage")
+  lifeStageLabel String? @map("life_stage_label")
+
+  goalFlags          Json @default("[]") @map("goal_flags")
+  goalLabels         Json @default("[]") @map("goal_labels")
+  riskFlags          Json @default("[]") @map("risk_flags")
+  conditionFlags     Json @default("[]") @map("condition_flags")
+  medicationFlags    Json @default("[]") @map("medication_flags")
+  familyHistoryFlags Json @default("[]") @map("family_history_flags")
+  lifestyleFlags     Json @default("[]") @map("lifestyle_flags")
+
+  domainAffinities Json @default("{}") @map("domain_affinities")
+  bundleAffinities Json @default("{}") @map("bundle_affinities")
+
+  lastTests    Json @default("{}") @map("last_tests")
+  recencyHints Json @default("{}") @map("recency_hints")
+
+  profileCompletenessPercent Int    @default(0) @map("profile_completeness_percent")
+  retakeState                String @default("not_needed") @map("retake_state")
+
+  profileSummary Json @default("{}") @map("profile_summary")
+  rawProfile     Json @map("raw_profile")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  diffsFrom               ProfileSnapshotDiff[]    @relation("profile_snapshot_diffs_prev")
+  diffsTo                 ProfileSnapshotDiff[]    @relation("profile_snapshot_diffs_curr")
+  recommendationRuns      RecommendationRun[]
+  recommendationResults   RecommendationResult[]
+  recommendationInstances RecommendationInstance[]
+  healthScores            UserHealthScore[]         @relation("profile_snapshot_health_scores")
+  bundleScoreInstances    UserBundleScoreInstance[] @relation("profile_snapshot_bundle_score_instances")
+  timelineGenerationRuns  TimelineGenerationRun[]   @relation("profile_snapshot_timeline_runs")
+  dashboardScoreSnapshots DashboardScoreSnapshot[]  @relation("profile_snapshot_dashboard_scores")
+  dashboardSummaries      DashboardSummary[]        @relation("profile_snapshot_dashboard_summaries")
+
+  @@index([userEmail])
+  @@index([userEmail, isActive])
+  @@index([sessionId])
+  @@map("profile_snapshots")
+}
+
+model ProfileSnapshotDiff {
+  id                 String  @id @default(uuid()) @db.Uuid
+  userEmail          String  @map("user_email")
+  previousSnapshotId String? @map("previous_snapshot_id") @db.Uuid
+  currentSnapshotId  String  @map("current_snapshot_id") @db.Uuid
+
+  previousSnapshot ProfileSnapshot? @relation("profile_snapshot_diffs_prev", fields: [previousSnapshotId], references: [id], onDelete: SetNull)
+  currentSnapshot  ProfileSnapshot  @relation("profile_snapshot_diffs_curr", fields: [currentSnapshotId], references: [id], onDelete: Cascade)
+
+  changedFields Json     @default("[]") @map("changed_fields")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([currentSnapshotId])
+  @@map("profile_snapshot_diffs")
+}
+
+// ─── Engine A: Catalog bridge tables ─────────────────────────────────────────
+
+model CanonicalTestBundle {
+  id                    String  @id @default(uuid()) @db.Uuid
+  bundleKey             String  @unique @map("bundle_key")
+  displayNameEn         String  @map("display_name_en")
+  displayNameDe         String? @map("display_name_de")
+  category              String
+  defaultIntervalMonths Int?    @map("default_interval_months")
+  metadata              Json    @default("{}")
+
+  biomarkerAliases BundleBiomarkerAlias[]
+  productMappings  BundleProductMapping[]
+
+  @@map("canonical_test_bundles")
+}
+
+model BundleBiomarkerAlias {
+  id                      String              @id @default(uuid()) @db.Uuid
+  bundleId                String              @map("bundle_id") @db.Uuid
+  bundle                  CanonicalTestBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  biomarkerNameNormalized String              @map("biomarker_name_normalized")
+  biomarkerNameDisplay    String              @map("biomarker_name_display")
+  category                String?
+
+  @@unique([bundleId, biomarkerNameNormalized], name: "bundle_biomarker_aliases_bundle_norm_unique")
+  @@index([bundleId])
+  @@map("bundle_biomarker_aliases")
+}
+
+model CatalogProduct {
+  id                String    @id @default(uuid()) @db.Uuid
+  externalProductId String?   @unique @map("external_product_id")
+  providerId        String?   @map("provider_id")
+  name              String
+  description       String?
+  priceCents        Int?      @map("price_cents")
+  currency          String?   @default("EUR")
+  tags              Json      @default("{}")
+  available         Boolean   @default(true)
+  aboutText         String?   @map("about_text")
+  helpCheckText     String?   @map("help_check_text")
+  audienceText      String?   @map("audience_text")
+  createdAtSource   DateTime? @map("created_at_source")
+  importedAt        DateTime  @default(now()) @map("imported_at")
+
+  biomarkers     CatalogProductBiomarker[]
+  bundleMappings BundleProductMapping[]
+  progressSelections RecommendationProgress[] @relation("progress_selected_product")
+
+  @@index([available])
+  @@map("catalog_products")
+}
+
+model CatalogBiomarker {
+  id             String  @id @default(uuid()) @db.Uuid
+  externalCode   String? @map("external_code")
+  name           String
+  normalizedName String  @map("normalized_name")
+  category       String?
+
+  products CatalogProductBiomarker[]
+
+  @@unique([normalizedName, externalCode], name: "catalog_biomarkers_norm_code_unique")
+  @@index([normalizedName])
+  @@map("catalog_biomarkers")
+}
+
+model CatalogProductBiomarker {
+  productId   String @map("product_id") @db.Uuid
+  biomarkerId String @map("biomarker_id") @db.Uuid
+
+  product   CatalogProduct   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  biomarker CatalogBiomarker @relation(fields: [biomarkerId], references: [id], onDelete: Cascade)
+
+  @@id([productId, biomarkerId])
+  @@index([biomarkerId])
+  @@map("catalog_product_biomarkers")
+}
+
+model BundleProductMapping {
+  id        String @id @default(uuid()) @db.Uuid
+  bundleId  String @map("bundle_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+
+  bundle  CanonicalTestBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product CatalogProduct      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  matchScore  Int     @default(0) @map("match_score")
+  matchReason Json    @default("{}") @map("match_reason")
+  isPrimary   Boolean @default(false) @map("is_primary")
+
+  @@unique([bundleId, productId], name: "bundle_product_mapping_bundle_product_unique")
+  @@index([bundleId])
+  @@index([productId])
+  @@map("bundle_product_mapping")
+}
+
+// ─── Engine B: Deterministic Recommendation Engine ───────────────────────────
+
+model RecommendationRun {
+  id                String          @id @default(uuid()) @db.Uuid
+  userEmail         String          @map("user_email")
+  profileSnapshotId String          @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot   ProfileSnapshot @relation(fields: [profileSnapshotId], references: [id], onDelete: Cascade)
+  engineVersion     String          @map("engine_version")
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  results RecommendationResult[]
+
+  @@index([userEmail])
+  @@index([profileSnapshotId])
+  @@index([userEmail, profileSnapshotId])
+  @@map("recommendation_runs")
+}
+
+model RecommendationResult {
+  id                String            @id @default(uuid()) @db.Uuid
+  runId             String            @map("run_id") @db.Uuid
+  run               RecommendationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  userEmail         String            @map("user_email")
+  profileSnapshotId String            @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot   ProfileSnapshot   @relation(fields: [profileSnapshotId], references: [id], onDelete: Cascade)
+
+  bundleKey           String @map("bundle_key")
+  displayName         String @map("display_name")
+  category            String
+  status              String // missing | outdated | current | optional
+  priorityScore       Int    @map("priority_score")
+  priorityRank        Int?   @map("priority_rank")
+  reasonsJson         Json   @default("[]") @map("reasons_json")
+  matchedProductIds   Json   @default("[]") @map("matched_product_ids")
+  explanationSeedJson Json   @default("{}") @map("explanation_seed_json")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  scoreEvents             RecommendationScoreEvent[]
+  recommendationInstances RecommendationInstance[]
+
+  @@index([runId])
+  @@index([userEmail])
+  @@index([profileSnapshotId])
+  @@index([bundleKey])
+  @@map("recommendation_results")
+}
+
+model RecommendationScoreEvent {
+  id                     String               @id @default(uuid()) @db.Uuid
+  recommendationResultId String               @map("recommendation_result_id") @db.Uuid
+  recommendationResult   RecommendationResult @relation(fields: [recommendationResultId], references: [id], onDelete: Cascade)
+  ruleKey                String               @map("rule_key")
+  bundleKey              String               @map("bundle_key")
+  scoreDelta             Int                  @map("score_delta")
+  reasonCode             String               @map("reason_code")
+  reasonPayload          Json                 @default("{}") @map("reason_payload")
+  createdAt              DateTime             @default(now()) @map("created_at")
+
+  @@index([recommendationResultId])
+  @@index([bundleKey])
+  @@map("recommendation_score_events")
+}
+
+// ─── Engine C: Recency & Status Engine ───────────────────────────────────────
+
+model RecommendationInstance {
+  id                String          @id @default(uuid()) @db.Uuid
+  userEmail         String          @map("user_email")
+  profileSnapshotId String          @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot   ProfileSnapshot @relation(fields: [profileSnapshotId], references: [id], onDelete: Cascade)
+
+  bundleKey                    String                @map("bundle_key")
+  sourceRecommendationResultId String?               @map("source_recommendation_result_id") @db.Uuid
+  sourceRecommendationResult   RecommendationResult? @relation(fields: [sourceRecommendationResultId], references: [id], onDelete: SetNull)
+  priorityScore                Int                   @default(0) @map("priority_score")
+  recommendedAt                DateTime              @default(now()) @map("recommended_at")
+  active                       Boolean               @default(true)
+
+  actions         UserRecommendationAction[]
+  statusSnapshots StatusSnapshot[]
+  progress        RecommendationProgress?      @relation("instance_progress")
+  progressEvents  RecommendationProgressEvent[] @relation("instance_progress_events")
+  timelineEntries TimelineEntry[]
+
+  @@unique([userEmail, profileSnapshotId, bundleKey], name: "recommendation_instances_user_profile_bundle_unique")
+  @@index([userEmail])
+  @@index([profileSnapshotId])
+  @@index([bundleKey])
+  @@map("recommendation_instances")
+}
+
+model UserTestEvidence {
+  id                String    @id @default(uuid()) @db.Uuid
+  userEmail         String    @map("user_email")
+  bundleKey         String    @map("bundle_key")
+  evidenceSource    String    @map("evidence_source")
+  evidenceDate      DateTime? @map("evidence_date") @db.Date
+  rawRecencyCode    String?   @map("raw_recency_code")
+  biomarkerPayload  Json      @default("{}") @map("biomarker_payload")
+  confidenceScore   Decimal   @default(1.0) @map("confidence_score") @db.Decimal(4, 2)
+  sourceReferenceId String?   @map("source_reference_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([userEmail, bundleKey])
+  @@index([bundleKey])
+  @@map("user_test_evidence")
+}
+
+model UserRecommendationAction {
+  id                       String                 @id @default(uuid()) @db.Uuid
+  userEmail                String                 @map("user_email")
+  recommendationInstanceId String                 @map("recommendation_instance_id") @db.Uuid
+  recommendationInstance   RecommendationInstance @relation(fields: [recommendationInstanceId], references: [id], onDelete: Cascade)
+  bundleKey                String                 @map("bundle_key")
+  actionType               String                 @map("action_type") // mark_planned | mark_completed | unmark_planned | reopen
+  actionMetadata           Json                   @default("{}") @map("action_metadata")
+  actionAt                 DateTime               @default(now()) @map("action_at")
+
+  @@index([userEmail])
+  @@index([recommendationInstanceId])
+  @@index([bundleKey])
+  @@map("user_recommendation_actions")
+}
+
+model StatusSnapshot {
+  id                       String                 @id @default(uuid()) @db.Uuid
+  userEmail                String                 @map("user_email")
+  recommendationInstanceId String                 @map("recommendation_instance_id") @db.Uuid
+  recommendationInstance   RecommendationInstance @relation(fields: [recommendationInstanceId], references: [id], onDelete: Cascade)
+  bundleKey                String                 @map("bundle_key")
+
+  recencyStatus           String    @map("recency_status") // missing | outdated | current
+  executionStatus         String    @map("execution_status") // none | planned | completed
+  finalStatus             String    @map("final_status") // missing | outdated | current | planned | completed
+  stateGroup              String    @map("state_group") // action_needed | in_progress | done | up_to_date
+  effectiveIntervalMonths Int       @map("effective_interval_months")
+  evidenceSourceUsed      String?   @map("evidence_source_used")
+  evidenceDateUsed        DateTime? @map("evidence_date_used") @db.Date
+  calculatedAt            DateTime  @default(now()) @map("calculated_at")
+  engineVersion           String    @map("engine_version")
+  statusPayload           Json      @default("{}") @map("status_payload")
+
+  @@index([userEmail])
+  @@index([recommendationInstanceId])
+  @@index([bundleKey])
+  @@index([userEmail, bundleKey])
+  @@index([userEmail, calculatedAt(sort: Desc)])
+  @@map("status_snapshots")
+}
+
+// ─── Engine D: Progress Tracking Engine ───────────────────────────────────────
+
+model ActionOption {
+  id        String   @id @default(uuid()) @db.Uuid
+  optionKey String   @unique @map("option_key")
+  labelEn   String   @map("label_en")
+  labelDe   String?  @map("label_de")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  progressRows RecommendationProgress[] @relation("progress_selected_action_option")
+
+  @@map("action_options")
+}
+
+model RecommendationProgress {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  userEmail              String                 @map("user_email")
+  recommendationInstanceId String               @unique @map("recommendation_instance_id") @db.Uuid
+  recommendationInstance RecommendationInstance @relation("instance_progress", fields: [recommendationInstanceId], references: [id], onDelete: Cascade)
+  bundleKey              String                 @map("bundle_key")
+
+  progressState         String  @default("not_started") @map("progress_state") // not_started | planned | completed
+  selectedRoute         String? @map("selected_route") // doctor | private | lab | home_test (extensible)
+  selectedProductId     String? @map("selected_product_id") @db.Uuid
+  selectedProduct       CatalogProduct? @relation("progress_selected_product", fields: [selectedProductId], references: [id], onDelete: SetNull)
+  selectedActionOptionId String? @map("selected_action_option_id") @db.Uuid
+  selectedActionOption   ActionOption? @relation("progress_selected_action_option", fields: [selectedActionOptionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userEmail])
+  @@index([bundleKey])
+  @@index([progressState])
+  @@index([userEmail, bundleKey])
+  @@map("recommendation_progress")
+}
+
+model RecommendationProgressEvent {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  userEmail              String                 @map("user_email")
+  recommendationInstanceId String               @map("recommendation_instance_id") @db.Uuid
+  recommendationInstance RecommendationInstance @relation("instance_progress_events", fields: [recommendationInstanceId], references: [id], onDelete: Cascade)
+  bundleKey              String                 @map("bundle_key")
+
+  eventType    String @map("event_type")
+  eventPayload Json   @default("{}") @map("event_payload")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([recommendationInstanceId])
+  @@index([bundleKey])
+  @@index([createdAt])
+  @@map("recommendation_progress_events")
+}
+
+// ─── Engine E: Health Score / Completeness Engine ─────────────────────────────
+
+model HealthScorePolicy {
+  id                   String   @id @default(uuid()) @db.Uuid
+  policyKey            String   @unique @map("policy_key")
+  displayName          String   @map("display_name")
+  statusWeights        Json     @map("status_weights")
+  relevanceThreshold   Decimal  @default(1.0) @map("relevance_threshold") @db.Decimal(6, 3)
+  allowPartialCoverage Boolean  @default(true) @map("allow_partial_coverage")
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  bundleWeights BundleWeightPolicy[]
+  healthScores  UserHealthScore[]
+
+  @@map("health_score_policies")
+}
+
+model BundleWeightPolicy {
+  id        String          @id @default(uuid()) @db.Uuid
+  policyId  String          @map("policy_id") @db.Uuid
+  policy    HealthScorePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  bundleKey String          @map("bundle_key")
+  baseWeight Decimal        @map("base_weight") @db.Decimal(8, 3)
+  category  String?
+
+  @@unique([policyId, bundleKey], name: "bundle_weight_policies_policy_bundle_unique")
+  @@index([policyId])
+  @@index([bundleKey])
+  @@map("bundle_weight_policies")
+}
+
+model BundleCoverageRequirement {
+  id                     String   @id @default(uuid()) @db.Uuid
+  bundleKey              String   @map("bundle_key")
+  biomarkerNormalizedName String  @map("biomarker_normalized_name")
+  isRequired             Boolean  @default(true) @map("is_required")
+  weight                 Decimal  @default(1.0) @db.Decimal(8, 3)
+
+  @@unique([bundleKey, biomarkerNormalizedName], name: "bundle_coverage_requirements_bundle_biomarker_unique")
+  @@index([bundleKey])
+  @@map("bundle_coverage_requirements")
+}
+
+model BundleRelevanceFactor {
+  id          String  @id @default(uuid()) @db.Uuid
+  bundleKey   String  @map("bundle_key")
+  factorType  String  @map("factor_type") // symptom | lifestyle | condition | family_history | goal | life_stage | age_group | medication
+  factorKey   String  @map("factor_key")
+  weightDelta Decimal @map("weight_delta") @db.Decimal(8, 3)
+
+  @@unique([bundleKey, factorType, factorKey], name: "bundle_relevance_factors_bundle_type_key_unique")
+  @@index([bundleKey])
+  @@map("bundle_relevance_factors")
+}
+
+model BundleSuppressionRule {
+  id                 String   @id @default(uuid()) @db.Uuid
+  primaryBundleKey   String   @map("primary_bundle_key")
+  suppressedBundleKey String  @map("suppressed_bundle_key")
+  conditionJson      Json     @default("{}") @map("condition_json")
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([primaryBundleKey])
+  @@index([suppressedBundleKey])
+  @@map("bundle_suppression_rules")
+}
+
+model UserHealthScore {
+  id              String          @id @default(uuid()) @db.Uuid
+  userEmail       String          @map("user_email")
+  profileSnapshotId String        @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot ProfileSnapshot @relation("profile_snapshot_health_scores", fields: [profileSnapshotId], references: [id], onDelete: Cascade)
+  policyId        String          @map("policy_id") @db.Uuid
+  policy          HealthScorePolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  score           Decimal         @db.Decimal(6, 2)
+  denominatorTotal Decimal        @map("denominator_total") @db.Decimal(12, 4)
+  numeratorTotal  Decimal         @map("numerator_total") @db.Decimal(12, 4)
+  bundleCount     Int             @map("bundle_count")
+  scoreBand       String?         @map("score_band")
+  payload         Json
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  bundleInstances UserBundleScoreInstance[]
+
+  @@index([userEmail])
+  @@index([profileSnapshotId])
+  @@index([createdAt])
+  @@index([userEmail, createdAt(sort: Desc)])
+  @@map("user_health_scores")
+}
+
+model UserBundleScoreInstance {
+  id               String          @id @default(uuid()) @db.Uuid
+  userEmail        String          @map("user_email")
+  profileSnapshotId String         @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot  ProfileSnapshot @relation("profile_snapshot_bundle_score_instances", fields: [profileSnapshotId], references: [id], onDelete: Cascade)
+  healthScoreId    String          @map("health_score_id") @db.Uuid
+  healthScore      UserHealthScore @relation(fields: [healthScoreId], references: [id], onDelete: Cascade)
+  bundleKey        String          @map("bundle_key")
+  status           String
+  baseWeight       Decimal         @map("base_weight") @db.Decimal(10, 4)
+  relevanceWeight  Decimal         @map("relevance_weight") @db.Decimal(10, 4)
+  statusMultiplier Decimal         @map("status_multiplier") @db.Decimal(8, 4)
+  coverageRatio    Decimal         @map("coverage_ratio") @db.Decimal(8, 4)
+  denominatorWeight Decimal        @map("denominator_weight") @db.Decimal(10, 4)
+  numeratorValue   Decimal         @map("numerator_value") @db.Decimal(10, 4)
+  rationale        Json            @default("{}")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([profileSnapshotId])
+  @@index([healthScoreId])
+  @@index([bundleKey])
+  @@map("user_bundle_score_instances")
+}
+
+// ─── Engine G: Timeline / Upcoming Checks Engine ──────────────────────────────
+
+model TimelinePolicy {
+  id              String   @id @default(uuid()) @db.Uuid
+  bundleKey        String   @unique @map("bundle_key")
+  timelineCategory String   @map("timeline_category")
+  defaultLeadDays  Int      @map("default_lead_days")
+  outdatedLeadDays Int      @map("outdated_lead_days")
+  followUpDays     Int?     @map("follow_up_days")
+  maxFollowUps     Int      @default(1) @map("max_follow_ups")
+  scheduleMode     String   @map("schedule_mode")
+  titleCheck       String   @map("title_check")
+  titleFollowUp    String?  @map("title_follow_up")
+  metadata         Json     @default("{}")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("timeline_policies")
+}
+
+model TimelineRuleOverride {
+  id                  String   @id @default(uuid()) @db.Uuid
+  bundleKey            String   @map("bundle_key")
+  triggerType          String   @map("trigger_type") // risk_flag | condition_flag | family_history_flag | life_stage | status
+  triggerValue         String   @map("trigger_value")
+  urgencyBoost         Int      @default(0) @map("urgency_boost")
+  maxBucket            String?  @map("max_bucket") // this_month | next_month | in_6_weeks | in_3_months | later
+  followUpDaysOverride Int?     @map("follow_up_days_override")
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([bundleKey])
+  @@index([triggerType, triggerValue])
+  @@map("timeline_rule_overrides")
+}
+
+model UserPlanItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  userEmail    String   @map("user_email")
+  bundleKey    String   @map("bundle_key")
+  plannedDate  DateTime? @map("planned_date") @db.Date
+  completedDate DateTime? @map("completed_date") @db.Date
+  userState    String   @default("suggested") @map("user_state") // suggested | planned | completed | skipped
+  source       String   @default("system")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([userEmail])
+  @@index([bundleKey])
+  @@map("user_plan_items")
+}
+
+model TimelineGenerationRun {
+  id              String   @id @default(uuid()) @db.Uuid
+  userEmail        String   @map("user_email")
+  profileSnapshotId String? @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot  ProfileSnapshot? @relation("profile_snapshot_timeline_runs", fields: [profileSnapshotId], references: [id], onDelete: SetNull)
+  engineVersion    String   @map("engine_version")
+  inputHash        String   @map("input_hash")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  events TimelineEvent[]
+
+  @@index([userEmail])
+  @@index([createdAt])
+  @@map("timeline_generation_runs")
+}
+
+model TimelineEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  userEmail        String   @map("user_email")
+  bundleKey        String   @map("bundle_key")
+  eventType        String   @map("event_type") // check | follow_up
+  scheduledDate    DateTime @map("scheduled_date") @db.Date
+  labelKey         String   @map("label_key")
+  title            String
+  subtitle         String?
+  status           String
+  source           String
+  parentEventId    String?  @map("parent_event_id") @db.Uuid
+  parentEvent      TimelineEvent? @relation("timeline_parent", fields: [parentEventId], references: [id], onDelete: SetNull)
+  generationRunId  String   @map("generation_run_id") @db.Uuid
+  generationRun    TimelineGenerationRun @relation(fields: [generationRunId], references: [id], onDelete: Cascade)
+  metadata         Json     @default("{}")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  children TimelineEvent[] @relation("timeline_parent")
+
+  @@index([userEmail])
+  @@index([bundleKey])
+  @@index([scheduledDate])
+  @@index([labelKey])
+  @@index([generationRunId])
+  @@map("timeline_events")
+}
+
+// ─── Engine H: Dashboard Summary Engine ───────────────────────────────────────
+
+model DashboardScoreSnapshot {
+  id              String   @id @default(uuid()) @db.Uuid
+  userEmail        String   @map("user_email")
+  profileSnapshotId String? @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot  ProfileSnapshot? @relation("profile_snapshot_dashboard_scores", fields: [profileSnapshotId], references: [id], onDelete: SetNull)
+  scoreValue       Int      @map("score_value")
+  scoreMethod      String   @map("score_method")
+  scoreComponents  Json     @default("{}") @map("score_components")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([createdAt])
+  @@map("dashboard_score_snapshots")
+}
+
+model TimelineEntry {
+  id                     String   @id @default(uuid()) @db.Uuid
+  userEmail               String   @map("user_email")
+  bundleKey               String   @map("bundle_key")
+  recommendationInstanceId String? @map("recommendation_instance_id") @db.Uuid
+  recommendationInstance  RecommendationInstance? @relation(fields: [recommendationInstanceId], references: [id], onDelete: SetNull)
+  dueDate                 DateTime? @map("due_date") @db.Date
+  dueBucket               String   @map("due_bucket")
+  title                   String
+  sortOrder               Int      @default(0) @map("sort_order")
+  active                  Boolean  @default(true)
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  @@index([userEmail])
+  @@index([dueBucket])
+  @@index([dueDate])
+  @@map("timeline_entries")
+}
+
+model DashboardSummary {
+  id              String   @id @default(uuid()) @db.Uuid
+  userEmail        String   @map("user_email")
+  profileSnapshotId String? @map("profile_snapshot_id") @db.Uuid
+  profileSnapshot  ProfileSnapshot? @relation("profile_snapshot_dashboard_summaries", fields: [profileSnapshotId], references: [id], onDelete: SetNull)
+  version          String
+  payload          Json
+  generatedAt      DateTime @default(now()) @map("generated_at")
+
+  @@unique([userEmail, version], map: "dashboard_summaries_user_version_unique")
+  @@index([generatedAt])
+  @@map("dashboard_summaries")
+}
+
+// ─── Engine I: Navigation State Engine ───────────────────────────────────────
+
+model OnboardingSession {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userEmail           String?  @map("user_email")
+  anonymousSessionKey String?  @map("anonymous_session_key")
+  status              String
+  currentStep         String?  @map("current_step")
+  step1Completed      Boolean  @default(false) @map("step_1_completed")
+  step2Completed      Boolean  @default(false) @map("step_2_completed")
+  step3Completed      Boolean  @default(false) @map("step_3_completed")
+  step4Completed      Boolean  @default(false) @map("step_4_completed")
+  isRetake            Boolean  @default(false) @map("is_retake")
+  startedAt           DateTime @default(now()) @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  abandonedAt         DateTime? @map("abandoned_at")
+  lastActiveAt        DateTime @default(now()) @map("last_active_at")
+  version             String   @default("v1")
+  metadata            Json     @default("{}")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  stepAnswers OnboardingStepAnswer[]
+  stepStatus  OnboardingStepStatus[]
+  navEvents   NavigationEvent[]
+  anonymousBrowserSessions AnonymousBrowserSession[]
+
+  @@index([userEmail])
+  @@index([anonymousSessionKey])
+  @@index([status])
+  @@map("onboarding_sessions")
+}
+
+model OnboardingStepAnswer {
+  id                 String   @id @default(uuid()) @db.Uuid
+  onboardingSessionId String   @map("onboarding_session_id") @db.Uuid
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+  stepKey             String   @map("step_key")
+  questionKey         String   @map("question_key")
+  answerValue         Json     @map("answer_value")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@unique([onboardingSessionId, questionKey], map: "onboarding_step_answers_session_question_unique")
+  @@index([onboardingSessionId])
+  @@map("onboarding_step_answers")
+}
+
+model OnboardingStepStatus {
+  id                 String   @id @default(uuid()) @db.Uuid
+  onboardingSessionId String   @map("onboarding_session_id") @db.Uuid
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+  stepKey             String   @map("step_key")
+  isAccessible        Boolean  @default(false) @map("is_accessible")
+  isCompleted         Boolean  @default(false) @map("is_completed")
+  completedAt         DateTime? @map("completed_at")
+  validationErrors    Json     @default("[]") @map("validation_errors")
+
+  @@unique([onboardingSessionId, stepKey], map: "onboarding_step_status_session_step_unique")
+  @@index([onboardingSessionId])
+  @@map("onboarding_step_status")
+}
+
+model UserResultState {
+  userEmail                String   @id @map("user_email")
+  latestProfileSnapshotId  String?  @map("latest_profile_snapshot_id") @db.Uuid
+  latestRecommendationRunId String? @map("latest_recommendation_run_id") @db.Uuid
+  resultsSeenAt            DateTime? @map("results_seen_at")
+  actionPlanSeenAt         DateTime? @map("action_plan_seen_at")
+  dashboardSeenAt          DateTime? @map("dashboard_seen_at")
+  dashboardReady           Boolean  @default(false) @map("dashboard_ready")
+  updatedAt                DateTime @default(now()) @map("updated_at")
+
+  @@map("user_result_state")
+}
+
+model NavigationEvent {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userEmail           String?  @map("user_email")
+  onboardingSessionId String?  @map("onboarding_session_id") @db.Uuid
+  onboardingSession   OnboardingSession? @relation(fields: [onboardingSessionId], references: [id], onDelete: SetNull)
+  sourceRoute         String?  @map("source_route")
+  requestedRoute      String?  @map("requested_route")
+  resolvedState       String   @map("resolved_state")
+  targetRoute         String   @map("target_route")
+  reason              String
+  isBlocking          Boolean  @default(false) @map("is_blocking")
+  uiMode              String   @default("default") @map("ui_mode")
+  createdAt           DateTime @default(now()) @map("created_at")
+  metadata            Json     @default("{}")
+
+  @@index([userEmail])
+  @@index([createdAt])
+  @@map("navigation_events")
+}
+
+model AnonymousBrowserSession {
+  anonymousSessionKey String   @id @map("anonymous_session_key")
+  onboardingSessionId String   @map("onboarding_session_id") @db.Uuid
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now()) @map("created_at")
+  lastSeenAt          DateTime @default(now()) @map("last_seen_at")
+  metadata            Json     @default("{}")
+
+  @@map("anonymous_browser_sessions")
+}
+
+// ─── Biomarker Coverage & Doctor Guidance (Germany) ──────────────────────────
+
+model BiomarkerCoverageUiContent {
+  id                      String   @id @default(uuid()) @db.Uuid
+  biomarkerNameNormalized String   @map("biomarker_name_normalized")
+  sourceBiomarkerName     String   @map("source_biomarker_name")
+  sourceCategory          String?  @map("source_category")
+  sourceSubCategory       String?  @map("source_sub_category")
+  sourceSampleType        String?  @map("source_sample_type")
+  gkvRawCoverage          String?  @map("gkv_raw_coverage")
+  pkvRawCoverage          String?  @map("pkv_raw_coverage")
+  gkvRawFrequency         String?  @map("gkv_raw_frequency")
+  gkvStatusLabel          String   @map("gkv_status_label")
+  gkvUserText             String   @map("gkv_user_text")
+  gkvFrequencyUserText    String?  @map("gkv_frequency_user_text")
+  gkvExtraNote            String?  @map("gkv_extra_note")
+  pkvStatusLabel          String   @map("pkv_status_label")
+  pkvUserText             String   @map("pkv_user_text")
+  pkvExtraNote            String?  @map("pkv_extra_note")
+  selfPayNote             String?  @map("self_pay_note")
+  locale                  String   @default("en")
+  contentVersion          String   @default("v1") @map("content_version")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([biomarkerNameNormalized, locale], name: "biomarker_coverage_locale_unique")
+  @@index([sourceCategory])
+  @@index([sourceSubCategory])
+  @@map("biomarker_coverage_ui_content")
+}
+
+model BiomarkerDoctorScriptTemplate {
+  id                       String   @id @default(uuid()) @db.Uuid
+  biomarkerNameNormalized  String   @map("biomarker_name_normalized")
+  sourceBiomarkerName      String   @map("source_biomarker_name")
+  sourceCategory           String?  @map("source_category")
+  sourceSubCategory        String?  @map("source_sub_category")
+  sourceSampleType         String?  @map("source_sample_type")
+  introTemplate            String   @map("intro_template")
+  symptomTemplate          String?  @map("symptom_template")
+  coverageQuestionTemplate String?  @map("coverage_question_template")
+  followupTemplate         String?  @map("followup_template")
+  whyThisMattersTemplate   String   @map("why_this_matters_template")
+  privateOptionTemplate    String?  @map("private_option_template")
+  locale                   String   @default("en")
+  contentVersion           String   @default("v1") @map("content_version")
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([biomarkerNameNormalized, locale], name: "biomarker_doctor_script_locale_unique")
+  @@index([sourceCategory])
+  @@index([sourceSubCategory])
+  @@map("biomarker_doctor_script_templates")
+}

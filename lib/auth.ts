@@ -32,6 +32,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
         const email = credentials.email.trim().toLowerCase();
         const password = credentials.password;
+
+        // 1. Check hardcoded test accounts (backwards-compat)
         const expectedPassword = process.env.CREDENTIALS_PASSWORD ?? "demo";
         const defaultEmails = "demo@thearc.com,iron@test.com,stress@test.com,sugar@test.com,baseline@test.com";
         const allowedEmails = (process.env.CREDENTIALS_EMAIL ?? defaultEmails)
@@ -39,8 +41,23 @@ export const authOptions: NextAuthOptions = {
           .map((e) => e.trim().toLowerCase())
           .filter(Boolean);
         if (allowedEmails.length === 0) allowedEmails.push("demo@thearc.com");
-        if (!allowedEmails.includes(email) || password !== expectedPassword) return null;
-        return { id: email, email, name: email };
+        if (allowedEmails.includes(email) && password === expectedPassword) {
+          return { id: email, email, name: email };
+        }
+
+        // 2. Check registered AppUser in DB
+        try {
+          const appUser = await prisma.appUser.findUnique({ where: { email } });
+          if (appUser) {
+            const { verifyPassword } = await import("@/lib/crypto");
+            const valid = verifyPassword(password, appUser.hashedPassword);
+            if (valid) return { id: appUser.id, email: appUser.email, name: appUser.name ?? appUser.email };
+          }
+        } catch {
+          // DB unavailable — fall through
+        }
+
+        return null;
       },
     }),
   ],

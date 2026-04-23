@@ -19,20 +19,33 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-/** True if this client was built from the current schema (ArticleView is required for /knowledge). */
-function clientHasArticleView(client: unknown): boolean {
-  return typeof (client as Record<string, unknown>).articleView !== "undefined";
+/**
+ * True if this client was built from the current schema.
+ * We defensively check a few representative model delegates so we don't reuse a
+ * hot-reloaded global Prisma client that predates newer Engine tables.
+ */
+function clientHasCurrentSchema(client: unknown): boolean {
+  const c = client as Record<string, unknown>;
+  return (
+    typeof c.articleView !== "undefined" &&
+    typeof c.questionnaireDefinition !== "undefined" &&
+    typeof c.recommendationInstance !== "undefined" &&
+    typeof c.statusSnapshot !== "undefined" &&
+    typeof c.actionOption !== "undefined" &&
+    typeof c.healthScorePolicy !== "undefined" &&
+    typeof c.userHealthScore !== "undefined"
+  );
 }
 
 export function getPrisma(): PrismaClient {
-  if (prismaSingleton && clientHasArticleView(prismaSingleton)) {
+  if (prismaSingleton && clientHasCurrentSchema(prismaSingleton)) {
     return prismaSingleton;
   }
   prismaSingleton = null;
 
   const candidate = global.prisma ?? createPrismaClient();
   // Do not reuse a global singleton that predates ArticleView — savedArticle alone is not enough.
-  const client = clientHasArticleView(candidate) ? candidate : createPrismaClient();
+  const client = clientHasCurrentSchema(candidate) ? candidate : createPrismaClient();
   prismaSingleton = client;
 
   if (process.env.NODE_ENV !== "production") {
