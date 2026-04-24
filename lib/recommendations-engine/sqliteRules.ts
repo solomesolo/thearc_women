@@ -1,17 +1,20 @@
 import path from "path";
+import Database from "better-sqlite3";
 
 const DB_PATH = path.resolve(
   process.cwd(),
   "rules and DB",
-  "arc_survey_rule_engine_enriched.sqlite",
+  "arc_survey_rule_engine_enriched_cmo_fixed.sqlite",
 );
 
 // Lazily load and cache the DB connection.
-let _db: any = null;
+let _db: Database.Database | null = null;
 function getDb() {
   if (_db) return _db;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const Database = require("better-sqlite3");
+  // Guard rail: ensure we never accidentally point to legacy artifacts.
+  if (!DB_PATH.includes("enriched_cmo_fixed")) {
+    throw new Error(`[rules] Refusing to open non-CMO rules DB: ${DB_PATH}`);
+  }
   _db = new Database(DB_PATH, { readonly: true });
   return _db;
 }

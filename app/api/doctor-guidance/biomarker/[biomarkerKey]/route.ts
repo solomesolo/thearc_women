@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getBiomarkerKey } from "@/lib/doctor-guidance/bundleBiomarkerMap";
 import type { DoctorGuidancePayload } from "@/lib/doctor-guidance/types";
 
-// Maps ISO country code → locale key used in coverage tables.
 function countryToLocale(country: string | null): string {
   if (country === "GB") return "en-gb";
-  return "de"; // default: Germany
+  return "de";
 }
 
 const GENERIC_FALLBACK_LINES = [
@@ -39,29 +37,25 @@ function buildFallback(biomarkerName: string): DoctorGuidancePayload {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ bundleKey: string }> },
+  { params }: { params: Promise<{ biomarkerKey: string }> },
 ) {
-  const { bundleKey } = await params;
+  const { biomarkerKey } = await params;
   const country = req.nextUrl.searchParams.get("country") ?? null;
   const locale = countryToLocale(country);
 
-  const biomarkerKey = getBiomarkerKey(bundleKey);
-  if (!biomarkerKey) {
-    return NextResponse.json(buildFallback(bundleKey), { status: 200 });
-  }
+  const key = decodeURIComponent(biomarkerKey).trim();
+  if (!key) return NextResponse.json(buildFallback("Unknown"), { status: 200 });
 
   const [coverage, script] = await Promise.all([
     prisma.biomarkerCoverageUiContent.findFirst({
-      where: { biomarkerNameNormalized: biomarkerKey, locale },
+      where: { biomarkerNameNormalized: key, locale },
     }),
     prisma.biomarkerDoctorScriptTemplate.findFirst({
-      where: { biomarkerNameNormalized: biomarkerKey, locale },
+      where: { biomarkerNameNormalized: key, locale },
     }),
   ]);
 
-  if (!coverage) {
-    return NextResponse.json(buildFallback(biomarkerKey), { status: 200 });
-  }
+  if (!coverage) return NextResponse.json(buildFallback(key), { status: 200 });
 
   const suggestedLines: string[] = [];
   if (script?.introTemplate) suggestedLines.push(script.introTemplate);
@@ -83,7 +77,9 @@ export async function GET(
       extra_note: coverage.pkvExtraNote ?? null,
     },
     how_to_ask: {
-      why_this_matters: script?.whyThisMattersTemplate ?? "This check is prioritized based on your current status and profile signals.",
+      why_this_matters:
+        script?.whyThisMattersTemplate ??
+        "This check is prioritized based on your current status and profile signals.",
       suggested_lines: suggestedLines,
       self_pay_note: coverage.selfPayNote ?? null,
     },
@@ -91,3 +87,4 @@ export async function GET(
 
   return NextResponse.json(payload, { status: 200 });
 }
+

@@ -3,12 +3,16 @@ import { resolveChecks } from "./checkResolver";
 import type {
   CheckRecommendation,
   CheckStatus,
-  ImpactLevel,
   ProfileSummary,
   RecommendationsPayload,
   RecommendationSummary,
-  TopPriority,
-  UpcomingCheck,
+  PathwayPayload,
+  PathwayTimeframe,
+  FixedTimeframe,
+  FinalImpact,
+  FinalRecommendation,
+  FinalStatus,
+  PathwayTimelineEntry,
 } from "./types";
 
 // Life-stage display labels (internal key → display string)
@@ -47,18 +51,25 @@ function buildLifeStageLabel(answersMap: Map<string, unknown>): string | null {
 
 function buildProfileSummary(
   answersMap: Map<string, unknown>,
-  snap: any,
+  snap: unknown,
 ): ProfileSummary {
+  const s = (snap ?? null) as {
+    ageGroupLabel?: string | null;
+    ageGroup?: string | null;
+    lifeStageLabel?: string | null;
+    lifeStage?: string | null;
+    goalLabels?: string[] | null;
+  } | null;
   // Age group — prefer snapshot, fall back to survey answer
   const ageGroup: string | null =
-    snap?.ageGroupLabel ??
-    snap?.ageGroup ??
+    s?.ageGroupLabel ??
+    s?.ageGroup ??
     (answersMap.has("age_range") ? String(answersMap.get("age_range")) : null);
 
   // Life stage — built from raw answers
   const lifeStage = buildLifeStageLabel(answersMap) ??
-    snap?.lifeStageLabel ??
-    snap?.lifeStage ??
+    s?.lifeStageLabel ??
+    s?.lifeStage ??
     null;
 
   // Goals — map from internal keys to display labels
@@ -67,78 +78,397 @@ function buildProfileSummary(
     ? (rawGoals as string[]).map((g) => GOALS_LABELS[g] ?? g).filter(Boolean)
     : rawGoals
       ? [GOALS_LABELS[String(rawGoals)] ?? String(rawGoals)]
-      : (Array.isArray(snap?.goalLabels) ? snap.goalLabels : []);
+      : (Array.isArray(s?.goalLabels) ? (s.goalLabels as string[]) : []);
 
   return { ageGroup, lifeStage, goals };
 }
 
-function computeHealthScore(checks: CheckRecommendation[]): number {
-  let numerator = 0;
-  let denominator = 0;
-  for (const c of checks) {
-    // Use score as weight proxy — normalized to reasonable range
-    const w = Math.min(Math.max(c.score, 1), 10);
-    denominator += w;
-    if (c.status === "DONE") numerator += w;
-    else if (c.status === "PLANNED") numerator += w * 0.4;
+function computeHealthScoreSimple(checks: CheckRecommendation[]): number {
+  const total = checks.length;
+  if (total === 0) return 0;
+  const completed = checks.filter((c) => c.status === "completed" || c.status === "result_uploaded").length;
+  return Math.round((completed / total) * 100);
+}
+
+function normalizePersistedStatus(raw: string | null | undefined): CheckStatus {
+  if (!raw) return "missing";
+  const v = String(raw).trim();
+  // Back-compat: older uppercase statuses
+  if (v === "MISSING") return "missing";
+  if (v === "PLANNED") return "planned";
+  if (v === "DONE") return "completed";
+  // New statuses
+  if (v === "missing") return "missing";
+  if (v === "reminder_set") return "reminder_set";
+  if (v === "planned") return "planned";
+  if (v === "completed") return "completed";
+  if (v === "result_uploaded") return "result_uploaded";
+  return "missing";
+}
+
+function assignTimeframes(checksSorted: CheckRecommendation[]): PathwayPayload {
+  const buckets: PathwayPayload = {
+    next_month: [],
+    next_3_months: [],
+    next_6_months: [],
+    next_year: [],
+    optional_later: [],
+  };
+
+  for (const c of checksSorted) {
+    // Default assignment by score.
+    let tf: PathwayTimeframe;
+    if (c.score >= 8) tf = "next_month";
+    else if (c.score >= 5) tf = "next_3_months";
+    else if (c.score >= 3) tf = "next_6_months";
+    else tf = "optional_later";
+
+    (c as CheckRecommendation).timeframe = tf;
+    buckets[tf].push(c);
   }
-  return denominator > 0 ? Math.round((numerator / denominator) * 100) : 0;
+
+  // Enforce caps by moving overflow downward while keeping order.
+  const capAndOverflow = (from: PathwayTimeframe, cap: number, to: PathwayTimeframe) => {
+    if (buckets[from].length <= cap) return;
+    const overflow = buckets[from].splice(cap);
+    for (const c of overflow) {
+      (c as CheckRecommendation).timeframe = to;
+      buckets[to].push(c);
+    }
+  };
+
+  capAndOverflow("next_month", 3, "next_3_months");
+  capAndOverflow("next_3_months", 4, "next_6_months");
+  capAndOverflow("next_6_months", 4, "next_year");
+  capAndOverflow("next_year", 4, "optional_later");
+  // optional_later is unbounded but UI can collapse.
+
+  return buckets;
 }
 
-function impactOrder(impact: ImpactLevel): number {
-  if (impact === "HIGH IMPACT") return 0;
-  if (impact === "MEDIUM IMPACT") return 1;
-  return 2;
+function startOfMonth(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 
-function buildTopPriorities(checks: CheckRecommendation[]): TopPriority[] {
-  return checks
-    .filter((c) => c.status !== "DONE")
-    .sort((a, b) => {
-      const impactDiff = impactOrder(a.impact) - impactOrder(b.impact);
-      if (impactDiff !== 0) return impactDiff;
-      return a.priorityRank - b.priorityRank;
-    })
-    .slice(0, 5)
-    .map((c, i) => {
-      const firstSignal = c.relevanceSignals[0];
-      const shortReason = firstSignal
-        ? `${firstSignal.label}: ${firstSignal.explanation}`.slice(0, 80)
-        : c.whyRecommendedForYou.slice(0, 80);
-      return {
+function addMonths(d: Date, n: number): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
+}
+
+function endOfMonth(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+}
+
+type FinalTier = "core_now" | "high_later" | "mid" | "optional" | "context_only";
+
+function timeframeToFixed(tf: PathwayTimeframe): "current_month" | "next_3_months" | "next_6_months" | "next_year" | "optional_later" {
+  if (tf === "next_month") return "current_month";
+  if (tf === "next_3_months") return "next_3_months";
+  if (tf === "next_6_months") return "next_6_months";
+  if (tf === "next_year") return "next_year";
+  return "optional_later";
+}
+
+function mapImpactToFinal(impact: CheckRecommendation["impact"]): FinalImpact {
+  if (impact === "HIGH IMPACT") return "HIGH";
+  if (impact === "MEDIUM IMPACT") return "MEDIUM";
+  return "LOW";
+}
+
+function mapStatusToFinal(status: CheckStatus): FinalStatus {
+  if (status === "planned") return "PLANNED";
+  if (status === "completed" || status === "result_uploaded") return "DONE";
+  return "MISSING";
+}
+
+async function persistFixedSpecPathway(params: {
+  userEmail: string;
+  anchorDate: Date;
+  checksSorted: CheckRecommendation[];
+}) {
+  const { userEmail, anchorDate, checksSorted } = params;
+
+  // Build per-check biomarker selections:
+  // - take includedTestsByCategory in order, flatten tests
+  // - keep max 4 per check as core_now candidate
+  // - apply global max 10 core_now across current_month checks
+  const selections: Array<{
+    checkKey: string;
+    biomarkerId: string;
+    biomarkerName: string;
+    score: number;
+    tier: FinalTier;
+    timeframe: ReturnType<typeof timeframeToFixed>;
+    reason: string;
+  }> = [];
+
+  for (const c of checksSorted) {
+    const tf = timeframeToFixed(c.timeframe);
+    const flat: string[] = [];
+    for (const cat of c.includedTestsByCategory ?? []) {
+      for (const t of cat.tests ?? []) {
+        if (!flat.includes(t)) flat.push(t);
+      }
+    }
+
+    // Per-check cap 4 (fixed spec: 3–4)
+    const perCheckCore = flat.slice(0, 4);
+    const remaining = flat.slice(4);
+
+    const baseReason = c.whyForYou || "Selected based on your survey profile.";
+    for (const name of perCheckCore) {
+      selections.push({
         checkKey: c.checkKey,
-        checkName: c.checkName,
-        status: c.status,
-        impact: c.impact,
-        priorityRank: i + 1,
-        shortReason,
-      };
+        biomarkerId: name, // MVP: use name as id (until we map biomarker_id reliably)
+        biomarkerName: name,
+        score: Math.max(1, Math.round(c.score / 2)),
+        tier: "core_now",
+        timeframe: tf,
+        reason: baseReason,
+      });
+    }
+    for (const name of remaining) {
+      selections.push({
+        checkKey: c.checkKey,
+        biomarkerId: name,
+        biomarkerName: name,
+        score: 1,
+        tier: "high_later",
+        timeframe: tf === "current_month" ? "next_3_months" : tf,
+        reason: "Useful supporting marker to consider after core tests.",
+      });
+    }
+  }
+
+  // Global cap: max 10 core_now blood biomarkers in current_month
+  const currentCore = selections.filter((s) => s.timeframe === "current_month" && s.tier === "core_now");
+  if (currentCore.length > 10) {
+    const overflow = currentCore.slice(10);
+    for (const s of overflow) {
+      s.tier = "high_later";
+      s.timeframe = "next_3_months";
+      s.reason = "Moved out of this month to keep the plan focused (max 10 core blood tests now).";
+    }
+  }
+
+  // Persist: replace for user (simple MVP)
+  await prisma.userPathwayBiomarkerSelection.deleteMany({ where: { userEmail } });
+
+  // Deterministic ranking
+  const byGlobal = [...selections].sort((a, b) => b.score - a.score || a.biomarkerName.localeCompare(b.biomarkerName));
+  const globalRank = new Map<string, number>();
+  byGlobal.forEach((s, i) => globalRank.set(`${s.checkKey}::${s.biomarkerId}`, i + 1));
+
+  const byCheck = new Map<string, string[]>();
+  for (const s of selections) {
+    if (!byCheck.has(s.checkKey)) byCheck.set(s.checkKey, []);
+    byCheck.get(s.checkKey)!.push(s.biomarkerId);
+  }
+  const withinRank = new Map<string, number>();
+  for (const [ck, ids] of byCheck) {
+    const uniq = Array.from(new Set(ids));
+    uniq.forEach((id, idx) => withinRank.set(`${ck}::${id}`, idx + 1));
+  }
+
+  if (selections.length) {
+    await prisma.userPathwayBiomarkerSelection.createMany({
+      data: selections.map((s) => ({
+        userEmail,
+        checkKey: s.checkKey,
+        biomarkerId: s.biomarkerId,
+        biomarkerName: s.biomarkerName,
+        priorityTier: s.tier,
+        timeframe: s.timeframe,
+        score: s.score,
+        rankWithinCheck: withinRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
+        rankGlobal: globalRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
+        reason: s.reason,
+      })),
     });
+  }
+
+  // Persist schedule rows for checks
+  await prisma.userPathwaySchedule.deleteMany({ where: { userEmail } });
+  const month0 = startOfMonth(anchorDate);
+  const ranges = {
+    current_month: { start: month0, end: endOfMonth(month0) },
+    next_3_months: { start: addMonths(month0, 1), end: endOfMonth(addMonths(month0, 2)) },
+    next_6_months: { start: addMonths(month0, 3), end: endOfMonth(addMonths(month0, 5)) },
+    next_year: { start: addMonths(month0, 6), end: endOfMonth(addMonths(month0, 11)) },
+    optional_later: { start: addMonths(month0, 12), end: endOfMonth(addMonths(month0, 17)) },
+  } as const;
+
+  const scheduleRows = checksSorted.map((c) => {
+    const tf = timeframeToFixed(c.timeframe);
+    const r = ranges[tf];
+    return {
+      userEmail,
+      checkKey: c.checkKey,
+      timeframe: tf,
+      calendarStart: r.start,
+      calendarEnd: r.end,
+      priorityRank: c.priorityRank,
+      status: "MISSING",
+      timingReason: c.whyNow || "Scheduled based on your current profile.",
+    };
+  });
+
+  if (scheduleRows.length) {
+    await prisma.userPathwaySchedule.createMany({ data: scheduleRows });
+  }
 }
 
-function buildUpcomingChecks(checks: CheckRecommendation[]): UpcomingCheck[] {
-  const planned = checks.filter((c) => c.status === "PLANNED").slice(0, 3);
-  const missingNeeded = 3 - planned.length;
-  const missing = checks
-    .filter((c) => c.status === "MISSING")
-    .slice(0, missingNeeded);
+async function buildFixedSpecResponse(params: {
+  userEmail: string;
+  anchorDate: Date;
+  checksSorted: CheckRecommendation[];
+}): Promise<{ pathwayTimeline: PathwayTimelineEntry[]; recommendations: FinalRecommendation[] }> {
+  const { userEmail, anchorDate, checksSorted } = params;
 
-  const items: UpcomingCheck[] = [];
-  for (const c of planned) {
-    items.push({
-      checkKey: c.checkKey,
-      checkName: c.checkName,
-      timeLabel: c.plannedAt ? "Scheduled" : "Planned",
+  const [scheduleRows, selectionRows] = await Promise.all([
+    prisma.userPathwaySchedule.findMany({
+      where: { userEmail },
+      orderBy: [{ timeframe: "asc" }, { priorityRank: "asc" }],
+      select: {
+        checkKey: true,
+        timeframe: true,
+        calendarStart: true,
+        calendarEnd: true,
+        priorityRank: true,
+        status: true,
+        timingReason: true,
+      },
+      take: 500,
+    }),
+    prisma.userPathwayBiomarkerSelection.findMany({
+      where: { userEmail },
+      orderBy: [{ rankGlobal: "asc" }],
+      select: {
+        checkKey: true,
+        biomarkerName: true,
+        priorityTier: true,
+        timeframe: true,
+        rankWithinCheck: true,
+      },
+      take: 5000,
+    }),
+  ]);
+
+  // Build pathwayTimeline grouped by timeframe.
+  const month0 = startOfMonth(anchorDate);
+  const ranges: Record<FixedTimeframe, { label: string; start: Date; end: Date }> = {
+    current_month: { label: `This month: ${month0.toLocaleString("en", { month: "long" })}`, start: month0, end: endOfMonth(month0) },
+    next_3_months: { label: "Next 3 months", start: addMonths(month0, 1), end: endOfMonth(addMonths(month0, 2)) },
+    next_6_months: { label: "Next 6 months", start: addMonths(month0, 3), end: endOfMonth(addMonths(month0, 5)) },
+    next_year: { label: "Later this year", start: addMonths(month0, 6), end: endOfMonth(addMonths(month0, 11)) },
+    optional_later: { label: "Optional / later", start: addMonths(month0, 12), end: endOfMonth(addMonths(month0, 17)) },
+  };
+
+  const checksByKey = new Map(checksSorted.map((c) => [c.checkKey, c]));
+
+  const timelineByTf = new Map<FixedTimeframe, PathwayTimelineEntry>();
+  for (const tf of Object.keys(ranges) as FixedTimeframe[]) {
+    const r = ranges[tf];
+    timelineByTf.set(tf, {
+      timeframe: tf,
+      label: r.label,
+      calendarStart: r.start.toISOString().slice(0, 10),
+      calendarEnd: r.end.toISOString().slice(0, 10),
+      checks: [],
     });
   }
-  for (const c of missing) {
-    items.push({
-      checkKey: c.checkKey,
-      checkName: c.checkName,
-      timeLabel: c.recommendedTiming || "Recommended",
+
+  for (const row of scheduleRows) {
+    const tf = (row.timeframe as FixedTimeframe) ?? "optional_later";
+    const c = checksByKey.get(row.checkKey);
+    timelineByTf.get(tf)?.checks.push({
+      checkKey: row.checkKey,
+      checkName: c?.checkName ?? row.checkKey,
+      priorityRank: row.priorityRank,
+      status: mapStatusToFinal(normalizePersistedStatus(row.status)),
     });
   }
-  return items;
+
+  const pathwayTimeline = Array.from(timelineByTf.values()).filter((x) => x.checks.length > 0);
+
+  // Build per-check biomarker lists from persisted selections.
+  const byCheck = new Map<string, typeof selectionRows>();
+  for (const s of selectionRows) {
+    if (!byCheck.has(s.checkKey)) byCheck.set(s.checkKey, []);
+    byCheck.get(s.checkKey)!.push(s);
+  }
+
+  // Global biomarker de-dupe across the whole pathway (product requirement: show each biomarker once).
+  // We keep the first appearance in the earliest timeframe / highest priority check.
+  const tfOrder: Record<FixedTimeframe, number> = {
+    current_month: 0,
+    next_3_months: 1,
+    next_6_months: 2,
+    next_year: 3,
+    optional_later: 4,
+  };
+  const checksForOrdering = [...checksSorted].sort((a, b) => {
+    const ta = timeframeToFixed(a.timeframe) as FixedTimeframe;
+    const tb = timeframeToFixed(b.timeframe) as FixedTimeframe;
+    return (tfOrder[ta] ?? 9) - (tfOrder[tb] ?? 9) || a.priorityRank - b.priorityRank;
+  });
+  const globalSeenBiomarkers = new Set<string>();
+  const uniq = (names: string[]): string[] => {
+    const out: string[] = [];
+    for (const n of names) {
+      const key = n.trim().toLowerCase();
+      if (!key) continue;
+      if (globalSeenBiomarkers.has(key)) continue;
+      globalSeenBiomarkers.add(key);
+      out.push(n);
+    }
+    return out;
+  };
+
+  const recommendations: FinalRecommendation[] = [];
+  for (const c of checksForOrdering) {
+    const sels = byCheck.get(c.checkKey) ?? [];
+    const core = sels
+      .filter((s) => s.priorityTier === "core_now" && s.timeframe === "current_month")
+      .sort((a, b) => a.rankWithinCheck - b.rankWithinCheck)
+      .map((s) => s.biomarkerName)
+      .slice(0, 4);
+
+    const supporting = sels
+      .filter((s) => s.priorityTier !== "core_now")
+      .sort((a, b) => a.rankWithinCheck - b.rankWithinCheck)
+      .map((s) => s.biomarkerName)
+      .slice(0, 8);
+
+    const later = sels
+      .filter((s) => s.timeframe === "next_year" || s.timeframe === "optional_later")
+      .sort((a, b) => a.rankWithinCheck - b.rankWithinCheck)
+      .map((s) => s.biomarkerName)
+      .slice(0, 10);
+
+    const coreUnique = uniq(core).slice(0, 4);
+    const supportingUnique = uniq(supporting.filter((x) => !core.includes(x))).slice(0, 8);
+    const laterUnique = uniq(later.filter((x) => !core.includes(x) && !supporting.includes(x))).slice(0, 10);
+
+    recommendations.push({
+      checkKey: c.checkKey,
+      checkName: c.checkName,
+      shortSummary: c.shortSummary,
+      whyRecommendedForYou: c.whyForYou,
+      priorityExplanation: {
+        whyNow: c.whyNow,
+        timingReason: c.whyNow,
+      },
+      coreTestsNow: coreUnique,
+      supportingTests: supportingUnique,
+      laterTests: laterUnique,
+      whatCanWait: c.canWait,
+      timeframe: timeframeToFixed(c.timeframe),
+      impact: mapImpactToFinal(c.impact),
+      status: mapStatusToFinal(c.status),
+    });
+  }
+
+  return { pathwayTimeline, recommendations };
 }
 
 export async function getRecommendations(params: {
@@ -173,51 +503,168 @@ export async function getRecommendations(params: {
 
   // Load check statuses for all resolved check keys
   const checkKeys = resolved.map((c) => c.checkKey);
-  const statusRows = checkKeys.length
-    ? await prisma.userCheckStatus.findMany({
-        where: { userEmail, checkKey: { in: checkKeys } },
-        select: { checkKey: true, status: true, plannedAt: true, completedAt: true },
-      })
-    : [];
+  const [statusRows, reminderRows, resultRows] = await Promise.all([
+    checkKeys.length
+      ? prisma.userCheckStatus.findMany({
+          where: { userEmail, checkKey: { in: checkKeys } },
+          select: {
+            checkKey: true,
+            status: true,
+            plannedAt: true,
+            completedAt: true,
+          },
+        })
+      : Promise.resolve([]),
+    checkKeys.length
+      ? prisma.userCheckReminder.findMany({
+          where: { userEmail, checkKey: { in: checkKeys }, status: "active" },
+          orderBy: { remindAt: "asc" },
+          take: 200,
+          select: {
+            id: true,
+            checkKey: true,
+            remindAt: true,
+            timeframe: true,
+            channel: true,
+            status: true,
+          },
+        })
+      : Promise.resolve([]),
+    checkKeys.length
+      ? prisma.userCheckResult.findMany({
+          where: { userEmail, checkKey: { in: checkKeys } },
+          orderBy: { uploadedAt: "desc" },
+          take: 500,
+          select: {
+            id: true,
+            checkKey: true,
+            documentId: true,
+            fileName: true,
+            fileType: true,
+            source: true,
+            testDate: true,
+            uploadedAt: true,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const statusByKey = new Map(statusRows.map((r) => [r.checkKey, r]));
+  const reminderByKey = new Map<string, (typeof reminderRows)[number]>();
+  for (const r of reminderRows) {
+    if (!reminderByKey.has(r.checkKey)) reminderByKey.set(r.checkKey, r);
+  }
+  const resultsByKey = new Map<string, Array<(typeof resultRows)[number]>>();
+  for (const r of resultRows) {
+    if (!resultsByKey.has(r.checkKey)) resultsByKey.set(r.checkKey, []);
+    resultsByKey.get(r.checkKey)!.push(r);
+  }
 
   // Merge status into checks
   const checks: CheckRecommendation[] = resolved.map((c) => {
     const row = statusByKey.get(c.checkKey);
-    const status = (row?.status ?? "MISSING") as CheckStatus;
+    const status = normalizePersistedStatus(row?.status);
+    const reminder = reminderByKey.get(c.checkKey) ?? null;
+    const uploaded = resultsByKey.get(c.checkKey) ?? [];
+
     return {
       ...c,
+      timeframe: "optional_later",
       status,
-      progressLabel: status,
       plannedAt: row?.plannedAt ? row.plannedAt.toISOString() : null,
       completedAt: row?.completedAt ? row.completedAt.toISOString() : null,
+      actions: {
+        canBookLab: true,
+        canOrderHomeTest: true,
+        canAskDoctor: true,
+        canAddReminder: true,
+        canUploadResult: true,
+      },
+      reminder: reminder
+        ? {
+            id: reminder.id,
+            remindAt: reminder.remindAt.toISOString(),
+            timeframe: (reminder.timeframe as PathwayTimeframe) ?? null,
+            channel: reminder.channel,
+            status: reminder.status,
+          }
+        : null,
+      uploadedResults: uploaded.map((u) => ({
+        id: u.id,
+        documentId: u.documentId ?? null,
+        fileName: u.fileName ?? null,
+        fileType: u.fileType ?? null,
+        source: u.source ?? null,
+        testDate: u.testDate ? u.testDate.toISOString().slice(0, 10) : null,
+        uploadedAt: u.uploadedAt.toISOString(),
+      })),
     };
   });
 
-  const missingCount = checks.filter((c) => c.status === "MISSING").length;
-  const plannedCount = checks.filter((c) => c.status === "PLANNED").length;
-  const completedCount = checks.filter((c) => c.status === "DONE").length;
-  const healthScore = computeHealthScore(checks);
+  // Sort by priorityRank (already score-sorted), then assign timeframes with caps.
+  const sorted = [...checks].sort((a, b) => a.priorityRank - b.priorityRank);
+  const pathway = assignTimeframes(sorted);
 
-  const topPriorities = buildTopPriorities(checks);
-  const nextRecommendedCheck = topPriorities[0]?.checkName ?? null;
+  // Anchor date for calendar-based schedule: prefer questionnaire session updatedAt, then snapshot, else now.
+  const snapCreatedAt =
+    snap && typeof (snap as { createdAt?: unknown }).createdAt === "object"
+      ? ((snap as unknown as { createdAt?: Date | null }).createdAt ?? null)
+      : null;
+  const anchorDate =
+    (session as unknown as { updatedAt?: Date | null })?.updatedAt ??
+    snapCreatedAt ??
+    new Date();
+
+  // Persist fixed-spec pathway artifacts (biomarker selection + schedule).
+  // MVP: recompute on read; later can move to background job + caching.
+  try {
+    await persistFixedSpecPathway({ userEmail, anchorDate, checksSorted: sorted });
+  } catch (e) {
+    console.error("[recommendations] persistFixedSpecPathway failed", e);
+  }
+
+  // Build fixed-spec response fields
+  let fixedSpec: { pathwayTimeline: PathwayTimelineEntry[]; recommendations: FinalRecommendation[] } | null = null;
+  try {
+    fixedSpec = await buildFixedSpecResponse({ userEmail, anchorDate, checksSorted: sorted });
+  } catch (e) {
+    console.error("[recommendations] buildFixedSpecResponse failed", e);
+  }
+
+  const plannedCount = sorted.filter((c) => c.status === "planned").length;
+  const completedCount = sorted.filter((c) => c.status === "completed" || c.status === "result_uploaded").length;
+  const uploadedResultsCount = sorted.reduce((acc, c) => acc + (c.uploadedResults?.length ?? 0), 0);
+  const healthScore = computeHealthScoreSimple(sorted);
+  const nextMonthCount = pathway.next_month.length;
+
+  const nextBestActionCandidate =
+    pathway.next_month.find((c) => c.status === "missing") ??
+    pathway.next_month.find((c) => c.status === "reminder_set") ??
+    pathway.next_month.find((c) => c.status === "planned") ??
+    pathway.next_month[0] ??
+    sorted[0] ??
+    null;
 
   const summary: RecommendationSummary = {
-    recommendedCount: checks.length,
+    nextBestAction: nextBestActionCandidate
+      ? {
+          checkKey: nextBestActionCandidate.checkKey,
+          checkName: nextBestActionCandidate.checkName,
+          why: nextBestActionCandidate.whyForYou,
+        }
+      : null,
+    nextMonthCount,
     plannedCount,
     completedCount,
+    uploadedResultsCount,
     healthScore,
-    topGaps: missingCount,
-    nextRecommendedCheck,
   };
 
   return {
     summary,
-    profile: buildProfileSummary(answersMap, snap),
-    topPriorities,
-    upcomingChecks: buildUpcomingChecks(checks),
-    recommendations: checks,
+    profile: rawAnswers.length ? buildProfileSummary(answersMap, snap) : null,
+    pathway,
+    ...(fixedSpec ? fixedSpec : {}),
   };
 }
 
@@ -236,13 +683,23 @@ export async function updateCheckStatus(params: {
       userEmail,
       checkKey,
       status,
-      plannedAt: status === "PLANNED" ? now : null,
-      completedAt: status === "DONE" ? now : null,
+      plannedAt: status === "planned" ? now : null,
+      completedAt: status === "completed" || status === "result_uploaded" ? now : null,
     },
     update: {
       status,
-      plannedAt: status === "PLANNED" ? now : status === "MISSING" ? null : undefined,
-      completedAt: status === "DONE" ? now : status === "MISSING" ? null : undefined,
+      plannedAt:
+        status === "planned"
+          ? now
+          : status === "missing"
+            ? null
+            : undefined,
+      completedAt:
+        status === "completed" || status === "result_uploaded"
+          ? now
+          : status === "missing"
+            ? null
+            : undefined,
       updatedAt: now,
     },
   });

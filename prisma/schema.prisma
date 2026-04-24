@@ -363,6 +363,7 @@ model HealthUpload {
   imagingRecord      ImagingRecord?
   clinicalNoteRecord ClinicalNoteRecord?
   pipelineStepLogs   PipelineStepLog[]
+  userCheckResults   UserCheckResult[]
 
   @@index([userEmail])
   @@map("health_uploads")
@@ -1555,13 +1556,184 @@ model UserCheckStatus {
   id          String    @id @default(uuid()) @db.Uuid
   userEmail   String    @map("user_email")
   checkKey    String    @map("check_key")
-  status      String    @default("MISSING") // MISSING | PLANNED | DONE
+  /// Status progression (string for forward compatibility):
+  /// missing → reminder_set/planned → completed → result_uploaded
+  status      String    @default("missing")
   plannedAt   DateTime? @map("planned_at") @db.Timestamptz
   completedAt DateTime? @map("completed_at") @db.Timestamptz
+  selectedFulfillmentType String? @map("selected_fulfillment_type") // lab | home_test | doctor | other
+  notes       String?
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  reminders   UserCheckReminder[]
+  results     UserCheckResult[]
 
   @@unique([userEmail, checkKey], name: "user_check_status_unique")
   @@index([userEmail])
   @@map("user_check_statuses")
+}
+
+model UserCheckReminder {
+  id        String   @id @default(uuid()) @db.Uuid
+  userEmail String   @map("user_email")
+  checkKey  String   @map("check_key")
+  remindAt  DateTime @map("remind_at") @db.Timestamptz
+  timeframe String?  // next_month | next_3_months | next_6_months | next_year | optional_later
+  channel   String   @default("app") // app | email (placeholder)
+  status    String   @default("active") // active | dismissed | completed
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  /// Soft link (user_email + check_key) to UserCheckStatus
+  checkStatus UserCheckStatus? @relation(fields: [userEmail, checkKey], references: [userEmail, checkKey], onDelete: Cascade, map: "user_check_reminders_status_fk")
+
+  @@index([userEmail])
+  @@index([userEmail, checkKey])
+  @@map("user_check_reminders")
+}
+
+model UserCheckResult {
+  id         String   @id @default(uuid()) @db.Uuid
+  userEmail  String   @map("user_email")
+  checkKey   String   @map("check_key")
+  documentId String?  @map("document_id") @db.Uuid // optional link to health_uploads.document_id
+  fileName   String?  @map("file_name")
+  fileType   String?  @map("file_type")
+  source     String?  // lab | doctor | home_test | other
+  testDate   DateTime? @map("test_date") @db.Date
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamptz
+  notes      String?
+
+  /// Soft link (user_email + check_key) to UserCheckStatus
+  checkStatus UserCheckStatus? @relation(fields: [userEmail, checkKey], references: [userEmail, checkKey], onDelete: Cascade, map: "user_check_results_status_fk")
+
+  /// Optional hard link to the uploaded document metadata
+  upload HealthUpload? @relation(fields: [documentId], references: [documentId], onDelete: SetNull)
+
+  @@index([userEmail])
+  @@index([userEmail, checkKey])
+  @@index([documentId])
+  @@map("user_check_results")
+}
+
+// ─── ARC Recommendation Engine (Fixed spec) — user pathway persistence ────────
+
+model BiomarkerPriorityRule {
+  id            String   @id @default(uuid()) @db.Uuid
+  biomarkerId   String   @map("biomarker_id")
+  biomarkerName String   @map("biomarker_name")
+  checkKey      String   @map("check_key")
+  triggerType   String   @map("trigger_type")
+  triggerKey    String   @map("trigger_key")
+  weight        Int
+  maxPriorityTier String @map("max_priority_tier") // core_now | high_later | mid | optional | context_only
+  reasonTemplate String  @map("reason_template")
+  isBloodMarker  Boolean @default(true) @map("is_blood_marker")
+  isScreening    Boolean @default(false) @map("is_screening")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([checkKey])
+  @@index([biomarkerId])
+  @@index([checkKey, triggerType, triggerKey])
+  @@map("biomarker_priority_rules")
+}
+
+model CanonicalCheckBiomarkerSlot {
+  id              String   @id @default(uuid()) @db.Uuid
+  checkKey         String   @unique @map("check_key")
+  minCore          Int      @default(1) @map("min_core")
+  maxCore          Int      @default(4) @map("max_core")
+  defaultTimeframe String   @map("default_timeframe")
+  overflowStrategy String   @default("downgrade_to_high_later") @map("overflow_strategy")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("canonical_check_biomarker_slots")
+}
+
+model SignalCheckExplanationTemplate {
+  id              String   @id @default(uuid()) @db.Uuid
+  signalKey        String   @map("signal_key")
+  signalLabel      String   @map("signal_label")
+  checkKey         String   @map("check_key")
+  template         String
+  triggerType      String   @map("trigger_type")
+  priorityWeight   Int      @default(1) @map("priority_weight")
+  contentPriority  Int      @default(5) @map("content_priority")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([signalKey, checkKey], name: "signal_check_explanation_templates_signal_check_unique")
+  @@index([checkKey])
+  @@index([signalKey])
+  @@map("signal_check_explanation_templates")
+}
+
+model CheckPriorityExplanation {
+  id                  String   @id @default(uuid()) @db.Uuid
+  checkKey             String   @map("check_key")
+  scoreMin             Int      @map("score_min")
+  scoreMax             Int      @map("score_max")
+  impactTier           String   @map("impact_tier")
+  explanationTemplate  String   @map("explanation_template")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([checkKey])
+  @@map("check_priority_explanations")
+}
+
+model RecommendationContentTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  contentType String   @map("content_type") // summary | why | what_now | what_later | priority | timeline
+  checkKey     String   @map("check_key")
+  template     String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([checkKey])
+  @@index([contentType])
+  @@map("recommendation_content_templates")
+}
+
+model UserPathwayBiomarkerSelection {
+  id             String   @id @default(uuid()) @db.Uuid
+  userEmail       String   @map("user_id")
+  checkKey        String   @map("check_key")
+  biomarkerId     String   @map("biomarker_id")
+  biomarkerName   String   @map("biomarker_name")
+  priorityTier    String   @map("priority_tier") // core_now | high_later | mid | optional | context_only
+  timeframe       String   // current_month | next_3_months | next_6_months | next_year | optional_later
+  score           Int
+  rankWithinCheck Int      @map("rank_within_check")
+  rankGlobal      Int      @map("rank_global")
+  reason          String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userEmail])
+  @@index([userEmail, timeframe])
+  @@index([checkKey])
+  @@unique([userEmail, checkKey, biomarkerId], name: "user_pathway_biomarker_selection_unique")
+  @@map("user_pathway_biomarker_selection")
+}
+
+model UserPathwaySchedule {
+  id           String   @id @default(uuid()) @db.Uuid
+  userEmail     String   @map("user_id")
+  checkKey      String   @map("check_key")
+  timeframe     String   // current_month | next_3_months | next_6_months | next_year | optional_later
+  calendarStart DateTime @map("calendar_start") @db.Date
+  calendarEnd   DateTime @map("calendar_end") @db.Date
+  priorityRank  Int      @map("priority_rank")
+  status        String   @default("MISSING")
+  timingReason  String   @map("timing_reason")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([userEmail, checkKey], name: "user_pathway_schedule_unique")
+  @@index([userEmail])
+  @@index([userEmail, timeframe, priorityRank])
+  @@map("user_pathway_schedule")
 }

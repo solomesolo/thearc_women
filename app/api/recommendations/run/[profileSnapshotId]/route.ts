@@ -5,7 +5,7 @@ import { runAndPersistRecommendations } from "@/lib/recommendations/engine";
 
 export async function POST(_request: Request, context: { params: Promise<{ profileSnapshotId: string }> }) {
   const session = await getServerSession(authOptions);
-  const anonHeader = (_request as any)?.headers?.get?.("x-arc-anon-id")?.trim?.() || null;
+  const anonHeader = _request.headers.get("x-arc-anon-id")?.trim() || null;
   const caller = session?.user?.email ?? (anonHeader ? `anon:${anonHeader}` : null);
   if (!caller) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });

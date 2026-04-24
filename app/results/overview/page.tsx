@@ -20,27 +20,37 @@ import { useEffect } from "react";
 import { useDashboardSummary } from "@/lib/dashboard-summary/useDashboardSummary";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { t } from "@/content/i18n/appCopy";
+import { useRecommendations } from "@/lib/recommendations/useRecommendations";
+import type { BundleStatus } from "@/lib/status/statusApi";
+import type { RecommendationCardData } from "@/components/app/RecommendationCard";
 
 export default function ResultsOverviewPage() {
   const { data: session } = useSession();
   const locale = useLocale();
   const { loading, profileSnapshot } = useActiveProfile();
-  const userId = session?.user?.email ?? null;
+  const userId = session?.user?.email ?? (typeof window !== "undefined" ? `anon:${getOrCreateAnonId()}` : null);
   const { data: statusData } = useDashboardStatus(userId);
   const { apply } = useApplyProgressEvent({ userId });
   const { data: healthScoreData, isLoading: healthScoreLoading, error: healthScoreError, reload: reloadHealthScore } = useHealthScore();
   const { data: timelineData, isLoading: timelineLoading, error: timelineError } = useTimeline(userId);
   const { data: dashSummary, isLoading: dashLoading } = useDashboardSummary();
+  const { data: pathwayRecs } = useRecommendations(userId);
   const timelineUI = mapTimelineResponseToUI(timelineData);
 
   const isAnonymous = !session?.user?.email;
   const [saveBannerDismissed, setSaveBannerDismissed] = useState(false);
 
   const userName = (profileSnapshot?.userName as string | null) ?? session?.user?.email ?? "your profile";
-  const summary = (profileSnapshot?.profileSummary as any) ?? {};
-  const ageGroupLabel = (summary.age_group_label as string | null) ?? (profileSnapshot?.ageGroupLabel as string | null) ?? "—";
-  const lifeStageLabel = (summary.life_stage_label as string | null) ?? (profileSnapshot?.lifeStageLabel as string | null) ?? "—";
-  const goalsLabel = (summary.goals_label as string | null) ?? "—";
+  const summary = (profileSnapshot?.profileSummary as unknown as Record<string, unknown> | null) ?? {};
+  const ageGroupLabel =
+    (typeof summary.age_group_label === "string" ? summary.age_group_label : null) ??
+    (profileSnapshot?.ageGroupLabel as string | null) ??
+    "—";
+  const lifeStageLabel =
+    (typeof summary.life_stage_label === "string" ? summary.life_stage_label : null) ??
+    (profileSnapshot?.lifeStageLabel as string | null) ??
+    "—";
+  const goalsLabel = (typeof summary.goals_label === "string" ? summary.goals_label : null) ?? "—";
   const riskFlags = Array.isArray(profileSnapshot?.riskFlags) ? (profileSnapshot.riskFlags as string[]) : [];
   const familyHistoryFlags = Array.isArray(profileSnapshot?.familyHistoryFlags)
     ? (profileSnapshot.familyHistoryFlags as string[])
@@ -51,8 +61,10 @@ export default function ResultsOverviewPage() {
   const recommendationStatusById = useMemo(() => {
     const m: Record<string, RecommendationStatus> = {};
     for (const id of ids) {
-      const s = statusData?.by_bundle?.[id] as any;
-      const raw = (s?.recency_status ?? s?.final_status ?? "missing") as string;
+      const s = statusData?.by_bundle?.[id] as unknown as { recency_status?: unknown; final_status?: unknown } | undefined;
+      const raw = (typeof s?.recency_status === "string" ? s.recency_status : null) ??
+        (typeof s?.final_status === "string" ? s.final_status : null) ??
+        "missing";
       m[id] = raw === "outdated" ? "outdated" : raw === "current" ? "current" : raw === "optional" ? "optional" : "missing";
     }
     return m;
@@ -182,49 +194,72 @@ export default function ResultsOverviewPage() {
 
             {hasSummaryPriorities && (dashSummary?.top_priorities ?? []).map((p) => {
               const bundleKey = p.bundle_key as string;
-              const status = bundleKey ? (statusData?.by_bundle?.[bundleKey] as any) : null;
+              const status = bundleKey ? ((statusData?.by_bundle?.[bundleKey] as BundleStatus | undefined) ?? null) : null;
               const badge = status ? mapBundleStatusToBadge(status) : null;
               const progress = progressById.get(bundleKey) ?? null;
               const isTopGap = Boolean(healthScoreData?.top_gaps?.includes(bundleKey));
-              const scoreMeta = healthScoreData?.bundle_breakdown?.find((x) => x.bundle_key === bundleKey) ?? null;
+              const scoreMetaRaw = healthScoreData?.bundle_breakdown?.find((x) => x.bundle_key === bundleKey) ?? null;
+              const scoreMeta = (scoreMetaRaw ?? null) as unknown as {
+                status?: string;
+                relevance_weight?: number;
+                coverage_ratio?: number;
+                numerator_value?: number;
+                rationale?: string[];
+              } | null;
               const whyBits = (scoreMeta?.rationale ?? []).slice(0, 3);
               const whyBody =
                 whyBits.length > 0
                   ? `Relevance signals: ${whyBits.join(", ")}.`
                   : "This check is prioritized based on your current status and profile signals.";
 
+              const country =
+                profileSnapshot && typeof (profileSnapshot as unknown as { country?: unknown }).country === "string"
+                  ? ((profileSnapshot as unknown as { country: string }).country)
+                  : "DE";
+
               const applyAndRefresh = async (req: Parameters<typeof apply>[0]) => {
                 await apply(req);
                 await reloadHealthScore();
               };
+
+              const statusBadge: RecommendationCardData["statusBadge"] =
+                (badge?.label as RecommendationCardData["statusBadge"] | undefined) ??
+                (p.badge_label === "OUTDATED" ? "Outdated" : p.badge_label === "MISSING" ? "Missing" : "Recommended");
+
+              const cardData: RecommendationCardData = {
+                id: bundleKey,
+                bundleKey,
+                country,
+                testName: p.display_name,
+                statusBadge,
+                priority: p.rank,
+                whyTitle: "Why this matters now",
+                whyBody,
+                labsTitle: "Book at a lab",
+                labs: [{ name: "Local lab", price: "—", address: "Choose a nearby lab", note: "", mapsHref: "#" }],
+                homeTitle: "Home test",
+                homeTests: [{ name: "Home test option", price: "—", descriptor: "If available in your area", orderHref: "#" }],
+                doctorTitle: "Through your doctor",
+                doctorLines: ["Bring this recommendation to your next appointment", "Ask if it can be added to routine bloodwork"],
+                ctaBook: "Book at lab",
+                ctaBookHref: "#",
+                ctaOrder: "Order home test",
+                ctaOrderHref: "#",
+                ctaPlanned: "Mark as planned",
+                ctaDone: "Mark as done",
+              };
               return (
                 <RecommendationCard
                   key={bundleKey}
-                  card={{
-                    id: bundleKey,
-                    bundleKey,
-                    country: (profileSnapshot as any)?.country ?? "DE",
-                    testName: p.display_name,
-                    statusBadge: (badge?.label as any) ?? (p.badge_label === "OUTDATED" ? "Outdated" : p.badge_label === "MISSING" ? "Missing" : "Recommended"),
-                    priority: p.rank,
-                    whyTitle: "Why this matters now",
-                    whyBody,
-                    labsTitle: "Book at a lab",
-                    labs: [{ name: "Local lab", price: "—", address: "Choose a nearby lab", note: "", mapsHref: "#" }],
-                    homeTitle: "Home test",
-                    homeTests: [{ name: "Home test option", price: "—", descriptor: "If available in your area", orderHref: "#" }],
-                    doctorTitle: "Through your doctor",
-                    doctorLines: ["Bring this recommendation to your next appointment", "Ask if it can be added to routine bloodwork"],
-                    ctaBook: "Book at lab",
-                    ctaBookHref: "#",
-                    ctaOrder: "Order home test",
-                    ctaOrderHref: "#",
-                    ctaPlanned: "Mark as planned",
-                    ctaDone: "Mark as done",
-                  } as any}
+                  card={cardData}
                   engineStatus={status}
                   isTopGap={isTopGap}
-                  scoreMeta={scoreMeta as any}
+                  scoreMeta={scoreMeta ? {
+                    status: scoreMeta.status,
+                    relevance_weight: scoreMeta.relevance_weight,
+                    coverage_ratio: scoreMeta.coverage_ratio,
+                    numerator_value: scoreMeta.numerator_value,
+                  } : null}
                   progress={
                     progress
                       ? { progress_state: progress.progress_state, selected_route: progress.selected_route }
@@ -267,6 +302,45 @@ export default function ResultsOverviewPage() {
               .flatMap((g) => g.items.map((it) => ({ month: g.labelText, item: it.title })))
               .slice(0, 6)}
           />
+
+          {/* Health Wallet preview (survey-driven pathway) */}
+          <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+              Health wallet
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">
+                  Completed
+                </p>
+                <p className="mt-1 font-mono text-[1.75rem] font-semibold tabular-nums leading-none text-[#0c0c0c]">
+                  {pathwayRecs?.summary.completedCount ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">
+                  Uploads
+                </p>
+                <p className="mt-1 font-mono text-[1.75rem] font-semibold tabular-nums leading-none text-[#0c0c0c]">
+                  {pathwayRecs?.summary.uploadedResultsCount ?? "—"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/upload"
+                className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+              >
+                Upload result
+              </Link>
+              <Link
+                href="/results/action-plan"
+                className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+              >
+                Open pathway
+              </Link>
+            </div>
+          </div>
 
           {/* Quick stat */}
           <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)]">

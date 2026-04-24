@@ -29,10 +29,11 @@ export async function GET(
         "Cache-Control": "private, max-age=30, stale-while-revalidate=120",
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[recommendations] GET error:", err);
+    const message = err instanceof Error ? err.message : null;
     return Response.json(
-      { error: err?.message ?? "Failed to load recommendations" },
+      { error: message ?? "Failed to load recommendations" },
       { status: 500 },
     );
   }

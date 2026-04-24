@@ -10,11 +10,12 @@ import { useRecommendations } from "@/lib/recommendations/useRecommendations";
 import { getOrCreateAnonId } from "@/lib/profile-engine-a/frontendClient";
 import { ProtectedRouteGate } from "@/components/navigation/ProtectedRouteGate";
 import { useLocale } from "@/lib/i18n/useLocale";
-import type { CheckStatus, ImpactLevel } from "@/lib/recommendations-engine/types";
+import type { CheckStatus, ImpactLevel, CheckRecommendation } from "@/lib/recommendations-engine/types";
 
 function statusBadgeClass(status: CheckStatus): string {
-  if (status === "MISSING") return "bg-[#0c0c0c] text-white";
-  if (status === "PLANNED") return "bg-[#525252] text-white";
+  if (status === "missing") return "bg-[#0c0c0c] text-white";
+  if (status === "reminder_set") return "bg-[#404040] text-white";
+  if (status === "planned") return "bg-[#525252] text-white";
   return "bg-white text-[#404040] border border-black/[0.12]";
 }
 
@@ -33,18 +34,33 @@ export default function DashboardPage() {
   const userId = session?.user?.email ?? (typeof window !== "undefined" ? `anon:${getOrCreateAnonId()}` : null);
   const { data: recs, isLoading: recsLoading } = useRecommendations(userId);
 
+  const allChecks: CheckRecommendation[] = recs
+    ? [
+        ...(recs.pathway.next_month ?? []),
+        ...(recs.pathway.next_3_months ?? []),
+        ...(recs.pathway.next_6_months ?? []),
+        ...(recs.pathway.next_year ?? []),
+        ...(recs.pathway.optional_later ?? []),
+      ]
+    : [];
+
   // KPIs: prefer live recommendations data, fall back to legacy summary.
   const open = recs
-    ? recs.summary.recommendedCount - recs.summary.completedCount
+    ? allChecks.filter((c) => c.status === "missing" || c.status === "reminder_set").length
     : (summary ? summary.kpis.tests_to_action : "—");
   const planned = recs ? recs.summary.plannedCount : (summary ? summary.kpis.planned : "—");
   const done = recs ? recs.summary.completedCount : (summary ? summary.kpis.completed : "—");
   const healthScore = recs ? recs.summary.healthScore : (summary?.kpis.health_score ?? 0);
+  const thisMonth = recs ? recs.summary.nextMonthCount : "—";
 
   // Profile from recommendations engine; fall back to legacy summary.
   // Use explicit typed variable to avoid union type conflicts.
   const recsProfile = recs?.profile ?? null;
   const legacyProfile = summary?.profile_summary ?? null;
+  const nextBestCheck =
+    recs?.pathway.next_month?.[0] ??
+    recs?.pathway.next_3_months?.[0] ??
+    null;
 
   return (
     <ProtectedRouteGate
@@ -66,7 +82,7 @@ export default function DashboardPage() {
 
       {summary?.dashboard_state === "needs_assessment" && (
         <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
-          <p className="text-[#404040]">{locale === "de" ? "Du hast noch kein Assessment." : "You don't have an assessment yet."}</p>
+          <p className="text-[#404040]">{locale === "de" ? "Du hast noch kein Assessment." : "You don&apos;t have an assessment yet."}</p>
           <Link href="/onboarding/start" className="mt-3 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.9375rem] font-medium text-white hover:brightness-[0.9]">
             {locale === "de" ? "Assessment starten" : "Start assessment"}
           </Link>
@@ -76,7 +92,12 @@ export default function DashboardPage() {
       {/* Stats row */}
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryStatCard
-          label={locale === "de" ? "Tests offen" : "Tests to action"}
+          label={locale === "de" ? "Nächster Monat" : "This month"}
+          value={thisMonth}
+          sub={recsLoading ? (locale === "de" ? "Lädt…" : "Loading…") : (locale === "de" ? "Checks empfohlen" : "checks recommended")}
+        />
+        <SummaryStatCard
+          label={locale === "de" ? "Offen" : "Open"}
           value={open}
           sub={summaryLoading ? (locale === "de" ? "Lädt…" : "Loading…") : summaryError ? (locale === "de" ? "Nicht verfügbar" : "Unavailable") : (locale === "de" ? "basierend auf deinem Fortschritt" : "based on your progress")}
         />
@@ -99,7 +120,7 @@ export default function DashboardPage() {
 
       {summaryError && (
         <div className="mb-5 rounded-[16px] border border-black/[0.08] bg-white p-4 text-[0.875rem] text-[#737373]">
-          We couldn't load your dashboard summary.{" "}
+          We couldn&apos;t load your dashboard summary.{" "}
           <button type="button" className="underline underline-offset-2 text-[#0c0c0c]" onClick={reloadSummary}>
             Retry
           </button>
@@ -147,55 +168,57 @@ export default function DashboardPage() {
           <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Top priorities
+                Your next best action
               </p>
               <Link
                 href="/results/action-plan"
                 className="text-[0.8125rem] text-[#737373] transition-colors hover:text-[#0c0c0c]"
               >
-                See all
+                View pathway
               </Link>
             </div>
-            <div className="space-y-3">
-              {recsLoading && (recs?.topPriorities ?? []).length === 0 && (
-                <p className="text-[0.875rem] text-[#737373]">{locale === "de" ? "Lädt…" : "Loading…"}</p>
-              )}
-              {(recs?.topPriorities ?? []).map((p) => (
-                <div
-                  key={p.checkKey}
-                  className="flex items-start justify-between gap-3 rounded-[12px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c0c0c]/[0.06] text-[0.6875rem] font-semibold tabular-nums text-[#0c0c0c]">
-                      {p.priorityRank}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[0.9375rem] font-medium text-[#0c0c0c]">{p.checkName}</p>
-                      {p.shortReason && (
-                        <p className="mt-0.5 line-clamp-1 text-[0.8125rem] text-[#737373]">
-                          {p.shortReason}
-                        </p>
-                      )}
-                    </div>
+            {!recsLoading && !nextBestCheck && (
+              <p className="text-[0.875rem] text-[#737373]">No recommendations yet.</p>
+            )}
+            {nextBestCheck && (
+              <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[0.9375rem] font-medium text-[#0c0c0c]">{nextBestCheck.checkName}</p>
+                    <p className="mt-0.5 line-clamp-2 text-[0.8125rem] text-[#737373]">
+                      {nextBestCheck.whyForYou}
+                    </p>
+                    {nextBestCheck.includedTestsPreview?.length > 0 && (
+                      <p className="mt-2 text-[0.8125rem] text-[#737373]">
+                        Includes: {nextBestCheck.includedTestsPreview.slice(0, 3).join(", ")}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${statusBadgeClass(p.status)}`}
-                    >
-                      {p.status}
+                    <span className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${statusBadgeClass(nextBestCheck.status)}`}>
+                      {nextBestCheck.status.replaceAll("_", " ")}
                     </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em] ${impactBadgeClass(p.impact)}`}
-                    >
-                      {p.impact}
+                    <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em] ${impactBadgeClass(nextBestCheck.impact)}`}>
+                      {nextBestCheck.impact}
                     </span>
                   </div>
                 </div>
-              ))}
-              {!recsLoading && (recs?.topPriorities ?? []).length === 0 && (
-                <p className="text-[0.875rem] text-[#737373]">No priorities yet.</p>
-              )}
-            </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href="/results/action-plan"
+                    className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+                  >
+                    {locale === "de" ? "Plan öffnen" : "Open plan"}
+                  </Link>
+                  <Link
+                    href="/upload"
+                    className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+                  >
+                    {locale === "de" ? "Ergebnis hochladen" : "Upload result"}
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Profile summary */}
@@ -248,12 +271,18 @@ export default function DashboardPage() {
             isLoading={recsLoading && summaryLoading}
             errorText={summaryError && !recs ? "Upcoming checks unavailable right now." : null}
             nextCheckTitle={
-              recs?.upcomingChecks?.find(() => true)?.checkName ??
+              recs?.summary.nextBestAction?.checkName ??
               summary?.upcoming_checks?.find((x) => (x.event_type ?? "check") === "check")?.title ?? null
             }
             entries={
-              recs?.upcomingChecks?.map((x) => ({ month: x.timeLabel, item: x.checkName })) ??
-              (summary?.upcoming_checks ?? []).map((x) => ({ month: x.time_label, item: x.title }))
+              recs
+                ? [
+                    { month: "NEXT MONTH", item: `${recs.pathway.next_month.length} checks` },
+                    { month: "NEXT 3 MONTHS", item: `${recs.pathway.next_3_months.length} checks` },
+                    { month: "NEXT 6 MONTHS", item: `${recs.pathway.next_6_months.length} checks` },
+                    { month: "NEXT YEAR", item: `${recs.pathway.next_year.length} checks` },
+                  ]
+                : (summary?.upcoming_checks ?? []).map((x) => ({ month: x.time_label, item: x.title }))
             }
           />
         </div>

@@ -4,7 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { updateCheckStatus } from "@/lib/recommendations-engine/recommendationsService";
 import type { CheckStatus } from "@/lib/recommendations-engine/types";
 
-const VALID_STATUSES: CheckStatus[] = ["MISSING", "PLANNED", "DONE"];
+const VALID_STATUSES: CheckStatus[] = [
+  "missing",
+  "reminder_set",
+  "planned",
+  "completed",
+  "result_uploaded",
+];
 
 export async function PATCH(
   request: NextRequest,
@@ -46,10 +52,11 @@ export async function PATCH(
       status: status as CheckStatus,
     });
     return Response.json(result);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[recommendations] PATCH status error:", err);
+    const message = err instanceof Error ? err.message : null;
     return Response.json(
-      { error: err?.message ?? "Failed to update check status" },
+      { error: message ?? "Failed to update check status" },
       { status: 500 },
     );
   }

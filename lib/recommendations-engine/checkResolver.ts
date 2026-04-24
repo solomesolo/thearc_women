@@ -8,9 +8,8 @@ import {
 } from "./sqliteRules";
 import { mapAnswersToSqlite } from "./answerMapper";
 import type {
-  CheckRecommendation,
   ImpactLevel,
-  IncludedTestCategory,
+  IncludedTestsCategory,
   MatchedBiomarker,
   RelevanceSignal,
 } from "./types";
@@ -20,6 +19,18 @@ const STRENGTH_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
 function scoreToImpact(score: number): ImpactLevel {
   if (score >= 8) return "HIGH IMPACT";
   if (score >= 4) return "MEDIUM IMPACT";
+  return "LOW IMPACT";
+}
+
+function capImpactByBiomarkerCount(
+  impact: ImpactLevel,
+  biomarkerCount: number,
+): ImpactLevel {
+  // Product constraint: HIGH IMPACT should never imply >10 biomarkers for the user.
+  // If a check expands beyond 10 biomarkers, downgrade the impact label.
+  if (impact !== "HIGH IMPACT") return impact;
+  if (biomarkerCount <= 10) return impact;
+  if (biomarkerCount <= 20) return "MEDIUM IMPACT";
   return "LOW IMPACT";
 }
 
@@ -33,14 +44,32 @@ function buildWhyText(signals: RelevanceSignal[]): string {
   return `This is recommended because ${parts.join(" ")}`;
 }
 
+export interface ResolvedCheckBase {
+  checkKey: string;
+  checkName: string;
+  priorityRank: number;
+  impact: ImpactLevel;
+  score: number;
+  recommendedTiming: string;
+  shortSummary: string;
+  whyForYou: string;
+  whyNow: string;
+  canWait: string | null;
+  nextAction: string | null;
+  relevanceSignals: RelevanceSignal[];
+  includedTestsPreview: string[];
+  includedTestsByCategory: IncludedTestsCategory[];
+  matchedBiomarkers: MatchedBiomarker[];
+}
+
 /**
  * Resolves which canonical checks are triggered for a set of raw survey answers
  * and enriches each with scoring, signals, biomarkers, and included test categories.
- * Does NOT set status — status is merged in by the service layer.
+ * Does NOT set user state (status/timeframe/reminders/results) — merged in by the service layer.
  */
 export function resolveChecks(
   answers: Array<{ questionKey: string; answerValue: unknown }>,
-): Omit<CheckRecommendation, "status" | "progressLabel" | "plannedAt" | "completedAt">[] {
+): ResolvedCheckBase[] {
   const mapped = mapAnswersToSqlite(answers);
 
   const rules = getRulesForAnswers(mapped);
@@ -127,7 +156,7 @@ export function resolveChecks(
   }
 
   // ── Assemble final check recommendations ──────────────────────────────────
-  const result: Omit<CheckRecommendation, "status" | "progressLabel" | "plannedAt" | "completedAt">[] = [];
+  const result: ResolvedCheckBase[] = [];
 
   for (const [checkKey, acc] of byCheck) {
     const canon = canonicalByKey.get(checkKey);
@@ -136,7 +165,7 @@ export function resolveChecks(
     const baseScore = acc.totalBaseScore;
     const signalBoost = signalBoostByCheck.get(checkKey) ?? 0;
     const score = baseScore + signalBoost;
-    const impact = scoreToImpact(score);
+    let impact = scoreToImpact(score);
 
     // Relevance signals — deduplicated by (source+label)
     const sigSeen = new Set<string>();
@@ -153,16 +182,22 @@ export function resolveChecks(
     }
 
     // Included tests — max 6 categories, max 6 items per category
-    const includedTests: IncludedTestCategory[] = [];
+    const includedTestsByCategory: IncludedTestsCategory[] = [];
+    const includedTestsPreview: string[] = [];
     const catMap = includedByCk.get(checkKey);
     if (catMap) {
       let catCount = 0;
       for (const [category, names] of catMap) {
         if (catCount >= 6) break;
-        includedTests.push({
+        const tests = Array.from(names);
+        includedTestsByCategory.push({
           category,
-          items: Array.from(names).slice(0, 6),
+          tests: tests.slice(0, 12),
         });
+        for (const t of tests) {
+          if (includedTestsPreview.length >= 3) break;
+          if (!includedTestsPreview.includes(t)) includedTestsPreview.push(t);
+        }
         catCount++;
       }
     }
@@ -181,7 +216,9 @@ export function resolveChecks(
       });
     }
 
-    const whyRecommendedForYou = buildWhyText(relevanceSignals);
+    impact = capImpactByBiomarkerCount(impact, matchedBiomarkers.length);
+
+    const whyForYou = buildWhyText(relevanceSignals);
 
     result.push({
       checkKey,
@@ -191,12 +228,13 @@ export function resolveChecks(
       score,
       recommendedTiming: canon.recommended_timing,
       shortSummary: canon.short_summary,
-      whyRecommendedForYou,
-      priorityRationale: canon.priority_rule,
-      whatCanWait: canon.what_can_wait,
+      whyForYou,
+      whyNow: canon.priority_rule,
+      canWait: canon.what_can_wait,
       nextAction: canon.next_action,
       relevanceSignals,
-      includedTests,
+      includedTestsPreview,
+      includedTestsByCategory,
       matchedBiomarkers,
     });
   }
@@ -212,7 +250,7 @@ export function resolveChecks(
 
   // Assign priority ranks
   result.forEach((c, i) => {
-    (c as CheckRecommendation).priorityRank = i + 1;
+    c.priorityRank = i + 1;
   });
 
   return result;
