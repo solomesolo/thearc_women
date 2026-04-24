@@ -1,33 +1,50 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { HealthScoreCard } from "@/components/app/HealthScoreCard";
 import { SummaryStatCard } from "@/components/app/SummaryStatCard";
 import { TimelineWidget } from "@/components/app/TimelineWidget";
 import { useDashboardSummary } from "@/lib/dashboard-summary/useDashboardSummary";
+import { useRecommendations } from "@/lib/recommendations/useRecommendations";
+import { getOrCreateAnonId } from "@/lib/profile-engine-a/frontendClient";
 import { ProtectedRouteGate } from "@/components/navigation/ProtectedRouteGate";
 import { useLocale } from "@/lib/i18n/useLocale";
+import type { CheckStatus, ImpactLevel } from "@/lib/recommendations-engine/types";
 
-function badgeToneFromLabel(label: string): "primary" | "secondary" | "neutral" {
-  const x = (label || "").toUpperCase();
-  if (x === "MISSING") return "primary";
-  if (x === "OUTDATED") return "secondary";
-  return "neutral";
-}
-
-function badgeClassNameFromTone(tone: "primary" | "secondary" | "neutral") {
-  if (tone === "primary") return "bg-[#0c0c0c] text-white";
-  if (tone === "secondary") return "bg-[#525252] text-white";
+function statusBadgeClass(status: CheckStatus): string {
+  if (status === "MISSING") return "bg-[#0c0c0c] text-white";
+  if (status === "PLANNED") return "bg-[#525252] text-white";
   return "bg-white text-[#404040] border border-black/[0.12]";
 }
 
+function impactBadgeClass(impact: ImpactLevel): string {
+  if (impact === "HIGH IMPACT") return "bg-[#0c0c0c] text-white";
+  if (impact === "MEDIUM IMPACT") return "bg-[#525252] text-white";
+  return "bg-[#f5f5f4] text-[#737373] border border-black/[0.1]";
+}
+
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const { data: summary, isLoading: summaryLoading, error: summaryError, reload: reloadSummary } = useDashboardSummary();
   const locale = useLocale();
 
-  const open = summary ? summary.kpis.tests_to_action : "—";
-  const planned = summary ? summary.kpis.planned : "—";
-  const done = summary ? summary.kpis.completed : "—";
+  // Live recommendations from SQLite rules engine — supplements legacy summary data.
+  const userId = session?.user?.email ?? (typeof window !== "undefined" ? `anon:${getOrCreateAnonId()}` : null);
+  const { data: recs, isLoading: recsLoading } = useRecommendations(userId);
+
+  // KPIs: prefer live recommendations data, fall back to legacy summary.
+  const open = recs
+    ? recs.summary.recommendedCount - recs.summary.completedCount
+    : (summary ? summary.kpis.tests_to_action : "—");
+  const planned = recs ? recs.summary.plannedCount : (summary ? summary.kpis.planned : "—");
+  const done = recs ? recs.summary.completedCount : (summary ? summary.kpis.completed : "—");
+  const healthScore = recs ? recs.summary.healthScore : (summary?.kpis.health_score ?? 0);
+
+  // Profile from recommendations engine; fall back to legacy summary.
+  // Use explicit typed variable to avoid union type conflicts.
+  const recsProfile = recs?.profile ?? null;
+  const legacyProfile = summary?.profile_summary ?? null;
 
   return (
     <ProtectedRouteGate
@@ -49,7 +66,7 @@ export default function DashboardPage() {
 
       {summary?.dashboard_state === "needs_assessment" && (
         <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
-          <p className="text-[#404040]">{locale === "de" ? "Du hast noch kein Assessment." : "You don’t have an assessment yet."}</p>
+          <p className="text-[#404040]">{locale === "de" ? "Du hast noch kein Assessment." : "You don't have an assessment yet."}</p>
           <Link href="/onboarding/start" className="mt-3 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.9375rem] font-medium text-white hover:brightness-[0.9]">
             {locale === "de" ? "Assessment starten" : "Start assessment"}
           </Link>
@@ -75,14 +92,14 @@ export default function DashboardPage() {
         />
         <SummaryStatCard
           label={locale === "de" ? "Health Score" : "Health score"}
-          value={summary?.kpis.health_score ?? "—"}
-          sub={summaryLoading ? (locale === "de" ? "Lädt…" : "Loading…") : summaryError ? (locale === "de" ? "Score nicht verfügbar" : "Score unavailable") : (locale === "de" ? "Vollständigkeits-Score" : "completeness score")}
+          value={recsLoading ? "—" : healthScore}
+          sub={recsLoading ? (locale === "de" ? "Lädt…" : "Loading…") : (locale === "de" ? "Vollständigkeits-Score" : "completeness score")}
         />
       </div>
 
       {summaryError && (
         <div className="mb-5 rounded-[16px] border border-black/[0.08] bg-white p-4 text-[0.875rem] text-[#737373]">
-          We couldn’t load your dashboard summary.{" "}
+          We couldn't load your dashboard summary.{" "}
           <button type="button" className="underline underline-offset-2 text-[#0c0c0c]" onClick={reloadSummary}>
             Retry
           </button>
@@ -140,30 +157,42 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="space-y-3">
-              {(summary?.top_priorities ?? []).map((p) => {
-                const tone = badgeToneFromLabel(p.badge_label);
-                return (
-                  <div
-                    key={p.bundle_key}
-                    className="flex items-center justify-between gap-3 rounded-[12px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c0c0c]/[0.06] text-[0.6875rem] font-semibold tabular-nums text-[#0c0c0c]">
-                        {p.rank}
-                      </span>
-                      <span className="text-[0.9375rem] font-medium text-[#0c0c0c]">{p.display_name}</span>
+              {recsLoading && (recs?.topPriorities ?? []).length === 0 && (
+                <p className="text-[0.875rem] text-[#737373]">{locale === "de" ? "Lädt…" : "Loading…"}</p>
+              )}
+              {(recs?.topPriorities ?? []).map((p) => (
+                <div
+                  key={p.checkKey}
+                  className="flex items-start justify-between gap-3 rounded-[12px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c0c0c]/[0.06] text-[0.6875rem] font-semibold tabular-nums text-[#0c0c0c]">
+                      {p.priorityRank}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[0.9375rem] font-medium text-[#0c0c0c]">{p.checkName}</p>
+                      {p.shortReason && (
+                        <p className="mt-0.5 line-clamp-1 text-[0.8125rem] text-[#737373]">
+                          {p.shortReason}
+                        </p>
+                      )}
                     </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
                     <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${badgeClassNameFromTone(
-                        tone,
-                      )}`}
+                      className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${statusBadgeClass(p.status)}`}
                     >
-                      {p.badge_label}
+                      {p.status}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em] ${impactBadgeClass(p.impact)}`}
+                    >
+                      {p.impact}
                     </span>
                   </div>
-                );
-              })}
-              {!summaryLoading && (summary?.top_priorities?.length ?? 0) === 0 && (
+                </div>
+              ))}
+              {!recsLoading && (recs?.topPriorities ?? []).length === 0 && (
                 <p className="text-[0.875rem] text-[#737373]">No priorities yet.</p>
               )}
             </div>
@@ -177,15 +206,23 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3 text-[0.875rem]">
               <div>
                 <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">Age group</p>
-                <p className="mt-0.5 text-[#0c0c0c]">{summary?.profile_summary.age_group ?? "—"}</p>
+                <p className="mt-0.5 text-[#0c0c0c]">
+                  {recsProfile?.ageGroup ?? legacyProfile?.age_group ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">Life stage</p>
-                <p className="mt-0.5 text-[#0c0c0c]">{summary?.profile_summary.life_stage ?? "—"}</p>
+                <p className="mt-0.5 text-[#0c0c0c]">
+                  {recsProfile?.lifeStage ?? legacyProfile?.life_stage ?? "—"}
+                </p>
               </div>
               <div className="col-span-2">
                 <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">Goals</p>
-                <p className="mt-0.5 text-[#0c0c0c]">{summary?.profile_summary.goals ?? "—"}</p>
+                <p className="mt-0.5 text-[#0c0c0c]">
+                  {recsProfile
+                    ? (recsProfile.goals.join(", ") || "—")
+                    : (legacyProfile?.goals ?? "—")}
+                </p>
               </div>
             </div>
             <div className="mt-4 border-t border-black/[0.06] pt-3">
@@ -203,15 +240,21 @@ export default function DashboardPage() {
         {/* Right column */}
         <div className="space-y-5">
           <HealthScoreCard
-            score={summary?.score_widget.value ?? 0}
+            score={recsLoading ? (summary?.score_widget.value ?? 0) : healthScore}
             label={summary?.score_widget.label ?? "Health completeness score"}
             subtitle={summary?.score_widget.caption ?? "Based on your current health data"}
           />
           <TimelineWidget
-            isLoading={summaryLoading}
-            errorText={summaryError ? "Upcoming checks unavailable right now." : null}
-            nextCheckTitle={summary?.upcoming_checks?.find((x) => (x.event_type ?? "check") === "check")?.title ?? null}
-            entries={(summary?.upcoming_checks ?? []).map((x) => ({ month: x.time_label, item: x.title }))}
+            isLoading={recsLoading && summaryLoading}
+            errorText={summaryError && !recs ? "Upcoming checks unavailable right now." : null}
+            nextCheckTitle={
+              recs?.upcomingChecks?.find(() => true)?.checkName ??
+              summary?.upcoming_checks?.find((x) => (x.event_type ?? "check") === "check")?.title ?? null
+            }
+            entries={
+              recs?.upcomingChecks?.map((x) => ({ month: x.timeLabel, item: x.checkName })) ??
+              (summary?.upcoming_checks ?? []).map((x) => ({ month: x.time_label, item: x.title }))
+            }
           />
         </div>
 

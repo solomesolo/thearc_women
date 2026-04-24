@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     "@prisma/get-platform",
     "@prisma/engines-version",
     "prisma",
+    "better-sqlite3",
   ],
   images: {
     qualities: [75, 90],

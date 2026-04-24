@@ -1549,3 +1549,19 @@ model BiomarkerDoctorScriptTemplate {
   @@index([sourceSubCategory])
   @@map("biomarker_doctor_script_templates")
 }
+
+
+model UserCheckStatus {
+  id          String    @id @default(uuid()) @db.Uuid
+  userEmail   String    @map("user_email")
+  checkKey    String    @map("check_key")
+  status      String    @default("MISSING") // MISSING | PLANNED | DONE
+  plannedAt   DateTime? @map("planned_at") @db.Timestamptz
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([userEmail, checkKey], name: "user_check_status_unique")
+  @@index([userEmail])
+  @@map("user_check_statuses")
+}
