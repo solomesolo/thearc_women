@@ -3,8 +3,10 @@ import {
   getAllCanonicalChecks,
   getSignalExplanationsForAnswers,
   getIncludedTestsForChecks,
+  getWhyThisMattersRulesForAnswers,
   type EnrichedRuleRow,
   type SignalExplanation,
+  type WhyThisMattersRuleRow,
 } from "./sqliteRules";
 import { mapAnswersToSqlite } from "./answerMapper";
 import type {
@@ -44,6 +46,28 @@ function buildWhyText(signals: RelevanceSignal[]): string {
   return `This is recommended because ${parts.join(" ")}`;
 }
 
+function buildWhyThisMattersFromRules(rules: WhyThisMattersRuleRow[]): string | null {
+  if (!rules.length) return null;
+  const sorted = [...rules].sort((a, b) => (b.priority_weight ?? 0) - (a.priority_weight ?? 0));
+
+  const pick = (group: WhyThisMattersRuleRow["merge_group"], limit: number) =>
+    sorted.filter((r) => r.merge_group === group).slice(0, limit);
+
+  const drivers = pick("driver", 2);
+  const modifier = pick("modifier", 1);
+  const context = pick("context", 1);
+
+  const parts = [...drivers, ...modifier, ...context]
+    .map((r) => (r.explanation_template ?? "").trim())
+    .filter(Boolean);
+
+  if (!parts.length) return null;
+
+  // Keep it short: 1–2 sentences.
+  const text = parts.join(" ").replaceAll(/\s+/g, " ").trim();
+  return text.length > 2 ? text : null;
+}
+
 export interface ResolvedCheckBase {
   checkKey: string;
   checkName: string;
@@ -74,6 +98,7 @@ export function resolveChecks(
 
   const rules = getRulesForAnswers(mapped);
   const signalRows = getSignalExplanationsForAnswers(mapped);
+  const whyMattersRows = getWhyThisMattersRulesForAnswers(mapped);
   const canonicalChecks = getAllCanonicalChecks();
   const canonicalByKey = new Map(canonicalChecks.map((c) => [c.check_key, c]));
 
@@ -158,6 +183,14 @@ export function resolveChecks(
   // ── Assemble final check recommendations ──────────────────────────────────
   const result: ResolvedCheckBase[] = [];
 
+  // Group personalized why-this-matters rules by check_key
+  const whyMattersByCheck = new Map<string, WhyThisMattersRuleRow[]>();
+  for (const r of whyMattersRows) {
+    if (!r.check_key) continue;
+    if (!whyMattersByCheck.has(r.check_key)) whyMattersByCheck.set(r.check_key, []);
+    whyMattersByCheck.get(r.check_key)!.push(r);
+  }
+
   for (const [checkKey, acc] of byCheck) {
     const canon = canonicalByKey.get(checkKey);
     if (!canon) continue; // only return canonical checks
@@ -218,7 +251,9 @@ export function resolveChecks(
 
     impact = capImpactByBiomarkerCount(impact, matchedBiomarkers.length);
 
-    const whyForYou = buildWhyText(relevanceSignals);
+    const whyForYou =
+      buildWhyThisMattersFromRules(whyMattersByCheck.get(checkKey) ?? []) ??
+      buildWhyText(relevanceSignals);
 
     result.push({
       checkKey,

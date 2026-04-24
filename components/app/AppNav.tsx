@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/app/dashboard", label: "Dashboard" },
   { href: "/results/overview", label: "My Overview" },
   { href: "/results/action-plan", label: "Action Plan" },
+  { href: "/my-health-calendar", label: "My Health Calendar" },
 ];
 
 export function AppNav() {

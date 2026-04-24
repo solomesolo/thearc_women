@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ProtectedRouteGate } from "@/components/navigation/ProtectedRouteGate";
 import { useLocale } from "@/lib/i18n/useLocale";
@@ -11,7 +12,6 @@ import { BiomarkerActionRow } from "@/components/app/BiomarkerActionRow";
 import type {
   CheckRecommendation,
   CheckStatus,
-  ImpactLevel,
   FinalRecommendation,
 } from "@/lib/recommendations-engine/types";
 
@@ -25,10 +25,32 @@ const STATUS_BADGE_CLASS: Record<CheckStatus, string> = {
   result_uploaded: "bg-white text-[#404040] border border-black/[0.12]",
 };
 
-function impactBadgeClass(impact: ImpactLevel): string {
-  if (impact === "HIGH IMPACT") return "bg-[#0c0c0c] text-white";
-  if (impact === "MEDIUM IMPACT") return "bg-[#525252] text-white";
-  return "bg-[#f5f5f4] text-[#737373] border border-black/[0.1]";
+type PriorityLabel = "do_now" | "do_soon" | "optional";
+
+function priorityFromFinal(finalRec: FinalRecommendation | null, check: CheckRecommendation): PriorityLabel {
+  const tf = finalRec?.timeframe ?? (check.timeframe === "next_month"
+    ? "current_month"
+    : check.timeframe === "next_3_months"
+      ? "next_3_months"
+      : check.timeframe === "next_6_months"
+        ? "next_6_months"
+        : check.timeframe === "next_year"
+          ? "next_year"
+          : "optional_later");
+
+  if (tf === "current_month") return "do_now";
+  if (tf === "next_3_months" || tf === "next_6_months") return "do_soon";
+  return "optional";
+}
+
+function priorityPill(label: PriorityLabel): { text: string; className: string } {
+  if (label === "do_now") {
+    return { text: "Do now", className: "bg-[#0c0c0c] text-white" };
+  }
+  if (label === "do_soon") {
+    return { text: "Do soon", className: "bg-[#525252] text-white" };
+  }
+  return { text: "Optional", className: "bg-[#f5f5f4] text-[#404040] border border-black/[0.08]" };
 }
 
 function normalizeBiomarkerKey(name: string): string {
@@ -39,178 +61,194 @@ function normalizeBiomarkerKey(name: string): string {
     .replaceAll(/^_+|_+$/g, "");
 }
 
-function BloodTestCard({
+function CollapsibleCheckCard({
   check,
   finalRec,
+  expanded,
+  onToggle,
   onUpdateStatus,
+  cardRef,
 }: {
   check: CheckRecommendation;
   finalRec: FinalRecommendation | null;
+  expanded: boolean;
+  onToggle: () => void;
   onUpdateStatus: (key: string, status: CheckStatus) => void;
+  cardRef?: React.RefObject<HTMLDivElement | null>;
 }) {
-  const forwardStatus: CheckStatus =
-    check.status === "missing" ? "planned" : check.status === "planned" ? "completed" : "missing";
-  const forwardLabel =
+  const priority = priorityFromFinal(finalRec, check);
+  const pill = priorityPill(priority);
+
+  const statusLabel =
+    check.status === "planned"
+      ? "Planned"
+      : check.status === "completed" || check.status === "result_uploaded"
+        ? "Done"
+        : "Not started";
+
+  const isDone = check.status === "completed" || check.status === "result_uploaded";
+  const primaryCtaLabel =
     check.status === "missing"
-      ? "Mark as planned"
+      ? "Start planning"
       : check.status === "planned"
-        ? "Mark as done"
-        : "Reset";
+        ? "Mark completed"
+        : "Completed";
+  const primaryNextStatus: CheckStatus =
+    check.status === "missing" ? "planned" : check.status === "planned" ? "completed" : check.status;
 
   return (
-    <div className="space-y-3">
-      {/* Compact header chips (impact + status + timing + preview tests) */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${impactBadgeClass(check.impact)}`}
-        >
-          {check.impact}
-        </span>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[check.status]}`}
-        >
-          {check.status.replaceAll("_", " ")}
-        </span>
-        <span className="rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[#737373]">
-          {check.recommendedTiming || "Recommended"}
-        </span>
-        {check.includedTestsPreview?.slice(0, 3).map((x) => (
-          <span
-            key={x}
-            className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2.5 py-1 text-[0.75rem] text-[#525252]"
-          >
-            {x}
-          </span>
-        ))}
-      </div>
-
-      {/* Check header + importance */}
-      <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:p-6">
+    <div
+      ref={cardRef as never}
+      id={`check-${check.checkKey}`}
+      className={`rounded-[20px] border border-black/[0.08] bg-white shadow-[0_1px_0_rgba(0,0,0,0.03)] transition-colors ${isDone ? "bg-[#fafaf9]" : ""}`}
+    >
+      <div className="p-5 md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-[1.125rem] font-semibold leading-snug tracking-tight text-[#0c0c0c] md:text-[1.25rem]">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${pill.className}`}
+              >
+                {pill.text}
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[check.status]}`}
+              >
+                {statusLabel}
+              </span>
+              <span className="rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[#737373]">
+                {check.status === "missing" ? "~5 min to plan" : check.status === "planned" ? "Ready to complete" : "Done"}
+              </span>
+            </div>
+
+            <h3 className="mt-3 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[#0c0c0c] md:text-[1.125rem]">
               {check.checkName}
             </h3>
-            {check.shortSummary && (
-              <p className="mt-1 text-[0.9375rem] text-[#737373]">{check.shortSummary}</p>
-            )}
+            <p className="mt-1 text-[0.9375rem] leading-[1.6] text-[#737373]">
+              {check.shortSummary || "A focused check to build your health baseline and next steps."}
+            </p>
           </div>
-          <span className="shrink-0 text-[0.8125rem] text-[#a3a3a3]">#{check.priorityRank}</span>
-        </div>
-
-        <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-            Why this matters
-          </p>
-          <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#404040]">
-            {finalRec?.whyRecommendedForYou ?? check.whyForYou}
-          </p>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => onUpdateStatus(check.checkKey, "planned")}
-            className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            className="shrink-0 rounded-[12px] border border-black/[0.08] bg-white px-3 py-2 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
           >
-            Mark as planned
-          </button>
-          <button
-            type="button"
-            onClick={() => onUpdateStatus(check.checkKey, "completed")}
-            className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
-          >
-            Mark as done
+            {expanded ? "Hide details" : "View details"}
           </button>
         </div>
-      </div>
 
-      {/* Biomarkers for this check (each has booking + coverage) */}
-      <div className="space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-          Biomarkers in this check
-        </p>
-        <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-            Core tests now
-          </p>
-          <div className="mt-4 space-y-3">
+        {/* Biomarker tags (secondary row) */}
+        {!!(finalRec?.coreTestsNow?.length || check.includedTestsPreview?.length) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {(finalRec?.coreTestsNow?.length ? finalRec.coreTestsNow : check.includedTestsPreview ?? [])
-              .slice(0, 6)
-              .map((testName) => (
-                <BiomarkerActionRow
-                  key={`core:${testName}`}
-                  biomarkerName={testName}
-                  biomarkerKey={normalizeBiomarkerKey(testName)}
-                  country={"DE"}
-                />
+              .slice(0, 3)
+              .map((x) => (
+                <span
+                  key={x}
+                  className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2.5 py-1 text-[0.75rem] text-[#525252]"
+                >
+                  {x}
+                </span>
               ))}
           </div>
+        )}
 
-          {!!finalRec?.supportingTests?.length && (
-            <>
-              <div className="mt-6 border-t border-black/[0.06] pt-5" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Supporting (if relevant)
-              </p>
-              <div className="mt-4 space-y-3">
-                {finalRec.supportingTests.slice(0, 6).map((testName) => (
-                  <BiomarkerActionRow
-                    key={`support:${testName}`}
-                    biomarkerName={testName}
-                    biomarkerKey={normalizeBiomarkerKey(testName)}
-                    country={"DE"}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-
-          {!!finalRec?.laterTests?.length && (
-            <>
-              <div className="mt-6 border-t border-black/[0.06] pt-5" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Later / optional
-              </p>
-              <div className="mt-4 space-y-3">
-                {finalRec.laterTests.slice(0, 6).map((testName) => (
-                  <BiomarkerActionRow
-                    key={`later:${testName}`}
-                    biomarkerName={testName}
-                    biomarkerKey={normalizeBiomarkerKey(testName)}
-                    country={"DE"}
-                  />
-                ))}
-              </div>
-            </>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onUpdateStatus(check.checkKey, primaryNextStatus)}
+            disabled={isDone}
+            className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {primaryCtaLabel}
+          </button>
+          {check.status !== "missing" && !isDone && (
+            <button
+              type="button"
+              onClick={() => onUpdateStatus(check.checkKey, "missing")}
+              className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#737373] transition-colors hover:text-[#0c0c0c]"
+            >
+              Reset
+            </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onUpdateStatus(check.checkKey, forwardStatus)}
-          className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
-        >
-          {forwardLabel}
-        </button>
-        {check.status !== "missing" && (
-          <button
-            type="button"
-            onClick={() => onUpdateStatus(check.checkKey, "missing")}
-            className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#737373] transition-colors hover:text-[#0c0c0c]"
-          >
-            Reset
-          </button>
-        )}
-        {check.plannedAt && (
-          <p className="text-[0.8125rem] text-[#a3a3a3]">Planned {new Date(check.plannedAt).toLocaleDateString()}</p>
-        )}
-        {check.completedAt && (
-          <p className="text-[0.8125rem] text-[#a3a3a3]">Done {new Date(check.completedAt).toLocaleDateString()}</p>
-        )}
-      </div>
+      {expanded && (
+        <div className="border-t border-black/[0.06] p-5 md:p-6">
+          <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+              Why this matters
+            </p>
+            <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#404040]">
+              {finalRec?.whyRecommendedForYou ?? check.whyForYou}
+            </p>
+          </div>
+
+          {/* Biomarkers for this check (each has booking + coverage) */}
+          <div className="mt-5 space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+              Biomarkers included
+            </p>
+            <div className="rounded-[20px] border border-black/[0.08] bg-white p-4 md:p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                Core tests now
+              </p>
+              <div className="mt-4 space-y-3">
+                {(finalRec?.coreTestsNow?.length ? finalRec.coreTestsNow : check.includedTestsPreview ?? [])
+                  .slice(0, 6)
+                  .map((testName) => (
+                    <BiomarkerActionRow
+                      key={`core:${testName}`}
+                      biomarkerName={testName}
+                      biomarkerKey={normalizeBiomarkerKey(testName)}
+                      country={"DE"}
+                    />
+                  ))}
+              </div>
+
+              {!!finalRec?.supportingTests?.length && (
+                <>
+                  <div className="mt-6 border-t border-black/[0.06] pt-5" />
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                    Lower priority checks
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {finalRec.supportingTests.slice(0, 6).map((testName) => (
+                      <BiomarkerActionRow
+                        key={`support:${testName}`}
+                        biomarkerName={testName}
+                        biomarkerKey={normalizeBiomarkerKey(testName)}
+                        country={"DE"}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {!!finalRec?.laterTests?.length && (
+                <>
+                  <div className="mt-6 border-t border-black/[0.06] pt-5" />
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                    Later / optional
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {finalRec.laterTests.slice(0, 6).map((testName) => (
+                      <BiomarkerActionRow
+                        key={`later:${testName}`}
+                        biomarkerName={testName}
+                        biomarkerKey={normalizeBiomarkerKey(testName)}
+                        country={"DE"}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -230,7 +268,11 @@ export default function ActionPlanPage() {
   const pathway = recs?.pathway;
   const finalRecs = recs?.recommendations ?? [];
   const summary = recs?.summary;
-  const profile = recs?.profile;
+  // profile reserved for future UI surface (kept in payload)
+
+  const [heroWhyOpen, setHeroWhyOpen] = useState(false);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [liveMessage, setLiveMessage] = useState<string>("");
 
   const checkByKey = new Map<string, CheckRecommendation>();
   if (pathway) {
@@ -241,6 +283,9 @@ export default function ActionPlanPage() {
 
   const finalByKey = new Map<string, FinalRecommendation>();
   for (const r of finalRecs) finalByKey.set(r.checkKey, r);
+
+  const allChecks = Array.from(checkByKey.values()).sort((a, b) => a.priorityRank - b.priorityRank);
+  const totalChecks = allChecks.length;
 
   const checksThisMonth = (recs?.pathwayTimeline?.find((x) => x.timeframe === "current_month")?.checks ?? [])
     .map((x) => checkByKey.get(x.checkKey))
@@ -272,6 +317,54 @@ export default function ActionPlanPage() {
   const nonHigh6Months = checks6Months.filter((c) => !isHighPriority(c));
   const nonHigh12Months = checks12Months.filter((c) => !isHighPriority(c));
 
+  const nextBestKey =
+    summary?.nextBestAction?.checkKey ??
+    highPriorityNow[0]?.checkKey ??
+    checksThisMonth[0]?.checkKey ??
+    allChecks[0]?.checkKey ??
+    null;
+
+  const nextBestCheck = nextBestKey ? checkByKey.get(nextBestKey) ?? null : null;
+
+  const nextBestRef = useRef<HTMLDivElement | null>(null);
+  const scrollToNextBest = () => {
+    nextBestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Default: first check expanded (initialize once when data becomes available).
+  useEffect(() => {
+    if (expandedKey || !nextBestKey) return;
+    const id = window.setTimeout(() => setExpandedKey(nextBestKey), 0);
+    return () => window.clearTimeout(id);
+  }, [expandedKey, nextBestKey]);
+
+  const onUpdateStatusWithReward = async (key: string, status: CheckStatus) => {
+    const prev = checkByKey.get(key)?.status ?? "missing";
+    await updateStatus(key, status);
+    if (prev !== status) {
+      if (status === "planned") setLiveMessage("Good start. This check is now in your plan.");
+      if (status === "completed" || status === "result_uploaded") setLiveMessage("Completed. Your health progress has been updated.");
+      window.setTimeout(() => setLiveMessage(""), 2200);
+    }
+  };
+
+  const journeyStep =
+    (summary?.completedCount ?? 0) > 0 ? 3 : (summary?.plannedCount ?? 0) > 0 ? 2 : 1;
+
+  const categoryGroups = [
+    { label: "Preventive baseline", keys: new Set(["preventive_baseline"]) },
+    { label: "Heart and metabolic health", keys: new Set(["cardiometabolic_risk"]) },
+    { label: "Iron and blood health", keys: new Set(["iron_ferritin", "fatigue_low_energy_panel"]) },
+  ] as const;
+
+  const categoryProgress = categoryGroups.map((g) => {
+    const items = allChecks.filter((c) => g.keys.has(c.checkKey));
+    const total = items.length;
+    const done = items.filter((c) => c.status === "completed" || c.status === "result_uploaded").length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { label: g.label, done, total, pct };
+  });
+
   return (
     <ProtectedRouteGate
       requestedRoute="/results/action-plan"
@@ -284,24 +377,6 @@ export default function ActionPlanPage() {
       loadingText={locale === "de" ? "Dein Plan wird geladen…" : "Loading your health plan…"}
     >
       <div className="mx-auto max-w-[72rem] px-5 py-10 md:px-8">
-
-        {/* Save your results — anonymous users */}
-        {isAnonymous && (
-          <div className="mb-8 flex flex-col gap-4 rounded-[20px] border border-black/[0.1] bg-[#0c0c0c] p-5 text-white sm:flex-row sm:items-center sm:justify-between md:p-6">
-            <div className="min-w-0">
-              <p className="text-[0.9375rem] font-semibold">Save your action plan</p>
-              <p className="mt-1 text-[0.8125rem] text-white/60">
-                Create a free account to keep your results and track your progress over time.
-              </p>
-            </div>
-            <Link
-              href="/auth/register"
-              className="shrink-0 rounded-[12px] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#0c0c0c] transition-[filter] hover:brightness-[0.92]"
-            >
-              Create free account
-            </Link>
-          </div>
-        )}
 
         {/* Page header */}
         <div className="mb-2">
@@ -339,90 +414,165 @@ export default function ActionPlanPage() {
           )}
         </div>
 
-        {/* Score bar */}
-        {summary && (
-          <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a3a3a3]">
-                  Health completeness score
-                </p>
-                <p className="mt-1 text-[2rem] font-semibold tabular-nums tracking-tight text-[#0c0c0c]">
-                  {summary.healthScore}
-                  <span className="ml-1 text-[1rem] font-normal text-[#a3a3a3]">/ 100</span>
-                </p>
-              </div>
-              <div className="text-right text-[0.875rem] text-[#737373]">
-                <p className="mt-0.5">
-                  {summary.completedCount} done · {summary.plannedCount} planned
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0ef]">
-              <div
-                className="h-full rounded-full bg-[#0c0c0c] transition-all"
-                style={{ width: `${summary.healthScore}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Profile summary */}
-        {profile && (
-          <div className="mb-6 flex items-center gap-3 rounded-[14px] border border-black/[0.07] bg-[#fafaf9] px-4 py-3.5">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden
-              className="mt-0.5 shrink-0 text-[#737373]"
-            >
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" />
-              <path
-                d="M8 5v4M8 11v.5"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-              />
-            </svg>
-            <p className="text-[0.875rem] leading-snug text-[#737373]">
-              {[
-                profile.lifeStage,
-                profile.ageGroup,
-                Array.isArray(profile.goals) ? profile.goals.slice(0, 2).join(", ") : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          </div>
-        )}
-
-        {/* Priority note */}
-        <div className="mb-6 flex items-start gap-3 rounded-[14px] border border-black/[0.07] bg-[#fafaf9] px-4 py-3.5">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden
-            className="mt-0.5 shrink-0 text-[#737373]"
-          >
-            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" />
-            <path
-              d="M8 5v4M8 11v.5"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <p className="text-[0.875rem] leading-snug text-[#737373]">
-            {t(locale, "results.action.tip")}
-          </p>
+        {/* Screen-reader live region for status updates */}
+        <div className="sr-only" aria-live="polite">
+          {liveMessage}
         </div>
 
-        {/* Pathway */}
-        <div className="space-y-5">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_20rem]">
+          {/* Main */}
+          <div className="min-w-0">
+            {/* 1) Next Best Action hero */}
+            <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                Your next best action
+              </p>
+              <p className="mt-2 text-[1.125rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[1.25rem]">
+                {nextBestCheck?.checkName ?? "Book your preventive health baseline blood test"}
+              </p>
+              <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#737373]">
+                Takes about 5 minutes to plan. This unlocks your first health baseline.
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={scrollToNextBest}
+                  className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+                >
+                  Start planning
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroWhyOpen((v) => !v)}
+                  aria-expanded={heroWhyOpen}
+                  className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+                >
+                  View why this matters
+                </button>
+              </div>
+
+              {heroWhyOpen && (
+                <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
+                  <p className="text-[0.9375rem] leading-[1.65] text-[#404040]">
+                    {finalByKey.get(nextBestKey ?? "")?.whyRecommendedForYou ?? nextBestCheck?.whyForYou ?? "Recommended based on your health profile."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* 2) Progress summary (replaces health completeness score) */}
+            {summary && (
+              <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a3a3a3]">
+                      Your health progress
+                    </p>
+                    <p className="mt-1 text-[1.5rem] font-semibold tabular-nums tracking-tight text-[#0c0c0c] md:text-[1.75rem]">
+                      {summary.completedCount} of {totalChecks} checks completed
+                    </p>
+                  </div>
+                  <div className="text-right text-[0.875rem] text-[#737373]">
+                    <p>
+                      {summary.plannedCount} planned
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0ef]"
+                  role="progressbar"
+                  aria-label="Overall health progress"
+                  aria-valuenow={totalChecks ? summary.completedCount : 0}
+                  aria-valuemin={0}
+                  aria-valuemax={Math.max(1, totalChecks)}
+                >
+                  <div
+                    className="h-full rounded-full bg-[#0c0c0c] transition-all"
+                    style={{ width: `${totalChecks ? Math.round((summary.completedCount / totalChecks) * 100) : 0}%` }}
+                  />
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {categoryProgress.map((c) => (
+                    <div key={c.label} className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-[0.875rem] font-medium text-[#0c0c0c]">{c.label}</p>
+                        <p className="text-[0.8125rem] tabular-nums text-[#737373]">
+                          {c.done}/{c.total}
+                        </p>
+                      </div>
+                      <div
+                        className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white"
+                        role="progressbar"
+                        aria-label={`${c.label} progress`}
+                        aria-valuenow={c.done}
+                        aria-valuemin={0}
+                        aria-valuemax={Math.max(1, c.total)}
+                      >
+                        <div
+                          className="h-full rounded-full bg-[#525252] transition-all"
+                          style={{ width: `${c.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3) Journey steps */}
+            <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                Journey
+              </p>
+              <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+                {[
+                  { label: "Plan your first check", step: 1 },
+                  { label: "Complete your blood test", step: 2 },
+                  { label: "Review your results", step: 3 },
+                ].map((s) => {
+                  const active = journeyStep === s.step;
+                  const unlocked = journeyStep >= s.step;
+                  return (
+                    <div
+                      key={s.label}
+                      className={`rounded-[16px] border border-black/[0.06] px-4 py-3 ${active ? "bg-[#0c0c0c] text-white" : unlocked ? "bg-[#fafaf9] text-[#0c0c0c]" : "bg-[#fafaf9] text-[#a3a3a3]"}`}
+                      aria-label={`${s.label}${active ? ", active" : unlocked ? "" : ", locked"}`}
+                    >
+                      <p className="text-[0.875rem] font-medium">{s.label}</p>
+                      <p className={`mt-1 text-[0.8125rem] ${active ? "text-white/70" : unlocked ? "text-[#737373]" : "text-[#a3a3a3]"}`}>
+                        {active ? "Current step" : unlocked ? "Unlocked" : "Locked"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 9) Save progress prompt (softened + repositioned) */}
+            {isAnonymous && (
+              <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">Save your progress</p>
+                    <p className="mt-1 text-[0.875rem] leading-[1.6] text-[#737373]">
+                      Create a free account to keep your plan, track completed checks, and return to your progress later.
+                    </p>
+                  </div>
+                  <Link
+                    href="/auth/register"
+                    className="shrink-0 rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+                  >
+                    Create free account
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Checks */}
+            <div className="space-y-5">
           {isLoading && (
             <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
               {locale === "de" ? "Lädt…" : "Loading your action plan…"}
@@ -457,27 +607,20 @@ export default function ActionPlanPage() {
             </div>
           )}
 
-          {/* Blood tests pathway (no biomarker lists) */}
-          <div className="rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-              Blood tests pathway
-            </p>
-            <p className="mt-2 max-w-[52rem] text-[0.9375rem] leading-[1.65] text-[#737373]">
-              A simple plan for what to test now vs later. Each card shows how to book, plus doctor guidance (GKV/PKV).
-            </p>
-          </div>
-
           {highPriorityNow.length ? (
             <div className="space-y-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                High priority blood tests to do now
+                Do now
               </p>
               {highPriorityNow.slice(0, 3).map((check) => (
-                <BloodTestCard
+                <CollapsibleCheckCard
                   key={check.checkKey}
                   check={check}
                   finalRec={finalByKey.get(check.checkKey) ?? null}
-                  onUpdateStatus={updateStatus}
+                  expanded={expandedKey === check.checkKey}
+                  onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
+                  onUpdateStatus={onUpdateStatusWithReward}
+                  cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
                 />
               ))}
             </div>
@@ -550,33 +693,36 @@ export default function ActionPlanPage() {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-10 rounded-[20px] border border-black/[0.08] bg-white p-6 text-center shadow-[0_1px_0_rgba(0,0,0,0.03)] md:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a3a3a3]">
-            Want to track your progress?
-          </p>
-          <h3 className="mt-3 text-[1.25rem] font-semibold tracking-tight text-[#0c0c0c]">
-            Save your plan and get reminders
-          </h3>
-          <p className="mt-2 text-[0.9375rem] text-[#737373]">
-            Create a free account to keep your results and revisit your action plan any time.
-          </p>
-          <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/auth/register"
-              className="rounded-[12px] bg-[#0c0c0c] px-5 py-3 text-[0.9375rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
-            >
-              Create free account
-            </Link>
-            <Link
-              href="/app/dashboard"
-              className="rounded-[12px] border border-black/[0.1] px-5 py-3 text-[0.9375rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
-            >
-              Go to dashboard
-            </Link>
+            </div>
           </div>
+
+          {/* 10) Sticky progress summary (desktop only) */}
+          <aside className="hidden md:block">
+            <div className="sticky top-6 rounded-[20px] border border-black/[0.08] bg-white p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                Current progress
+              </p>
+              <div className="mt-3 space-y-1 text-[0.9375rem] text-[#404040]">
+                <p><span className="font-medium">{summary?.completedCount ?? 0}</span> completed</p>
+                <p><span className="font-medium">{summary?.plannedCount ?? 0}</span> planned</p>
+              </div>
+              <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#737373]">
+                  Next action
+                </p>
+                <p className="mt-2 text-[0.875rem] leading-[1.55] text-[#404040]">
+                  {nextBestCheck?.checkName ?? "Continue your plan"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={scrollToNextBest}
+                className="mt-4 w-full rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+              >
+                Continue
+              </button>
+            </div>
+          </aside>
         </div>
       </div>
     </ProtectedRouteGate>
