@@ -1,0 +1,26 @@
+check_key,display_name,priority_tier,included_category,biomarker_id,biomarker_name,sample_type,why_included
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9000,Chlamydia (Urine),Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Dental Health,9001,Dental,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9002,Physical,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9003,Genetic counseling if BRCA+,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9004,Chlamydia,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9005,Early Ultrasound (US),Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9006,Pap Smear,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9007,Genital Exam,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9008,Colposcopy if Pap is abnormal,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Breast Health,9009,Annual Breast MRI/US (High Risk),Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9010,Pap,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Breast Health,9011,Breast Palpation,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Breast Health,9012,Breast Ultrasound,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Dermatology,9013,Skin Check,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Gastrointestinal/Urogenital,9014,HPV+Pap,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9015,Palpation,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Dermatology,9016,Annual Skin Check,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9017,Start Colonoscopy 10y prior,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Breast Health,9018,Mammography,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9019,Stool Test,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9020,Phys.,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9021,Yearly Colonoscopy,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9022,Colonoscopy,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9023,Biopsy,Screening/Exam,Standard screening according to German health guidelines for this age/risk group.
+preventive_screening_germany,German Statutory Screenings,core_now,Preventive Screening,9024,Colonoscopy (2nd),Screening/Exam,Standard screening according to German health guidelines for this age/risk group.

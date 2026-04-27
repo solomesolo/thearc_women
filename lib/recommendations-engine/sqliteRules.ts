@@ -49,6 +49,7 @@ export interface CanonicalCheck {
   what_can_wait: string | null;
   next_action: string | null;
   ui_priority_order: number;
+  is_screening: number; // 0 = blood test, 1 = physical screening
 }
 
 export interface SignalExplanation {

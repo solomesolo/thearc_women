@@ -71,6 +71,7 @@ function buildWhyThisMattersFromRules(rules: WhyThisMattersRuleRow[]): string | 
 export interface ResolvedCheckBase {
   checkKey: string;
   checkName: string;
+  isScreening: boolean;
   priorityRank: number;
   impact: ImpactLevel;
   score: number;
@@ -258,6 +259,7 @@ export function resolveChecks(
     result.push({
       checkKey,
       checkName: canon.display_name,
+      isScreening: canon.is_screening === 1,
       priorityRank: 0, // will be set after sorting
       impact,
       score,

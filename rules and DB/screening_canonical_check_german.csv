@@ -1,0 +1,2 @@
+check_key,display_name,short_summary,max_core_biomarkers,default_timeframe,what_can_wait_template
+preventive_screening_germany,German Statutory Preventive Screenings,This check identifies standard non-blood screenings covered by German health insurance based on your age and family history.,10,current_month,Non-essential screenings can be scheduled later depending on clinical urgency.

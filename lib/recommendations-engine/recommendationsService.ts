@@ -574,11 +574,11 @@ export async function getRecommendations(params: {
       plannedAt: row?.plannedAt ? row.plannedAt.toISOString() : null,
       completedAt: row?.completedAt ? row.completedAt.toISOString() : null,
       actions: {
-        canBookLab: true,
-        canOrderHomeTest: true,
+        canBookLab: !c.isScreening,
+        canOrderHomeTest: !c.isScreening,
         canAskDoctor: true,
         canAddReminder: true,
-        canUploadResult: true,
+        canUploadResult: !c.isScreening,
       },
       reminder: reminder
         ? {

@@ -62,6 +62,7 @@ export interface UploadedResult {
 export interface CheckRecommendation {
   checkKey: string;
   checkName: string;
+  isScreening: boolean;
   timeframe: PathwayTimeframe;
   priorityRank: number;
   status: CheckStatus;
