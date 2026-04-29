@@ -13,6 +13,31 @@ type State = {
   error: Error | null;
 };
 
+const RECS_CACHE_VERSION = 1;
+function recsCacheKey(userId: string) {
+  return `arc.recommendations.cache.v${RECS_CACHE_VERSION}:${userId}`;
+}
+
+function loadCachedRecommendations(userId: string): RecommendationsPayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(recsCacheKey(userId));
+    if (!raw) return null;
+    return JSON.parse(raw) as RecommendationsPayload;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedRecommendations(userId: string, data: RecommendationsPayload) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(recsCacheKey(userId), JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+}
+
 function flattenPathway(data: RecommendationsPayload | null) {
   if (!data) return [];
   const p = data.pathway;
@@ -36,7 +61,11 @@ async function fetchRecommendations(userId: string): Promise<RecommendationsPayl
 }
 
 export function useRecommendations(userId: string | null) {
-  const [state, setState] = useState<State>({ data: null, isLoading: Boolean(userId), error: null });
+  const [state, setState] = useState<State>(() => {
+    if (!userId) return { data: null, isLoading: false, error: null };
+    const cached = loadCachedRecommendations(userId);
+    return { data: cached, isLoading: true, error: null };
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -51,11 +80,13 @@ export function useRecommendations(userId: string | null) {
       try {
         const data = await fetchRecommendations(userId);
         if (cancelled) return;
+        saveCachedRecommendations(userId, data);
         setState({ data, isLoading: false, error: null });
       } catch (e) {
         if (cancelled) return;
+        const cached = loadCachedRecommendations(userId);
         setState({
-          data: null,
+          data: cached,
           isLoading: false,
           error: e instanceof Error ? e : new Error("Failed"),
         });
@@ -72,10 +103,12 @@ export function useRecommendations(userId: string | null) {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
       const data = await fetchRecommendations(userId);
+      saveCachedRecommendations(userId, data);
       setState({ data, isLoading: false, error: null });
     } catch (e) {
+      const cached = loadCachedRecommendations(userId);
       setState({
-        data: null,
+        data: cached,
         isLoading: false,
         error: e instanceof Error ? e : new Error("Failed"),
       });
@@ -119,7 +152,7 @@ export function useRecommendations(userId: string | null) {
         const healthScore = all.length > 0 ? Math.round((completedCount / all.length) * 100) : 0;
         const nextBest = next_month.find((c) => c.status === "missing") ?? next_month[0] ?? all[0] ?? null;
 
-        return {
+        const nextState = {
           ...s,
           data: {
             ...s.data,
@@ -135,6 +168,8 @@ export function useRecommendations(userId: string | null) {
             },
           },
         };
+        saveCachedRecommendations(userId, nextState.data);
+        return nextState;
       });
     },
     [userId],

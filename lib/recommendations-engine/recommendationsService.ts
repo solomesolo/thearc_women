@@ -251,39 +251,54 @@ async function persistFixedSpecPathway(params: {
   }
 
   // Persist: replace for user (simple MVP)
-  await prisma.userPathwayBiomarkerSelection.deleteMany({ where: { userEmail } });
+  // NOTE: some environments may not have this Prisma model generated (older schema),
+  // so we feature-detect to avoid runtime crashes that break the app router.
+  const biomarkerSelectionModel = (prisma as unknown as {
+    userPathwayBiomarkerSelection?: {
+      deleteMany: (args: unknown) => Promise<unknown>;
+      createMany: (args: unknown) => Promise<unknown>;
+    };
+  }).userPathwayBiomarkerSelection;
 
-  // Deterministic ranking
-  const byGlobal = [...selections].sort((a, b) => b.score - a.score || a.biomarkerName.localeCompare(b.biomarkerName));
-  const globalRank = new Map<string, number>();
-  byGlobal.forEach((s, i) => globalRank.set(`${s.checkKey}::${s.biomarkerId}`, i + 1));
+  if (!biomarkerSelectionModel) {
+    console.warn(
+      "[recommendations] userPathwayBiomarkerSelection model missing; skipping biomarker persistence",
+    );
+  } else {
+    await biomarkerSelectionModel.deleteMany({ where: { userEmail } });
 
-  const byCheck = new Map<string, string[]>();
-  for (const s of selections) {
-    if (!byCheck.has(s.checkKey)) byCheck.set(s.checkKey, []);
-    byCheck.get(s.checkKey)!.push(s.biomarkerId);
-  }
-  const withinRank = new Map<string, number>();
-  for (const [ck, ids] of byCheck) {
-    const uniq = Array.from(new Set(ids));
-    uniq.forEach((id, idx) => withinRank.set(`${ck}::${id}`, idx + 1));
-  }
+    // Deterministic ranking
+    const byGlobal = [...selections].sort((a, b) => b.score - a.score || a.biomarkerName.localeCompare(b.biomarkerName));
+    const globalRank = new Map<string, number>();
+    byGlobal.forEach((s, i) => globalRank.set(`${s.checkKey}::${s.biomarkerId}`, i + 1));
 
-  if (selections.length) {
-    await prisma.userPathwayBiomarkerSelection.createMany({
-      data: selections.map((s) => ({
-        userEmail,
-        checkKey: s.checkKey,
-        biomarkerId: s.biomarkerId,
-        biomarkerName: s.biomarkerName,
-        priorityTier: s.tier,
-        timeframe: s.timeframe,
-        score: s.score,
-        rankWithinCheck: withinRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
-        rankGlobal: globalRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
-        reason: s.reason,
-      })),
-    });
+    const byCheck = new Map<string, string[]>();
+    for (const s of selections) {
+      if (!byCheck.has(s.checkKey)) byCheck.set(s.checkKey, []);
+      byCheck.get(s.checkKey)!.push(s.biomarkerId);
+    }
+    const withinRank = new Map<string, number>();
+    for (const [ck, ids] of byCheck) {
+      const uniq = Array.from(new Set(ids));
+      uniq.forEach((id, idx) => withinRank.set(`${ck}::${id}`, idx + 1));
+    }
+
+    if (selections.length) {
+      await biomarkerSelectionModel.createMany({
+        data: selections.map((s) => ({
+          userEmail,
+          checkKey: s.checkKey,
+          biomarkerId: s.biomarkerId,
+          biomarkerName: s.biomarkerName,
+          priorityTier: s.tier,
+          timeframe: s.timeframe,
+          score: s.score,
+          rankWithinCheck: withinRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
+          rankGlobal: globalRank.get(`${s.checkKey}::${s.biomarkerId}`) ?? 1,
+          reason: s.reason,
+        })),
+      });
+    }
   }
 
   // Persist schedule rows for checks

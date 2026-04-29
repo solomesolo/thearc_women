@@ -74,7 +74,11 @@ export function resolveNavigation(input: NavigationInputs): NavigationDecision {
     if (input.onboarding.status === "completed") {
       // Let completed anon users view their results without forcing registration first.
       if (input.recommendations.exists && requestedRoute) {
-        if (requestedRoute === "/results/overview" || requestedRoute === "/results/action-plan") {
+        if (
+          requestedRoute === "/results/overview" ||
+          requestedRoute === "/results/action-plan" ||
+          requestedRoute === "/my-health-calendar"
+        ) {
           return decision(
             "ANON_COMPLETED_SURVEY_UNREGISTERED",
             requestedRoute,
@@ -157,6 +161,9 @@ export function resolveNavigation(input: NavigationInputs): NavigationDecision {
       if (requestedRoute === "/results/overview") {
         return decision("AUTH_ACTIVE_DASHBOARD_READY", "/results/overview", "honor_requested_results_overview", false, "default", input);
       }
+      if (requestedRoute === "/my-health-calendar") {
+        return decision("AUTH_ACTIVE_DASHBOARD_READY", "/my-health-calendar", "honor_requested_health_calendar", false, "default", input);
+      }
       return decision(
         "AUTH_ACTIVE_DASHBOARD_READY",
         "/app/dashboard",
@@ -187,6 +194,16 @@ export function resolveNavigation(input: NavigationInputs): NavigationDecision {
         input.recommendations.resultsSeenAt ? "AUTH_ACTIVE_DASHBOARD_READY" : "AUTH_PROFILE_READY_RESULTS_UNSEEN",
         "/results/action-plan",
         "honor_requested_action_plan",
+        false,
+        "default",
+        input,
+      );
+    }
+    if (authed && requestedRoute === "/my-health-calendar" && input.recommendations.exists) {
+      return decision(
+        input.recommendations.resultsSeenAt ? "AUTH_ACTIVE_DASHBOARD_READY" : "AUTH_PROFILE_READY_RESULTS_UNSEEN",
+        "/my-health-calendar",
+        "honor_requested_health_calendar",
         false,
         "default",
         input,

@@ -31,6 +31,12 @@ function getCached(route: string): NavigationDecisionResponse | null {
     NAV_CACHE.delete(route);
     return null;
   }
+  // If the cached decision is a redirect away from the requested route,
+  // do not reuse it — it can cause redirect loops after server-side logic changes
+  // (e.g. new routes are allowed) until TTL expires.
+  if (entry.decision?.target_route && entry.decision.target_route !== route) {
+    return null;
+  }
   return entry.decision;
 }
 

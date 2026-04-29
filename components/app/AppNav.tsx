@@ -8,7 +8,7 @@ import { clsx } from "clsx";
 
 const LINKS = [
   { href: "/app/dashboard", label: "Dashboard" },
-  { href: "/results/overview", label: "My Overview" },
+  { href: "/results/overview", label: "Health Wallet" },
   { href: "/results/action-plan", label: "Action Plan" },
   { href: "/my-health-calendar", label: "My Health Calendar" },
 ];
