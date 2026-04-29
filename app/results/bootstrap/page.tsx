@@ -67,7 +67,7 @@ export default function ResultsBootstrapPage() {
       const anonId = getOrCreateAnonId();
       const sessionId = window.localStorage.getItem(ENGINE_A_STORAGE.sessionId);
       if (!sessionId) {
-        router.replace("/onboarding/start");
+        router.replace("/health-journey");
         return;
       }
 

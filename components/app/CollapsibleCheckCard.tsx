@@ -1,11 +1,22 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import type {
   CheckRecommendation,
   CheckStatus,
   FinalRecommendation,
 } from "@/lib/recommendations-engine/types";
+import { AddToHealthCalendarModal } from "@/components/app/AddToHealthCalendarModal";
+import { RemindMeButton } from "@/components/app/RemindMeButton";
+import {
+  loadCalendarMeta,
+  loadCalendarOverrides,
+  loadCalendarNotes,
+  saveCalendarMeta,
+  saveCalendarNotes,
+  saveCalendarOverrides,
+} from "@/lib/calendar/localHealthCalendarStore";
 
 const BiomarkerActionRow = dynamic(
   () => import("./BiomarkerActionRow").then((m) => ({ default: m.BiomarkerActionRow })),
@@ -15,7 +26,7 @@ const ScreeningActionRow = dynamic(
   () => import("./ScreeningActionRow").then((m) => ({ default: m.ScreeningActionRow })),
   { loading: () => <div className="h-10 rounded-[18px] bg-[#f0f0ef] animate-pulse" /> },
 );
-import { deduplicateScreenings } from "./ScreeningActionRow";
+import { deduplicateScreenings } from "@/lib/screenings/screeningUtils";
 
 const STATUS_BADGE_CLASS: Record<CheckStatus, string> = {
   missing: "bg-[#0c0c0c] text-white",
@@ -84,14 +95,9 @@ export function CollapsibleCheckCard({
         : "Not started";
 
   const isDone = check.status === "completed" || check.status === "result_uploaded";
-  const primaryCtaLabel =
-    check.status === "missing"
-      ? "Start planning"
-      : check.status === "planned"
-        ? "Mark completed"
-        : "Completed";
-  const primaryNextStatus: CheckStatus =
-    check.status === "missing" ? "planned" : check.status === "planned" ? "completed" : check.status;
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [initialMeta, setInitialMeta] = useState<{ plannedDateISO?: string; doctorName?: string; address?: string; notes?: string } | undefined>(undefined);
 
   return (
     <div
@@ -156,21 +162,49 @@ export function CollapsibleCheckCard({
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => onUpdateStatus(check.checkKey, primaryNextStatus)}
+            onClick={() => onUpdateStatus(check.checkKey, "planned")}
             disabled={isDone}
             className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {primaryCtaLabel}
+            {check.status === "planned" ? "Planned" : "Mark as planned"}
           </button>
-          {check.status !== "missing" && !isDone && (
-            <button
-              type="button"
-              onClick={() => onUpdateStatus(check.checkKey, "missing")}
-              className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#737373] transition-colors hover:text-[#0c0c0c]"
-            >
-              Reset
-            </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const overrides = loadCalendarOverrides();
+              const meta = loadCalendarMeta();
+              const notes = loadCalendarNotes();
+
+              const planned = meta[check.checkKey]?.plannedDateISO ?? overrides[check.checkKey];
+              setInitialMeta({
+                plannedDateISO: planned,
+                doctorName: meta[check.checkKey]?.doctorName,
+                address: meta[check.checkKey]?.address,
+                notes: meta[check.checkKey]?.notes ?? notes[`${check.checkKey}:${planned ?? ""}`],
+              });
+              setCalendarOpen(true);
+            }}
+            className="rounded-[12px] border border-black/[0.1] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+          >
+            Add to Calendar
+          </button>
+
+          {!isDone && (
+            <RemindMeButton
+              checkKey={check.checkKey}
+              checkName={check.checkName}
+            />
           )}
+
+          <button
+            type="button"
+            onClick={() => onUpdateStatus(check.checkKey, "completed")}
+            disabled={isDone}
+            className="rounded-[12px] border border-black/[0.1] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isDone ? "Done" : "Done"}
+          </button>
         </div>
       </div>
 
@@ -260,6 +294,31 @@ export function CollapsibleCheckCard({
           )}
         </div>
       )}
+
+      <AddToHealthCalendarModal
+        open={calendarOpen}
+        title={check.checkName}
+        initial={initialMeta}
+        onClose={() => setCalendarOpen(false)}
+        onSave={(meta) => {
+          const overrides = loadCalendarOverrides();
+          overrides[check.checkKey] = meta.plannedDateISO;
+          saveCalendarOverrides(overrides);
+
+          const allMeta = loadCalendarMeta();
+          allMeta[check.checkKey] = meta;
+          saveCalendarMeta(allMeta);
+
+          if (meta.notes) {
+            const allNotes = loadCalendarNotes();
+            allNotes[`${check.checkKey}:${meta.plannedDateISO}`] = meta.notes;
+            saveCalendarNotes(allNotes);
+          }
+
+          onUpdateStatus(check.checkKey, "planned");
+          setCalendarOpen(false);
+        }}
+      />
     </div>
   );
 }

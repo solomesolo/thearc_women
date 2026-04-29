@@ -42,7 +42,7 @@ export default function WieArcFunktioniertPage() {
               </p>
               <div className="mt-8">
                 <Link
-                  href="/onboarding/start"
+                  href="/health-journey"
                   className="inline-flex rounded-[14px] bg-[#0c0c0c] px-5 py-2.5 text-[0.9375rem] font-medium text-white transition-[filter] duration-[180ms] hover:brightness-[0.9]"
                 >
                   Deine Gesundheitsübersicht erkunden

@@ -2,6 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useLocale } from "@/lib/i18n/useLocale";
+import { AddToHealthCalendarModal } from "@/components/app/AddToHealthCalendarModal";
+import { RemindMeButton } from "@/components/app/RemindMeButton";
+import {
+  loadScreeningEvents,
+  saveScreeningEvents,
+  type HealthCalendarEventMeta,
+} from "@/lib/calendar/localHealthCalendarStore";
+export {
+  SCREENING_ALIASES,
+  RISK_ADJUSTED_SCREENINGS,
+  deduplicateScreenings,
+  getRiskAdjustedScreenings,
+} from "@/lib/screenings/screeningUtils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,87 +28,10 @@ export interface ScreeningResult {
   savedAt: string;
 }
 
-// ── Canonical gatekeeper ──────────────────────────────────────────────────────
-// Maps alias names → canonical display name. Prevents the same screening
-// from appearing twice when the DB stores both "Pap" and "Pap Smear".
-
-export const SCREENING_ALIASES: Record<string, string> = {
-  "Chlamydia": "Chlamydia (Urine)",
-  "Pap": "Pap Smear",
-  "Phys.": "Physical",
-  "Palpation": "Breast Palpation",
-  "Colonoscopy (2nd)": "Colonoscopy",
-};
-
-// Screenings that are risk-adjusted (family-history driven), shown in a
-// separate "based on your family history" block rather than the standard list.
-export const RISK_ADJUSTED_SCREENINGS = new Set([
-  "Annual Breast MRI/US (High Risk)",
-  "Breast Ultrasound",
-  "Genetic counseling if BRCA+",
-  "Annual Skin Check",
-  "Early Ultrasound (US)",
-  "Colposcopy if Pap is abnormal",
-  "Start Colonoscopy 10y prior",
-  "Yearly Colonoscopy",
-  "Biopsy",
-]);
-
-// Preferred display order for standard screenings.
-const CANONICAL_ORDER = [
-  "Chlamydia (Urine)",
-  "Pap Smear",
-  "HPV+Pap",
-  "Genital Exam",
-  "Breast Palpation",
-  "Skin Check",
-  "Dental",
-  "Physical",
-  "Mammography",
-  "Stool Test",
-  "Colonoscopy",
-];
-
-/**
- * Given raw biomarker names from the DB, returns deduplicated canonical names
- * in preferred display order. Filters out risk-adjusted screenings.
- */
-export function deduplicateScreenings(rawNames: string[]): string[] {
-  const seen = new Set<string>();
-  const standard: string[] = [];
-  for (const name of rawNames) {
-    const canonical = SCREENING_ALIASES[name] ?? name;
-    if (RISK_ADJUSTED_SCREENINGS.has(canonical)) continue;
-    if (seen.has(canonical)) continue;
-    seen.add(canonical);
-    standard.push(canonical);
-  }
-  // Sort by canonical order; unknowns go to the end.
-  return standard.sort((a, b) => {
-    const ai = CANONICAL_ORDER.indexOf(a);
-    const bi = CANONICAL_ORDER.indexOf(b);
-    if (ai === -1 && bi === -1) return 0;
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
-}
-
-/**
- * Same as deduplicateScreenings but returns only risk-adjusted ones.
- */
-export function getRiskAdjustedScreenings(rawNames: string[]): string[] {
-  const seen = new Set<string>();
-  const risk: string[] = [];
-  for (const name of rawNames) {
-    const canonical = SCREENING_ALIASES[name] ?? name;
-    if (!RISK_ADJUSTED_SCREENINGS.has(canonical)) continue;
-    if (seen.has(canonical)) continue;
-    seen.add(canonical);
-    risk.push(canonical);
-  }
-  return risk;
-}
+import {
+  SCREENING_ALIASES,
+  RISK_ADJUSTED_SCREENINGS,
+} from "@/lib/screenings/screeningUtils";
 
 // ── Bilingual metadata ────────────────────────────────────────────────────────
 
@@ -263,23 +199,6 @@ function downloadCalendarEvent(name: string) {
   URL.revokeObjectURL(url);
 }
 
-// ── Notification helper ───────────────────────────────────────────────────────
-
-async function scheduleNotification(name: string, locale: string): Promise<"granted" | "denied" | "unsupported"> {
-  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
-  let perm = Notification.permission;
-  if (perm === "default") perm = await Notification.requestPermission();
-  if (perm !== "granted") return "denied";
-  // Fires immediately as a confirmation — true scheduling requires a service worker.
-  new Notification(locale === "de" ? `Erinnerung: ${name}` : `Reminder: ${name}`, {
-    body: locale === "de"
-      ? "Denken Sie daran, diese GKV-Vorsorge zu buchen."
-      : "Don't forget to book this GKV preventive screening.",
-    icon: "/favicon.ico",
-  });
-  return "granted";
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ScreeningActionRow({ screeningName }: { screeningName: string }) {
@@ -293,7 +212,8 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
   const [resultDate, setResultDate] = useState("");
   const [resultNotes, setResultNotes] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied" | "unsupported">("idle");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [initialMeta, setInitialMeta] = useState<Partial<HealthCalendarEventMeta> | undefined>(undefined);
 
   // Load persisted state on mount (client-only)
   useEffect(() => {
@@ -332,11 +252,11 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
     setShowResultsPanel(false);
   };
 
-  const handleCalendar = () => downloadCalendarEvent(screeningName);
-
-  const handleNotification = async () => {
-    const result = await scheduleNotification(screeningName, locale);
-    setNotifState(result);
+  const handleCalendar = () => {
+    const stored = loadScreeningEvents();
+    const existing = stored[screeningName]?.meta ?? null;
+    setInitialMeta(existing ?? undefined);
+    setCalendarOpen(true);
   };
 
   const isDone = status === "done";
@@ -355,7 +275,6 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
       : "Covered by German statutory health insurance — no additional cost.",
     markPlanned: locale === "de" ? "Als geplant markieren" : "Mark as planned",
     addCalendar: locale === "de" ? "Zum Kalender" : "Add to Calendar",
-    sendNotif: locale === "de" ? "Erinnerung" : "Remind me",
     done: locale === "de" ? "Erledigt" : "Done",
     planned: locale === "de" ? "Geplant" : "Planned",
     doneLabel: locale === "de" ? "Abgeschlossen" : "Completed",
@@ -366,9 +285,6 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
     fileSelected: locale === "de" ? "Datei ausgewählt" : "File selected",
     saveResults: locale === "de" ? "In Health Wallet speichern" : "Save to Health Wallet",
     skipResults: locale === "de" ? "Überspringen" : "Skip",
-    notifGranted: locale === "de" ? "Erinnerung gesendet ✓" : "Reminder sent ✓",
-    notifDenied: locale === "de" ? "Benachrichtigungen blockiert" : "Notifications blocked",
-    notifUnsupported: locale === "de" ? "Nicht unterstützt" : "Not supported",
     resultSaved: locale === "de" ? "In Health Wallet gespeichert" : "Saved to Health Wallet",
   };
 
@@ -459,25 +375,23 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
                 onClick={handleCalendar}
                 className="rounded-[10px] border border-black/[0.1] px-3.5 py-2 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
               >
-                📅 {L.addCalendar}
+                {L.addCalendar}
               </button>
-              <button
-                type="button"
-                onClick={handleNotification}
-                disabled={notifState === "granted"}
-                className="rounded-[10px] border border-black/[0.1] px-3.5 py-2 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c] disabled:opacity-60"
-              >
-                {notifState === "granted" ? L.notifGranted
-                  : notifState === "denied" ? L.notifDenied
-                    : notifState === "unsupported" ? L.notifUnsupported
-                      : `🔔 ${L.sendNotif}`}
-              </button>
+              {!isDone && (
+                <RemindMeButton
+                  checkKey={`screening_${screeningName.replace(/\s+/g, "_")}`}
+                  checkName={screeningName}
+                  isDE={locale === "de"}
+                  variant="raw"
+                  className="rounded-[10px] border border-black/[0.1] px-3.5 py-2 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+                />
+              )}
               <button
                 type="button"
                 onClick={markDone}
                 className="rounded-[10px] border border-black/[0.1] px-3.5 py-2 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
               >
-                ✓ {L.done}
+                {L.done}
               </button>
             </div>
           )}
@@ -485,7 +399,7 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
           {isDone && savedResult && (
             <div className="border-t border-black/[0.07] px-5 py-3 space-y-0.5">
               <p className="text-[0.8125rem] text-[#737373]">
-                ✓ {L.resultSaved}
+                {L.resultSaved}
                 {savedResult.notes && <> — {savedResult.notes.slice(0, 80)}</>}
               </p>
               {savedResult.fileName && (
@@ -563,6 +477,25 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
           )}
         </div>
       )}
+
+      <AddToHealthCalendarModal
+        open={calendarOpen}
+        title={screeningName}
+        initial={initialMeta}
+        onClose={() => setCalendarOpen(false)}
+        onSave={(meta) => {
+          const stored = loadScreeningEvents();
+          stored[screeningName] = {
+            screeningName,
+            meta,
+            createdAtISO: new Date().toISOString(),
+          };
+          saveScreeningEvents(stored);
+          saveStatus(screeningName, "planned");
+          setStatus("planned");
+          setCalendarOpen(false);
+        }}
+      />
     </div>
   );
 }

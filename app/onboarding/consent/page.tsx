@@ -31,7 +31,7 @@ export default function ConsentPage() {
       {/* Back link */}
       <button
         type="button"
-        onClick={() => router.push("/onboarding/start")}
+        onClick={() => router.push("/health-journey")}
         className="mb-8 inline-flex items-center gap-1.5 text-[0.8125rem] text-[#737373] hover:text-[#0c0c0c] transition-colors"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>

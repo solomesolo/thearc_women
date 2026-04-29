@@ -7,12 +7,14 @@ import { useRecommendations } from "@/lib/recommendations/useRecommendations";
 import { getOrCreateAnonId } from "@/lib/profile-engine-a/frontendClient";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { ProtectedRouteGate } from "@/components/navigation/ProtectedRouteGate";
-import { deduplicateScreenings } from "@/components/app/ScreeningActionRow";
+import { deduplicateScreenings } from "@/lib/screenings/screeningUtils";
 import {
   loadWalletHistory,
   type BiomarkerWalletEntry,
   type BiomarkerResultStatus,
 } from "@/components/app/BiomarkerActionRow";
+import { HealthWalletHeader } from "@/components/app/HealthWalletHeader";
+import { RemindMeButton } from "@/components/app/RemindMeButton";
 import type { CheckRecommendation } from "@/lib/recommendations-engine/types";
 
 // ── localStorage helpers for screenings ───────────────────────────────────────
@@ -403,20 +405,6 @@ export default function HealthWalletPage() {
     setWallet({ groups, biomarkers: allBiomarkers, screenings: allScreenings });
   }, [recs]);
 
-  const stats = useMemo(() => {
-    const { biomarkers, screenings } = wallet;
-    const total = biomarkers.length + screenings.length;
-    const completed = biomarkers.filter((b) => b.entries.length > 0).length + screenings.filter((s) => s.status === "done").length;
-    const planned = screenings.filter((s) => s.status === "planned").length;
-    const missing = biomarkers.filter((b) => b.entries.length === 0).length + screenings.filter((s) => s.status === "missing").length;
-    const critical = [
-      ...biomarkers.filter((b) => b.entries.length === 0 && b.priority === "do_now"),
-      ...screenings.filter((s) => s.status === "missing" && s.priority === "do_now"),
-    ];
-    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, planned, missing, critical, pct };
-  }, [wallet]);
-
   const timelineEvents = useMemo((): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
     for (const bm of wallet.biomarkers) {
@@ -509,16 +497,10 @@ export default function HealthWalletPage() {
       <div className="mx-auto max-w-[72rem] px-5 py-10 md:px-8">
 
         {/* ── Page header ── */}
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a3a3a3]">
-              {isDE ? "Personalisierte Gesundheitsdaten" : "Personalized health data"}
-            </p>
-            <h1 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[2rem]">
-              {L.title}
-            </h1>
-            <p className="mt-2 max-w-[52rem] text-[0.9375rem] text-[#737373]">{L.subtitle}</p>
-          </div>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[1.75rem]">
+            {L.title}
+          </h1>
 
           {/* Export for Doctor button */}
           {hasExportableData && (
@@ -532,7 +514,7 @@ export default function HealthWalletPage() {
                   isDE,
                 )
               }
-              className="mt-2 shrink-0 flex items-center gap-2 rounded-[12px] border border-black/[0.12] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#0c0c0c] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-[filter] hover:brightness-[0.95]"
+              className="shrink-0 flex items-center gap-2 rounded-[12px] border border-black/[0.12] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#0c0c0c] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-[filter] hover:brightness-[0.95]"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path d="M3 11v2a1 1 0 001 1h8a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -542,62 +524,23 @@ export default function HealthWalletPage() {
           )}
         </div>
 
-        {/* ── Completeness + summary stats ── */}
+        {/* ── Journey header ── */}
         {isLoading ? (
-          <div className="mb-8 h-32 animate-pulse rounded-[20px] bg-[#f0f0ef]" />
-        ) : (
-          <div className="mb-8 rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:p-6">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-3">
-                  <span className="font-mono text-[2.5rem] font-semibold tabular-nums leading-none text-[#0c0c0c]">
-                    {stats.pct}%
-                  </span>
-                  <span className="text-[0.9375rem] text-[#737373]">{L.completenessLabel}</span>
-                </div>
-                <div className="mt-3 h-2 w-full rounded-full bg-[#f0f0ef]">
-                  <div
-                    className="h-2 rounded-full bg-[#0c0c0c] transition-all duration-700"
-                    style={{ width: `${stats.pct}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid shrink-0 grid-cols-5 gap-4">
-                {[
-                  { label: L.recommended, value: stats.total },
-                  { label: L.completed, value: stats.completed, dark: true },
-                  { label: L.missing, value: stats.missing },
-                  { label: L.planned, value: stats.planned },
-                  { label: L.criticalMissing, value: stats.critical.length, urgent: stats.critical.length > 0 },
-                ].map(({ label, value, dark, urgent }) => (
-                  <div key={label} className="text-center">
-                    <p className={`font-mono text-[1.5rem] font-semibold tabular-nums leading-none ${urgent ? "text-[#0c0c0c]" : dark ? "text-[#0c0c0c]" : "text-[#404040]"}`}>
-                      {value}
-                    </p>
-                    <p className="mt-1 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-[#a3a3a3]">{label}</p>
-                  </div>
-                ))}
-              </div>
+          <div className="mb-8 space-y-3">
+            <div className="h-28 animate-pulse rounded-[20px] bg-[#f0f0ef]" />
+            <div className="flex gap-3">
+              {[1, 2, 3].map((i) => <div key={i} className="h-28 flex-1 animate-pulse rounded-[16px] bg-[#f0f0ef]" />)}
             </div>
-
-            {stats.critical.length > 0 && (
-              <div className="mt-5 border-t border-black/[0.06] pt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0c0c0c]">
-                  {L.criticalMissing}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {(stats.critical as Array<{ name: string }>).slice(0, 6).map((item) => (
-                    <div key={item.name} className="flex items-center gap-1.5 rounded-full border border-black/[0.1] bg-[#fafaf9] px-3 py-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#0c0c0c]" />
-                      <span className="text-[0.8125rem] font-medium text-[#0c0c0c]">{item.name}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-2 text-[0.8125rem] text-[#737373]">{L.criticalNote}</p>
-              </div>
-            )}
+            <div className="h-28 animate-pulse rounded-[20px] bg-[#f0f0ef]" />
           </div>
+        ) : (
+          <HealthWalletHeader
+            biomarkers={wallet.biomarkers}
+            screenings={wallet.screenings}
+            isDE={isDE}
+            onViewBiomarkers={() => setTab("biomarkers")}
+            onViewScreenings={() => setTab("screenings")}
+          />
         )}
 
         {/* ── Tab bar ── */}
@@ -633,7 +576,7 @@ export default function HealthWalletPage() {
             {wallet.groups.length === 0 && (
               <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
                 <p className="text-[0.9375rem] text-[#737373]">{L.empty}</p>
-                <Link href="/onboarding/start" className="mt-4 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white hover:brightness-[0.9]">
+                <Link href="/health-journey" className="mt-4 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white hover:brightness-[0.9]">
                   {isDE ? "Assessment starten" : "Start assessment"}
                 </Link>
               </div>
@@ -708,6 +651,11 @@ export default function HealthWalletPage() {
                           {isDE ? "Nächste:" : "Next:"} <span className="font-medium text-[#0c0c0c]">{nextMissing}</span>
                         </p>
                       )}
+                      <RemindMeButton
+                        checkKey={group.checkKey}
+                        checkName={group.name}
+                        isDE={isDE}
+                      />
                       <button
                         type="button"
                         onClick={() => setTab(group.isScreening ? "screenings" : "biomarkers")}

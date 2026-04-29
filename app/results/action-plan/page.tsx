@@ -10,12 +10,13 @@ import { useRecommendations } from "@/lib/recommendations/useRecommendations";
 import { getOrCreateAnonId } from "@/lib/profile-engine-a/frontendClient";
 import dynamic from "next/dynamic";
 import { CollapsibleCheckCard } from "@/components/app/CollapsibleCheckCard";
+import { RemindMeButton } from "@/components/app/RemindMeButton";
 
 const ScreeningActionRow = dynamic(
   () => import("@/components/app/ScreeningActionRow").then((m) => ({ default: m.ScreeningActionRow })),
   { loading: () => <div className="h-10 rounded-[18px] bg-[#f0f0ef] animate-pulse" /> },
 );
-import { deduplicateScreenings } from "@/components/app/ScreeningActionRow";
+import { deduplicateScreenings } from "@/lib/screenings/screeningUtils";
 import type {
   CheckRecommendation,
   CheckStatus,
@@ -228,6 +229,13 @@ export default function ActionPlanPage() {
                 >
                   View why this matters
                 </button>
+                {nextBestCheck && (
+                  <RemindMeButton
+                    checkKey={nextBestCheck.checkKey}
+                    checkName={nextBestCheck.checkName}
+                    isDE={locale === "de"}
+                  />
+                )}
               </div>
 
               {heroWhyOpen && (
@@ -377,7 +385,7 @@ export default function ActionPlanPage() {
             <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
               <p>No recommendations yet.</p>
               <Link
-                href="/onboarding/start"
+                href="/health-journey"
                 className="mt-3 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.9375rem] font-medium text-white hover:brightness-[0.9]"
               >
                 {locale === "de" ? "Assessment starten" : "Start assessment"}
@@ -427,13 +435,21 @@ export default function ActionPlanPage() {
                     {b.items.length ? (
                       <ul className="mt-2 space-y-2 text-[0.875rem] text-[#404040]">
                         {b.items.map((c) => (
-                          <li key={c.checkKey} className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate">{c.checkName}</span>
-                            <span
-                              className={`shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[c.status]}`}
-                            >
-                              {c.status.replaceAll("_", " ")}
-                            </span>
+                          <li key={c.checkKey} className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate text-[0.875rem]">{c.checkName}</span>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              <RemindMeButton
+                                checkKey={c.checkKey}
+                                checkName={c.checkName}
+                                isDE={locale === "de"}
+                                variant="icon"
+                              />
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[c.status]}`}
+                              >
+                                {c.status.replaceAll("_", " ")}
+                              </span>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -528,6 +544,13 @@ export default function ActionPlanPage() {
                     >
                       {locale === "de" ? "Zurücksetzen" : "Reset"}
                     </button>
+                  )}
+                  {!isDone && (
+                    <RemindMeButton
+                      checkKey={sc.checkKey}
+                      checkName={sc.checkName}
+                      isDE={locale === "de"}
+                    />
                   )}
                   <span className="rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[#737373]">
                     {locale === "de" ? "GKV übernommen" : "GKV covered"}
