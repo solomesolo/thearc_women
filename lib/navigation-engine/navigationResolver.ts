@@ -131,7 +131,7 @@ export function resolveNavigation(input: NavigationInputs): NavigationDecision {
       // If the user explicitly requests dashboard or action-plan, let them through
       // so the page can show a loading/empty state while data regenerates in the background.
       // Only force bootstrap when there's no specific destination in mind.
-      if (requestedRoute === "/app/dashboard" || requestedRoute === "/results/action-plan" || requestedRoute === "/results/overview") {
+      if (requestedRoute === "/app/dashboard" || requestedRoute === "/results/action-plan" || requestedRoute === "/results/overview" || requestedRoute === "/my-health-calendar") {
         return decision("AUTH_PROFILE_READY_NO_RECOMMENDATIONS", requestedRoute, "profile_exists_recs_pending", false, "default", input);
       }
       return decision(
@@ -144,9 +144,18 @@ export function resolveNavigation(input: NavigationInputs): NavigationDecision {
       );
     }
     if (input.recommendations.exists && !input.recommendations.resultsSeenAt) {
+      // Honor the requested route — don't force users to overview first.
+      // Dashboard is always the default landing after survey completion.
+      const target =
+        requestedRoute === "/results/action-plan" ||
+        requestedRoute === "/results/overview" ||
+        requestedRoute === "/my-health-calendar" ||
+        requestedRoute === "/app/dashboard"
+          ? requestedRoute
+          : "/app/dashboard";
       return decision(
         "AUTH_PROFILE_READY_RESULTS_UNSEEN",
-        "/results/overview",
+        target,
         "first_results_view",
         false,
         "default",

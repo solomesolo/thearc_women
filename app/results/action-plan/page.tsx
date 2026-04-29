@@ -16,6 +16,10 @@ const ScreeningActionRow = dynamic(
   () => import("@/components/app/ScreeningActionRow").then((m) => ({ default: m.ScreeningActionRow })),
   { loading: () => <div className="h-10 rounded-[18px] bg-[#f0f0ef] animate-pulse" /> },
 );
+const UploadResultsModal = dynamic(
+  () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
+  { ssr: false },
+);
 import { deduplicateScreenings } from "@/lib/screenings/screeningUtils";
 import type {
   CheckRecommendation,
@@ -51,6 +55,7 @@ export default function ActionPlanPage() {
   const [heroWhyOpen, setHeroWhyOpen] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [liveMessage, setLiveMessage] = useState<string>("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const checkByKey = new Map<string, CheckRecommendation>();
   if (pathway) {
@@ -66,38 +71,26 @@ export default function ActionPlanPage() {
   const screeningChecks = allChecks.filter((c) => c.isScreening);
   const totalChecks = allChecks.length;
 
-  const checksThisMonth = (recs?.pathwayTimeline?.find((x) => x.timeframe === "current_month")?.checks ?? [])
-    .map((x) => checkByKey.get(x.checkKey))
-    .filter((c): c is CheckRecommendation => !!c && !c.isScreening);
-
-  const checks6Months = [
-    ...(recs?.pathwayTimeline?.find((x) => x.timeframe === "next_3_months")?.checks ?? []),
-    ...(recs?.pathwayTimeline?.find((x) => x.timeframe === "next_6_months")?.checks ?? []),
-  ]
-    .map((x) => checkByKey.get(x.checkKey))
-    .filter((c): c is CheckRecommendation => !!c && !c.isScreening);
-
-  const checks12Months = [
-    ...(recs?.pathwayTimeline?.find((x) => x.timeframe === "next_year")?.checks ?? []),
-    ...(recs?.pathwayTimeline?.find((x) => x.timeframe === "optional_later")?.checks ?? []),
-  ]
-    .map((x) => checkByKey.get(x.checkKey))
-    .filter((c): c is CheckRecommendation => !!c && !c.isScreening);
+  // Use live pathway (not stale pathwayTimeline DB data) so ordering reflects current engine output.
+  const checksThisMonth = (pathway?.next_month ?? []).filter((c) => !c.isScreening);
 
   const isHighPriority = (check: CheckRecommendation) => {
+    // preventive_baseline is always the first step when not done.
+    if (check.checkKey === "preventive_baseline") {
+      return check.status !== "completed" && check.status !== "result_uploaded";
+    }
     const r = finalByKey.get(check.checkKey);
-    // "High priority" for first view = has core tests scheduled for now (or explicitly marked high).
-    // We prefer this over impact because impact may be downgraded for UX caps.
     return (r?.coreTestsNow?.length ?? 0) > 0 || r?.impact === "HIGH";
   };
 
   const highPriorityNow = checksThisMonth.filter(isHighPriority);
-  const nonHighThisMonth = checksThisMonth.filter((c) => !isHighPriority(c));
-  const nonHigh6Months = checks6Months.filter((c) => !isHighPriority(c));
-  const nonHigh12Months = checks12Months.filter((c) => !isHighPriority(c));
 
+  // preventive_baseline is always the starting point when not yet done.
+  const baselineCheck = allChecks.find(
+    (c) => c.checkKey === "preventive_baseline" && c.status !== "completed" && c.status !== "result_uploaded"
+  );
   const nextBestKey =
-    summary?.nextBestAction?.checkKey ??
+    baselineCheck?.checkKey ??
     highPriorityNow[0]?.checkKey ??
     checksThisMonth[0]?.checkKey ??
     allChecks[0]?.checkKey ??
@@ -228,6 +221,13 @@ export default function ActionPlanPage() {
                   className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
                 >
                   View why this matters
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(true)}
+                  className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+                >
+                  Upload result
                 </button>
                 {nextBestCheck && (
                   <RemindMeButton
@@ -406,59 +406,10 @@ export default function ActionPlanPage() {
                   expanded={expandedKey === check.checkKey}
                   onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
                   onUpdateStatus={onUpdateStatusWithReward}
+                  onUploadResult={() => setShowUploadModal(true)}
                   cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
                 />
               ))}
-            </div>
-          ) : null}
-
-          {/* Mid/low priority moved into timeline planning (3/6/12 months) */}
-          {(nonHighThisMonth.length + nonHigh6Months.length + nonHigh12Months.length) > 0 ? (
-            <div className="mt-8 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Plan ahead (mid / low priority)
-              </p>
-              <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#737373]">
-                These items are still recommended, but can be scheduled into 3, 6, and 12 month windows.
-              </p>
-
-              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-                {[
-                  { label: "Plan in 3 months", items: nonHighThisMonth.slice(0, 6) },
-                  { label: "Plan in 6 months", items: nonHigh6Months.slice(0, 6) },
-                  { label: "Plan in 12 months", items: nonHigh12Months.slice(0, 6) },
-                ].map((b) => (
-                  <div key={b.label} className="rounded-[16px] border border-black/[0.06] bg-[#fafaf9] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#737373]">
-                      {b.label}
-                    </p>
-                    {b.items.length ? (
-                      <ul className="mt-2 space-y-2 text-[0.875rem] text-[#404040]">
-                        {b.items.map((c) => (
-                          <li key={c.checkKey} className="flex items-center justify-between gap-2">
-                            <span className="min-w-0 truncate text-[0.875rem]">{c.checkName}</span>
-                            <div className="flex shrink-0 items-center gap-1.5">
-                              <RemindMeButton
-                                checkKey={c.checkKey}
-                                checkName={c.checkName}
-                                isDE={locale === "de"}
-                                variant="icon"
-                              />
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[c.status]}`}
-                              >
-                                {c.status.replaceAll("_", " ")}
-                              </span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-[0.875rem] text-[#737373]">—</p>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
           ) : null}
 
@@ -591,6 +542,11 @@ export default function ActionPlanPage() {
           </aside>
         </div>
       </div>
+
+      <UploadResultsModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      />
     </ProtectedRouteGate>
   );
 }

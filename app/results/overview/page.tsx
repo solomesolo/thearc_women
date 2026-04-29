@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRecommendations } from "@/lib/recommendations/useRecommendations";
@@ -16,6 +17,12 @@ import {
 import { HealthWalletHeader } from "@/components/app/HealthWalletHeader";
 import { RemindMeButton } from "@/components/app/RemindMeButton";
 import type { CheckRecommendation } from "@/lib/recommendations-engine/types";
+import { loadScreeningEvents } from "@/lib/calendar/localHealthCalendarStore";
+
+const UploadResultsModal = dynamic(
+  () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
+  { ssr: false },
+);
 
 // ── localStorage helpers for screenings ───────────────────────────────────────
 
@@ -135,6 +142,321 @@ function Sparkline({ entries, status }: { entries: BiomarkerWalletEntry[]; statu
         return <circle cx={last[0]} cy={last[1]} r="2.5" fill={stroke} />;
       })()}
     </svg>
+  );
+}
+
+// ── ProgressRing ──────────────────────────────────────────────────────────────
+
+function ProgressRing({ value, size = 52, strokeWidth = 4 }: { value: number; size?: number; strokeWidth?: number }) {
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(100, Math.max(0, value));
+  const offset = circ - (pct / 100) * circ;
+  const cx = size / 2;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#f0f0ef" strokeWidth={strokeWidth} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#0c0c0c" strokeWidth={strokeWidth}
+        strokeDasharray={`${circ}`} strokeDashoffset={`${offset}`}
+        strokeLinecap="round" transform={`rotate(-90 ${cx} ${cx})`} />
+    </svg>
+  );
+}
+
+// ── PriorityPill (standalone) ─────────────────────────────────────────────────
+
+function PriorityPill({ priority }: { priority: Priority }) {
+  if (priority === "do_now") return <span className="rounded-full bg-[#0c0c0c] px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.08em] text-white">Do now</span>;
+  if (priority === "do_soon") return <span className="rounded-full bg-[#525252] px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.08em] text-white">Do soon</span>;
+  return <span className="rounded-full border border-black/[0.1] bg-[#f5f5f4] px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.08em] text-[#737373]">Optional</span>;
+}
+
+// ── BiomarkerResultCard ───────────────────────────────────────────────────────
+
+function BiomarkerResultCard({ bm }: { bm: WalletBiomarker }) {
+  const entries = bm.entries;
+  const latest = entries[entries.length - 1];
+  const numeric = entries.map((e) => e.numericValue).filter((v): v is number => v !== null);
+
+  const bgBorder: Record<BiomarkerResultStatus, string> = {
+    in_range: "bg-[#f0fdf4] border-green-100",
+    borderline: "bg-amber-50 border-amber-100",
+    out_of_range: "bg-red-50 border-red-100",
+    unknown: "bg-[#fafaf9] border-black/[0.06]",
+  };
+  const valueColor: Record<BiomarkerResultStatus, string> = {
+    in_range: "text-[#16a34a]",
+    borderline: "text-[#d97706]",
+    out_of_range: "text-[#dc2626]",
+    unknown: "text-[#404040]",
+  };
+
+  return (
+    <div className={`rounded-[14px] border p-3.5 ${bgBorder[latest.status] ?? bgBorder.unknown}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[0.875rem] font-semibold text-[#0c0c0c]">{bm.name}</p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-1.5">
+            {latest.value && (
+              <span className={`text-[0.9375rem] font-semibold tabular-nums ${valueColor[latest.status] ?? valueColor.unknown}`}>
+                {latest.value}
+              </span>
+            )}
+            {latest.date && <span className="text-[0.75rem] text-[#a3a3a3]">{latest.date}</span>}
+          </div>
+          {latest.fileName && <p className="mt-0.5 truncate text-[0.7rem] text-[#a3a3a3]">{latest.fileName}</p>}
+          {latest.status === "out_of_range" && (
+            <p className="mt-1.5 text-[0.75rem] font-medium text-[#dc2626]">Consult your doctor</p>
+          )}
+          {latest.status === "borderline" && (
+            <p className="mt-1.5 text-[0.75rem] text-[#d97706]">Monitor closely</p>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {numeric.length >= 2 ? (
+            <Sparkline entries={entries} status={latest.status} />
+          ) : (
+            <span className="max-w-[68px] text-right text-[0.7rem] leading-snug text-[#a3a3a3]">
+              Trend after next result
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BiomarkerGroupCard ────────────────────────────────────────────────────────
+
+function BiomarkerGroupCard({
+  group,
+  onUpload,
+}: {
+  group: DomainGroup;
+  onUpload: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const completed = group.biomarkers.filter((b) => b.entries.length > 0);
+  const missing = group.biomarkers.filter((b) => b.entries.length === 0);
+  const pct = group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
+
+  const CHIP_MAX = 4;
+  const visibleMissing = expanded ? missing : missing.slice(0, CHIP_MAX);
+  const hiddenCount = missing.length - CHIP_MAX;
+
+  const latestDate = completed
+    .flatMap((b) => b.entries)
+    .filter((e) => e.date)
+    .sort((a, b) => b.savedAt.localeCompare(a.savedAt))[0]?.date ?? null;
+
+  const statusText =
+    pct === 100 && group.total > 0 ? "Complete"
+    : completed.length > 0 ? `${completed.length} of ${group.total} added`
+    : "No results added yet";
+
+  const showToggle = completed.length > 3 || missing.length > CHIP_MAX;
+
+  return (
+    <div className="overflow-hidden rounded-[20px] border border-black/[0.08] bg-white shadow-[0_1px_0_rgba(0,0,0,0.03)]">
+      <div className="p-5 md:p-6">
+        {/* Header row */}
+        <div className="flex items-start gap-4">
+          <div className="relative shrink-0">
+            <ProgressRing value={pct} size={52} strokeWidth={4} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[0.6rem] font-semibold tabular-nums text-[#0c0c0c]">{pct}%</span>
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[1rem] font-semibold leading-snug tracking-tight text-[#0c0c0c]">{group.name}</h3>
+              <PriorityPill priority={group.priority} />
+            </div>
+            <p className="mt-0.5 text-[0.8125rem] text-[#737373]">{statusText}</p>
+            {latestDate && (
+              <p className="text-[0.75rem] text-[#a3a3a3]">Last result: {latestDate}</p>
+            )}
+          </div>
+          {showToggle && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="shrink-0 rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+            >
+              {expanded ? "Show less" : "Show all"}
+            </button>
+          )}
+        </div>
+
+        {/* Completed biomarkers */}
+        {completed.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#737373]">
+              What we know
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(expanded ? completed : completed.slice(0, 3)).map((bm) => (
+                <BiomarkerResultCard key={bm.key} bm={bm} />
+              ))}
+              {!expanded && completed.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="rounded-[14px] border border-dashed border-black/[0.1] p-3.5 text-left text-[0.8125rem] text-[#737373] transition-colors hover:text-[#0c0c0c]"
+                >
+                  +{completed.length - 3} more results
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Missing chips */}
+        {missing.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#737373]">
+              Still useful to add
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleMissing.map((bm) => (
+                <span
+                  key={bm.key}
+                  className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2.5 py-1 text-[0.8125rem] text-[#525252]"
+                >
+                  {bm.name}
+                </span>
+              ))}
+              {!expanded && hiddenCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="rounded-full border border-black/[0.08] bg-[#f0f0ef] px-2.5 py-1 text-[0.8125rem] text-[#737373] transition-colors hover:text-[#0c0c0c]"
+                >
+                  +{hiddenCount} more
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CTAs */}
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onUpload}
+            className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+          >
+            Upload result
+          </button>
+          <Link
+            href="/results/action-plan"
+            className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+          >
+            Plan test
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ScreeningCard ─────────────────────────────────────────────────────────────
+
+function ScreeningCard({
+  sc,
+  groupName,
+  plannedDate,
+}: {
+  sc: WalletScreening;
+  groupName: string;
+  plannedDate: string | null;
+}) {
+  const displayStatus =
+    sc.status === "done" ? "completed"
+    : sc.status === "planned" ? "planned"
+    : "recommended";
+
+  const dot = {
+    recommended: "bg-[#0c0c0c]",
+    planned: "bg-[#525252]",
+    completed: "bg-[#16a34a]",
+  }[displayStatus];
+
+  const labelText = { recommended: "Recommended", planned: "Planned", completed: "Completed" }[displayStatus];
+  const labelClass = { recommended: "text-[#0c0c0c]", planned: "text-[#525252]", completed: "text-[#16a34a]" }[displayStatus];
+  const isDone = displayStatus === "completed";
+  const cardBg = isDone ? "bg-[#fafaf9] border-black/[0.05]" : "bg-white border-black/[0.08]";
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+  return (
+    <div className={`rounded-[18px] border p-4 md:p-5 ${cardBg}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+            <p className={`text-[0.9375rem] font-semibold ${isDone ? "text-[#737373]" : "text-[#0c0c0c]"}`}>
+              {sc.name}
+            </p>
+            <span className={`text-[0.75rem] font-semibold ${labelClass}`}>{labelText}</span>
+          </div>
+
+          <div className="mt-1.5 space-y-0.5 pl-4">
+            {isDone && sc.result?.date && (
+              <p className="text-[0.8125rem] text-[#737373]">
+                Completed: {sc.result.date}
+                {sc.result.notes ? ` · ${sc.result.notes}` : ""}
+              </p>
+            )}
+            {displayStatus === "planned" && plannedDate && (
+              <p className="text-[0.8125rem] text-[#737373]">
+                Planned: {formatDate(plannedDate)}
+              </p>
+            )}
+            {displayStatus === "recommended" && (
+              <p className="text-[0.8125rem] text-[#a3a3a3]">
+                No result added yet · Recommended for: {groupName}
+              </p>
+            )}
+            {sc.result?.fileName && (
+              <p className="text-[0.75rem] text-[#a3a3a3]">{sc.result.fileName}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {!isDone && (
+            <Link
+              href="/results/action-plan"
+              className="rounded-[10px] bg-[#0c0c0c] px-3 py-1.5 text-[0.8125rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+            >
+              Add result
+            </Link>
+          )}
+          {isDone && (
+            <Link
+              href="/results/action-plan"
+              className="rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+            >
+              View details
+            </Link>
+          )}
+          {displayStatus === "planned" && (
+            <Link
+              href="/my-health-calendar"
+              className="rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+            >
+              View calendar
+            </Link>
+          )}
+          {displayStatus === "recommended" && (
+            <RemindMeButton checkKey={sc.checkKey} checkName={sc.name} />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -320,6 +642,21 @@ export default function HealthWalletPage() {
   const { data: recs, isLoading } = useRecommendations(userId);
 
   const [tab, setTab] = useState<Tab>("overview");
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [scPlannedDates, setScPlannedDates] = useState<Record<string, string>>({});
+
+  // Load screening calendar events from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const events = loadScreeningEvents();
+      const dates: Record<string, string> = {};
+      for (const [key, ev] of Object.entries(events)) {
+        dates[key] = ev.meta.plannedDateISO;
+      }
+      setScPlannedDates(dates);
+    } catch { /* ignore */ }
+  }, []);
 
   const [wallet, setWallet] = useState<{
     groups: DomainGroup[];
@@ -407,15 +744,18 @@ export default function HealthWalletPage() {
 
   const timelineEvents = useMemo((): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
+    // All individual biomarker entries (not just latest)
     for (const bm of wallet.biomarkers) {
-      if (bm.entries.length > 0) {
-        const latest = bm.entries[bm.entries.length - 1];
-        events.push({ label: bm.name, sub: latest.value ? `Value: ${latest.value}` : "Result saved", date: latest.savedAt, type: "completed" });
+      for (const entry of bm.entries) {
+        const sub = [entry.value, entry.fileName ? `Source: ${entry.fileName}` : null]
+          .filter(Boolean).join(" · ") || "Result saved";
+        events.push({ label: bm.name, sub, date: entry.savedAt, type: "completed" });
       }
     }
     for (const sc of wallet.screenings) {
       if (sc.status === "done" && sc.result) {
-        events.push({ label: sc.name, sub: "Screening completed", date: sc.result.savedAt, type: "completed" });
+        const sub = sc.result.notes ? `Completed · ${sc.result.notes}` : "Screening completed";
+        events.push({ label: sc.name, sub, date: sc.result.savedAt, type: "completed" });
       } else if (sc.status === "planned") {
         events.push({ label: sc.name, sub: "Screening planned", date: new Date().toISOString(), type: "planned" });
       }
@@ -491,7 +831,7 @@ export default function HealthWalletPage() {
   return (
     <ProtectedRouteGate
       requestedRoute="/results/overview"
-      allowStates={["AUTH_ACTIVE_DASHBOARD_READY", "AUTH_PROFILE_READY_RESULTS_UNSEEN", "AUTH_PROFILE_READY_NO_RECOMMENDATIONS"]}
+      allowStates={["AUTH_ACTIVE_DASHBOARD_READY", "AUTH_PROFILE_READY_RESULTS_UNSEEN", "AUTH_PROFILE_READY_NO_RECOMMENDATIONS", "ANON_COMPLETED_SURVEY_UNREGISTERED"]}
       loadingText={L.loading}
     >
       <div className="mx-auto max-w-[72rem] px-5 py-10 md:px-8">
@@ -690,192 +1030,51 @@ export default function HealthWalletPage() {
 
         {/* ── Tab: Biomarkers ── */}
         {!isLoading && tab === "biomarkers" && (
-          <div className="space-y-4">
-            {wallet.biomarkers.length === 0 && (
-              <p className="text-[0.9375rem] text-[#737373]">{L.noItems}</p>
-            )}
-
-            {wallet.groups.filter((g) => !g.isScreening && g.biomarkers.length > 0).map((group) => (
-              <div key={group.checkKey}>
-                <div className="mb-3 flex items-center gap-2">
-                  <h2 className="text-[0.875rem] font-semibold text-[#0c0c0c]">{group.name}</h2>
-                  {priorityPill(group.priority)}
-                  <span className="text-[0.8125rem] text-[#a3a3a3]">
-                    {group.completed}/{group.total}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {group.biomarkers.map((bm) => {
-                    const hasSaved = bm.entries.length > 0;
-                    const latest = hasSaved ? bm.entries[bm.entries.length - 1] : null;
-                    const latestStatus: BiomarkerResultStatus = latest?.status ?? "unknown";
-                    const consultLabel = hasSaved ? statusLabel(latestStatus, isDE) : null;
-
-                    return (
-                      <div
-                        key={bm.key}
-                        className={`rounded-[16px] border p-4 ${hasSaved ? bmCardClass(latestStatus) : "border-black/[0.08] bg-white"}`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {hasSaved && (
-                                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#0c0c0c] text-white">
-                                  <svg width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden>
-                                    <path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </span>
-                              )}
-                              <p className={`text-[0.9375rem] font-semibold ${hasSaved ? "text-[#0c0c0c]" : "text-[#0c0c0c]"}`}>
-                                {bm.name}
-                              </p>
-                              {statusBadge(hasSaved ? "done" : "missing")}
-
-                              {/* Out-of-range / borderline badge */}
-                              {consultLabel && (
-                                <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.08em] ${
-                                  latestStatus === "out_of_range"
-                                    ? "bg-[#dc2626] text-white"
-                                    : "bg-[#d97706] text-white"
-                                }`}>
-                                  {consultLabel}
-                                </span>
-                              )}
-                            </div>
-
-                            {hasSaved && latest ? (
-                              <div className="mt-2 space-y-1">
-                                <div className="flex flex-wrap gap-3 text-[0.8125rem] text-[#737373]">
-                                  {latest.value && <span>{L.value}: <span className="font-medium text-[#404040]">{latest.value}</span></span>}
-                                  {latest.date && <span>{L.savedDate}: <span className="font-medium text-[#404040]">{latest.date}</span></span>}
-                                  {latest.fileName && <span>📎 {latest.fileName}</span>}
-                                  {latest.notes && <span className="line-clamp-1 italic">{latest.notes}</span>}
-                                </div>
-
-                                {/* History entries when multiple exist */}
-                                {bm.entries.length > 1 && (
-                                  <p className="text-[0.75rem] text-[#a3a3a3]">
-                                    {bm.entries.length} {isDE ? "Einträge" : "entries"} —&nbsp;
-                                    {bm.entries.slice(-3, -1).reverse().map((e, i) => (
-                                      <span key={i}>{e.date ? `${e.date}: ` : ""}{e.value || "—"}{i < Math.min(bm.entries.length - 2, 2) - 1 ? ", " : ""}</span>
-                                    ))}
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="mt-1.5 text-[0.8125rem] text-[#a3a3a3]">
-                                {isDE ? "Empfohlen für:" : "Recommended for:"} {bm.groupName}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex shrink-0 flex-col items-end gap-2">
-                            {/* Sparkline trend */}
-                            {hasSaved && latest && (
-                              <Sparkline entries={bm.entries} status={latestStatus} />
-                            )}
-
-                            {!hasSaved && (
-                              <Link
-                                href="/results/action-plan"
-                                className="rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
-                              >
-                                {L.addResult}
-                              </Link>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+          <div className="space-y-5">
+            {wallet.groups.filter((g) => !g.isScreening && g.biomarkers.length > 0).length === 0 && (
+              <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
+                <p className="text-[0.9375rem] font-semibold text-[#404040]">No biomarker results added yet</p>
+                <p className="mt-1.5 text-[0.8125rem] text-[#737373]">
+                  Upload existing results or plan your first recommended test.
+                </p>
+                <div className="mt-4 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(true)}
+                    className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white hover:brightness-[0.88]"
+                  >
+                    Upload existing result
+                  </button>
+                  <Link
+                    href="/results/action-plan"
+                    className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] hover:text-[#0c0c0c]"
+                  >
+                    Plan your first test
+                  </Link>
                 </div>
               </div>
-            ))}
+            )}
+
+            {wallet.groups
+              .filter((g) => !g.isScreening && g.biomarkers.length > 0)
+              .map((group) => (
+                <BiomarkerGroupCard
+                  key={group.checkKey}
+                  group={group}
+                  onUpload={() => setShowUploadModal(true)}
+                />
+              ))}
           </div>
         )}
 
         {/* ── Tab: Screenings ── */}
         {!isLoading && tab === "screenings" && (
-          <div className="space-y-4">
-            {wallet.screenings.length === 0 && (
-              <p className="text-[0.9375rem] text-[#737373]">{L.noItems}</p>
-            )}
-
-            {wallet.groups.filter((g) => g.isScreening && g.screenings.length > 0).map((group) => (
-              <div key={group.checkKey}>
-                <div className="mb-3 flex items-center gap-2">
-                  <h2 className="text-[0.875rem] font-semibold text-[#0c0c0c]">{group.name}</h2>
-                  {priorityPill(group.priority)}
-                  <span className="text-[0.8125rem] text-[#a3a3a3]">{group.completed}/{group.total}</span>
-                </div>
-                <div className="space-y-2">
-                  {group.screenings.map((sc) => (
-                    <div
-                      key={sc.name}
-                      className={`rounded-[16px] border p-4 ${sc.status === "done" ? "border-black/[0.05] bg-[#fafaf9]" : "border-black/[0.08] bg-white"}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {sc.status === "done" && (
-                              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#0c0c0c] text-white">
-                                <svg width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden>
-                                  <path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </span>
-                            )}
-                            {sc.status === "planned" && (
-                              <span className="h-2 w-2 shrink-0 rounded-full bg-[#525252]" />
-                            )}
-                            <p className={`text-[0.9375rem] font-semibold ${sc.status === "done" ? "text-[#737373] line-through" : "text-[#0c0c0c]"}`}>
-                              {sc.name}
-                            </p>
-                            {statusBadge(sc.status)}
-                            <span className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[#737373]">
-                              GKV covered
-                            </span>
-                          </div>
-
-                          {sc.result ? (
-                            <div className="mt-2 flex flex-wrap gap-3 text-[0.8125rem] text-[#737373]">
-                              {sc.result.date && <span>{L.savedDate}: <span className="font-medium text-[#404040]">{sc.result.date}</span></span>}
-                              {sc.result.fileName && <span>📎 {sc.result.fileName}</span>}
-                              {sc.result.notes && <span className="line-clamp-1 italic">{sc.result.notes}</span>}
-                            </div>
-                          ) : (
-                            <p className="mt-1 text-[0.8125rem] text-[#a3a3a3]">
-                              {isDE ? "Empfohlen für:" : "Recommended for:"} {group.name}
-                            </p>
-                          )}
-                        </div>
-
-                        {sc.status !== "done" && (
-                          <Link
-                            href="/results/action-plan"
-                            className="shrink-0 rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
-                          >
-                            {sc.status === "planned" ? (isDE ? "Fortschritt" : "Update") : L.addResult}
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Tab: Timeline ── */}
-        {!isLoading && tab === "timeline" && (
-          <div>
-            {timelineEvents.length === 0 ? (
+          <div className="space-y-6">
+            {wallet.groups.filter((g) => g.isScreening && g.screenings.length > 0).length === 0 && (
               <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
-                <p className="text-[0.9375rem] text-[#737373]">{L.noEvents}</p>
-                <p className="mt-2 text-[0.8125rem] text-[#a3a3a3]">
-                  {isDE
-                    ? "Sobald Sie Ergebnisse hinzufügen oder Untersuchungen als abgeschlossen markieren, erscheinen sie hier."
-                    : "Once you add results or mark screenings complete, they'll appear here."}
+                <p className="text-[0.9375rem] font-semibold text-[#404040]">No screenings added yet</p>
+                <p className="mt-1.5 text-[0.8125rem] text-[#737373]">
+                  You can add past screenings or plan recommended ones.
                 </p>
                 <Link
                   href="/results/action-plan"
@@ -884,58 +1083,124 @@ export default function HealthWalletPage() {
                   {L.openActionPlan}
                 </Link>
               </div>
-            ) : (
-              <div className="relative space-y-0">
-                <div className="absolute left-[19px] top-4 bottom-4 w-px bg-black/[0.08]" aria-hidden />
-                <div className="space-y-3">
-                  {timelineEvents.map((ev, i) => {
-                    const dateStr = ev.date
-                      ? new Date(ev.date).toLocaleDateString(isDE ? "de-DE" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
-                      : "—";
-                    return (
-                      <div key={i} className="relative flex gap-4">
-                        <span
-                          className={`relative z-10 mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${
-                            ev.type === "completed"
-                              ? "border-black/[0.12] bg-[#0c0c0c] text-white"
-                              : ev.type === "planned"
-                                ? "border-black/[0.12] bg-[#525252] text-white"
-                                : "border-black/[0.1] bg-white text-[#737373]"
-                          }`}
-                        >
-                          {ev.type === "completed" ? (
-                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
-                              <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          ) : ev.type === "planned" ? (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-                              <circle cx="5" cy="5" r="3" stroke="currentColor" strokeWidth="1.4" />
-                            </svg>
-                          ) : (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-                              <path d="M5 2v4M5 7.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                            </svg>
-                          )}
-                        </span>
-                        <div className="flex-1 rounded-[16px] border border-black/[0.07] bg-white p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{ev.label}</p>
-                              <p className="mt-0.5 text-[0.8125rem] text-[#737373]">{ev.sub}</p>
-                            </div>
-                            <p className="shrink-0 text-[0.75rem] text-[#a3a3a3]">{dateStr}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+            )}
+
+            {wallet.groups
+              .filter((g) => g.isScreening && g.screenings.length > 0)
+              .map((group) => (
+                <div key={group.checkKey}>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <h2 className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{group.name}</h2>
+                    <PriorityPill priority={group.priority} />
+                    <span className="text-[0.8125rem] text-[#a3a3a3]">
+                      {group.completed}/{group.total} {group.completed === group.total && group.total > 0 ? "· Complete" : ""}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {group.screenings.map((sc) => {
+                      const scKey = sc.name.replace(/\s+/g, "_");
+                      const plannedDate = scPlannedDates[scKey] ?? null;
+                      return (
+                        <ScreeningCard
+                          key={sc.name}
+                          sc={sc}
+                          groupName={group.name}
+                          plannedDate={plannedDate}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+
+        {/* ── Tab: Timeline ── */}
+        {!isLoading && tab === "timeline" && (
+          <div>
+            {timelineEvents.length === 0 ? (
+              <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
+                <p className="text-[0.9375rem] font-semibold text-[#404040]">Your timeline will appear here</p>
+                <p className="mt-1.5 text-[0.8125rem] text-[#737373]">
+                  Once you add results or plan checks, each action will appear here in chronological order.
+                </p>
+                <div className="mt-4 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(true)}
+                    className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white hover:brightness-[0.88]"
+                  >
+                    Upload result
+                  </button>
+                  <Link
+                    href="/results/action-plan"
+                    className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] hover:text-[#0c0c0c]"
+                  >
+                    {L.openActionPlan}
+                  </Link>
                 </div>
               </div>
-            )}
+            ) : (() => {
+              // Group events by calendar date
+              const byDate: Record<string, TimelineEvent[]> = {};
+              for (const ev of timelineEvents) {
+                const key = ev.date
+                  ? new Date(ev.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                  : "Unknown date";
+                if (!byDate[key]) byDate[key] = [];
+                byDate[key].push(ev);
+              }
+              const dateGroups = Object.entries(byDate);
+
+              return (
+                <div className="space-y-6">
+                  {dateGroups.map(([dateLabel, evs]) => (
+                    <div key={dateLabel}>
+                      <p className="mb-3 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-[#a3a3a3]">
+                        {dateLabel}
+                      </p>
+                      <div className="relative space-y-2">
+                        <div className="absolute left-[15px] top-0 bottom-0 w-px bg-black/[0.07]" aria-hidden />
+                        {evs.map((ev, i) => (
+                          <div key={i} className="relative flex items-start gap-3">
+                            <span
+                              className={`relative z-10 mt-0.5 flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border ${
+                                ev.type === "completed"
+                                  ? "border-transparent bg-[#0c0c0c] text-white"
+                                  : "border-black/[0.1] bg-white text-[#737373]"
+                              }`}
+                            >
+                              {ev.type === "completed" ? (
+                                <svg width="9" height="7" viewBox="0 0 9 7" fill="none" aria-hidden>
+                                  <path d="M1 3.5l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              ) : (
+                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden>
+                                  <circle cx="4" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                                </svg>
+                              )}
+                            </span>
+                            <div className="flex-1 rounded-[14px] border border-black/[0.07] bg-white px-4 py-3">
+                              <p className="text-[0.875rem] font-semibold text-[#0c0c0c]">{ev.label}</p>
+                              <p className="mt-0.5 text-[0.8125rem] text-[#737373]">{ev.sub}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
       </div>
+
+      <UploadResultsModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      />
     </ProtectedRouteGate>
   );
 }

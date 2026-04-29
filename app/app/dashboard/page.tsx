@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+
+const UploadResultsModal = dynamic(
+  () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
+  { ssr: false },
+);
 import { useSession } from "next-auth/react";
 import { useDashboardSummary } from "@/lib/dashboard-summary/useDashboardSummary";
 import { useRecommendations } from "@/lib/recommendations/useRecommendations";
@@ -203,10 +209,22 @@ export default function DashboardPage() {
       ]
     : [];
 
+  // preventive_baseline is always the first step — prefer it over any other check when not done.
+  const allPathwayChecks = recs
+    ? [
+        ...(recs.pathway.next_month ?? []),
+        ...(recs.pathway.next_3_months ?? []),
+      ]
+    : [];
   const nextBestCheck: CheckRecommendation | null =
+    allPathwayChecks.find(
+      (c) => c.checkKey === "preventive_baseline" && c.status !== "completed" && c.status !== "result_uploaded"
+    ) ??
     recs?.pathway.next_month?.[0] ??
     recs?.pathway.next_3_months?.[0] ??
     null;
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   // ── Wallet data from localStorage ─────────────────────────────────────────
 
@@ -413,12 +431,13 @@ export default function DashboardPage() {
                   >
                     {isDE ? "Jetzt planen" : "Plan now"}
                   </Link>
-                  <Link
-                    href="/upload"
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(true)}
                     className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
                   >
                     {isDE ? "Ergebnis hochladen" : "Upload existing result"}
-                  </Link>
+                  </button>
                   <RemindMeButton
                     checkKey={nextBestCheck.checkKey}
                     checkName={nextBestCheck.checkName}
@@ -717,6 +736,15 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      <UploadResultsModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onSynced={() => {
+          // Refresh wallet state — modal stays open so user sees the done/summary step
+          setWallet({ biomarkers: [], screenings: [] });
+        }}
+      />
     </ProtectedRouteGate>
   );
 }

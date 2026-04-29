@@ -16,6 +16,29 @@ import type {
   RelevanceSignal,
 } from "./types";
 
+// Tests and checks that must never appear in recommendations.
+const EXCLUDED_TEST_NAMES = new Set([
+  "hCG",
+  "hcg",
+  "Human Chorionic Gonadotropin",
+  "Pregnancy Test",
+  "Pregnancy test",
+  "β-hCG",
+  "Beta-hCG",
+]);
+const EXCLUDED_CHECK_NAME_FRAGMENTS = ["pregnancy test", "pregnancy check", "pregnancy screening"];
+
+function isExcludedTest(name: string): boolean {
+  return EXCLUDED_TEST_NAMES.has(name) ||
+    name.toLowerCase().includes("hcg") ||
+    name.toLowerCase().includes("pregnancy test");
+}
+
+function isExcludedCheck(displayName: string): boolean {
+  const lower = displayName.toLowerCase();
+  return EXCLUDED_CHECK_NAME_FRAGMENTS.some((f) => lower.includes(f));
+}
+
 const STRENGTH_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
 
 function scoreToImpact(score: number): ImpactLevel {
@@ -195,6 +218,7 @@ export function resolveChecks(
   for (const [checkKey, acc] of byCheck) {
     const canon = canonicalByKey.get(checkKey);
     if (!canon) continue; // only return canonical checks
+    if (isExcludedCheck(canon.display_name ?? "")) continue;
 
     const baseScore = acc.totalBaseScore;
     const signalBoost = signalBoostByCheck.get(checkKey) ?? 0;
@@ -223,7 +247,8 @@ export function resolveChecks(
       let catCount = 0;
       for (const [category, names] of catMap) {
         if (catCount >= 6) break;
-        const tests = Array.from(names);
+        const tests = Array.from(names).filter((t) => !isExcludedTest(t));
+        if (!tests.length) continue;
         includedTestsByCategory.push({
           category,
           tests: tests.slice(0, 12),
@@ -274,6 +299,52 @@ export function resolveChecks(
       includedTestsByCategory,
       matchedBiomarkers,
     });
+  }
+
+  // Guarantee preventive_baseline is always present — it's the universal starting point
+  // for any user who hasn't completed it, regardless of which rules matched.
+  const UNIVERSAL_BASELINE_KEY = "preventive_baseline";
+  if (!result.some((c) => c.checkKey === UNIVERSAL_BASELINE_KEY)) {
+    const canon = canonicalByKey.get(UNIVERSAL_BASELINE_KEY);
+    if (canon && !isExcludedCheck(canon.display_name ?? "")) {
+      // Fetch its included tests so the card renders properly.
+      const baselineTestRows = getIncludedTestsForChecks([UNIVERSAL_BASELINE_KEY]);
+      const catMap = new Map<string, Set<string>>();
+      for (const t of baselineTestRows) {
+        if (isExcludedTest(t.biomarker_name)) continue;
+        if (!catMap.has(t.included_category)) catMap.set(t.included_category, new Set());
+        catMap.get(t.included_category)!.add(t.biomarker_name);
+      }
+      const includedTestsByCategory: IncludedTestsCategory[] = [];
+      const includedTestsPreview: string[] = [];
+      for (const [category, names] of catMap) {
+        const tests = Array.from(names).slice(0, 12);
+        includedTestsByCategory.push({ category, tests });
+        for (const t of tests) {
+          if (includedTestsPreview.length >= 3) break;
+          includedTestsPreview.push(t);
+        }
+      }
+      result.unshift({
+        checkKey: UNIVERSAL_BASELINE_KEY,
+        checkName: canon.display_name,
+        isScreening: false,
+        priorityRank: 0,
+        impact: "HIGH IMPACT",
+        // Score of 10 guarantees current_month placement in assignTimeframes.
+        score: 10,
+        recommendedTiming: canon.recommended_timing,
+        shortSummary: canon.short_summary,
+        whyForYou: "A preventive health baseline blood test is the essential first step for every woman — it establishes your reference values and surfaces any early changes before symptoms appear.",
+        whyNow: canon.priority_rule,
+        canWait: canon.what_can_wait,
+        nextAction: canon.next_action,
+        relevanceSignals: [],
+        includedTestsPreview,
+        includedTestsByCategory,
+        matchedBiomarkers: [],
+      });
+    }
   }
 
   // Sort: by score desc, then canonical ui_priority_order

@@ -455,9 +455,6 @@ export default function HealthJourneyPage() {
               {ctaLabel}
             </button>
             {startError && <p className="mt-3 text-[0.8125rem] text-red-600">{startError}</p>}
-            <p className="mt-3 text-[0.8125rem] text-[#c4c4c4]">
-              {isDE ? "Kein Konto erforderlich" : "No account required"}
-            </p>
           </div>
         </section>
 

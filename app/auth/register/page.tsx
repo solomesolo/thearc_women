@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
-import { ENGINE_A_STORAGE, apiBuildProfile, apiClaimSession, apiGetLatestProfile, apiGetLatestQuestionnaireSession } from "@/lib/profile-engine-a/frontendClient";
+import { ENGINE_A_STORAGE, apiBuildProfile, apiClaimSession, apiGetLatestQuestionnaireSession } from "@/lib/profile-engine-a/frontendClient";
+import { invalidateNavCache } from "@/lib/navigation/useNavigationDecision";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,20 +51,24 @@ export default function RegisterPage() {
           const built = await apiBuildProfile(sessionId).catch(() => null);
           const profileSnapshotId = built?.profile_snapshot_id as string | undefined;
           if (profileSnapshotId) {
-            // Re-run recommendations + status + score under the auth email so
-            // RecommendationInstance records exist for this user on first dashboard visit.
-            await fetch(`/api/recommendations/run/${encodeURIComponent(profileSnapshotId)}`, { method: "POST" }).catch(() => null);
-            await fetch("/api/status/recalculate", { method: "POST" }).catch(() => null);
-            await fetch("/api/health-score/calculate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({}),
-            }).catch(() => null);
+            // Re-run recommendations + status + score in parallel under the auth email.
+            await Promise.all([
+              fetch(`/api/recommendations/run/${encodeURIComponent(profileSnapshotId)}`, { method: "POST" }).catch(() => null),
+              fetch("/api/status/recalculate", { method: "POST" }).catch(() => null),
+              fetch("/api/health-score/calculate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({}),
+              }).catch(() => null),
+            ]);
           }
+          await fetch("/api/navigation/mark-results-seen", { method: "POST" }).catch(() => null);
         }
-        router.push("/results/overview");
+        invalidateNavCache();
+        router.push("/app/dashboard");
       } else {
-        router.push("/results/overview");
+        invalidateNavCache();
+        router.push("/app/dashboard");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -112,12 +117,9 @@ export default function RegisterPage() {
           }
         }
 
-        const active = await apiGetLatestProfile().catch(() => ({ profile: null }));
-        if (active.profile) {
-          router.push("/app/dashboard");
-          return;
-        }
-        router.push("/results/overview");
+        await fetch("/api/navigation/mark-results-seen", { method: "POST" }).catch(() => null);
+        invalidateNavCache();
+        router.push("/app/dashboard");
       } else {
         setError("Incorrect email or password.");
       }

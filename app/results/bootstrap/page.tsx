@@ -11,7 +11,6 @@ type Step =
   | "profile"
   | "recommendations"
   | "status"
-  | "score"
   | "timeline"
   | "summary"
   | "done";
@@ -19,9 +18,8 @@ type Step =
 const STEPS: Array<{ key: Exclude<Step, "done">; title: string; detail: string }> = [
   { key: "profile", title: "Profile", detail: "Turn your answers into a consistent profile snapshot" },
   { key: "recommendations", title: "Recommendations", detail: "Generate your personalized test roadmap" },
-  { key: "status", title: "Status", detail: "Mark checks as missing, outdated, or current" },
-  { key: "score", title: "Health score", detail: "Compute your completeness score" },
-  { key: "timeline", title: "Upcoming checks", detail: "Place items into a practical schedule" },
+  { key: "status", title: "Analysis", detail: "Calculate your health status and completeness score" },
+  { key: "timeline", title: "Schedule", detail: "Build your upcoming checks timeline" },
   { key: "summary", title: "Dashboard", detail: "Assemble everything into your dashboard view" },
 ];
 
@@ -54,8 +52,11 @@ export default function ResultsBootstrapPage() {
   // Watchdog: redirect as soon as step reaches "done", even if the main effect's
   // cancelled flag was set by React StrictMode's double-invoke cleanup.
   useEffect(() => {
-    if (step === "done") router.replace("/results/overview");
-  }, [step, router]);
+    if (step === "done") {
+      const dest = session?.user?.email ? "/app/dashboard" : "/results/overview";
+      router.replace(dest);
+    }
+  }, [step, router, session?.user?.email]);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,33 +91,42 @@ export default function ResultsBootstrapPage() {
           if (!r.ok) throw new Error("recommendations_failed");
         });
 
+        // Run status + score in parallel — they're independent of each other.
         setStep("status");
-        await fetch("/api/status/recalculate", { method: "POST", headers: { "x-arc-anon-id": anonId } }).then((r) => {
-          if (!r.ok) throw new Error("status_failed");
-        });
+        await Promise.all([
+          fetch("/api/status/recalculate", { method: "POST", headers: { "x-arc-anon-id": anonId } }).then((r) => {
+            if (!r.ok) throw new Error("status_failed");
+          }),
+          fetch("/api/health-score/calculate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-arc-anon-id": anonId },
+            body: JSON.stringify({}),
+          }).then((r) => {
+            if (!r.ok) throw new Error("score_failed");
+          }),
+        ]);
 
-        setStep("score");
-        await fetch("/api/health-score/calculate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-arc-anon-id": anonId },
-          body: JSON.stringify({}),
-        }).then((r) => {
-          if (!r.ok) throw new Error("score_failed");
-        });
-
+        // Run timeline + summary in parallel.
         setStep("timeline");
-        await fetch(`/api/timeline/${encodeURIComponent(effectiveCaller)}`, {
-          headers: { "x-arc-anon-id": anonId },
-          cache: "no-store",
-        }).then((r) => {
-          if (!r.ok) throw new Error("timeline_failed");
-        });
+        await Promise.all([
+          fetch(`/api/timeline/${encodeURIComponent(effectiveCaller)}`, {
+            headers: { "x-arc-anon-id": anonId },
+            cache: "no-store",
+          }).catch(() => null),
+          fetch("/api/dashboard/summary", { headers: { "x-arc-anon-id": anonId }, cache: "no-store" }).catch(() => null),
+        ]);
 
+        // Mark results as seen so Dashboard is the default landing from this point forward.
         setStep("summary");
-        await fetch("/api/dashboard/summary", { headers: { "x-arc-anon-id": anonId }, cache: "no-store" }).catch(() => null);
+        await fetch("/api/navigation/mark-results-seen", {
+          method: "POST",
+          headers: { "x-arc-anon-id": anonId },
+        }).catch(() => null);
 
         setStep("done");
-        if (!cancelled) router.replace("/results/overview");
+        // Authenticated users go straight to Dashboard; anon users see results overview.
+        const dest = session?.user?.email ? "/app/dashboard" : "/results/overview";
+        if (!cancelled) router.replace(dest);
       } catch (e: any) {
         if (cancelled) return;
         setError(e?.message ? String(e.message) : "bootstrap_failed");
@@ -139,14 +149,12 @@ export default function ResultsBootstrapPage() {
       : step === "recommendations"
         ? "Generating recommendations…"
         : step === "status"
-          ? "Calculating your test status…"
-          : step === "score"
-            ? "Computing your health score…"
-            : step === "timeline"
-              ? "Building your timeline…"
-              : step === "summary"
-                ? "Finalizing your dashboard…"
-                : "Done";
+          ? "Analysing your health data…"
+          : step === "timeline"
+            ? "Building your timeline…"
+            : step === "summary"
+              ? "Finalizing your dashboard…"
+              : "Done";
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">

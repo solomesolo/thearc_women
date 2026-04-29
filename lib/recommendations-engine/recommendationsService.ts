@@ -116,12 +116,21 @@ function assignTimeframes(checksSorted: CheckRecommendation[]): PathwayPayload {
   };
 
   for (const c of checksSorted) {
-    // Default assignment by score.
     let tf: PathwayTimeframe;
-    if (c.score >= 8) tf = "next_month";
-    else if (c.score >= 5) tf = "next_3_months";
-    else if (c.score >= 3) tf = "next_6_months";
-    else tf = "optional_later";
+
+    // preventive_baseline is always the first step — keep it in next_month unless done.
+    if (c.checkKey === "preventive_baseline") {
+      const isDone = c.status === "completed" || c.status === "result_uploaded" || c.status === "planned";
+      tf = isDone ? (c.score >= 8 ? "next_month" : c.score >= 5 ? "next_3_months" : "next_6_months") : "next_month";
+    } else if (c.score >= 8) {
+      tf = "next_month";
+    } else if (c.score >= 5) {
+      tf = "next_3_months";
+    } else if (c.score >= 3) {
+      tf = "next_6_months";
+    } else {
+      tf = "optional_later";
+    }
 
     (c as CheckRecommendation).timeframe = tf;
     buckets[tf].push(c);
@@ -142,6 +151,13 @@ function assignTimeframes(checksSorted: CheckRecommendation[]): PathwayPayload {
   capAndOverflow("next_6_months", 4, "next_year");
   capAndOverflow("next_year", 4, "optional_later");
   // optional_later is unbounded but UI can collapse.
+
+  // Guarantee preventive_baseline is always first in next_month when not done.
+  const bIdx = buckets.next_month.findIndex((c) => c.checkKey === "preventive_baseline");
+  if (bIdx > 0) {
+    const [baseline] = buckets.next_month.splice(bIdx, 1);
+    buckets.next_month.unshift(baseline);
+  }
 
   return buckets;
 }
@@ -427,11 +443,18 @@ async function buildFixedSpecResponse(params: {
     return (tfOrder[ta] ?? 9) - (tfOrder[tb] ?? 9) || a.priorityRank - b.priorityRank;
   });
   const globalSeenBiomarkers = new Set<string>();
+  const EXCLUDED_BIOMARKERS = new Set(["hcg", "pregnancy test", "β-hcg", "beta-hcg", "human chorionic gonadotropin"]);
+  const isExcludedBiomarker = (name: string) => {
+    const l = name.trim().toLowerCase();
+    return EXCLUDED_BIOMARKERS.has(l) || l.includes("hcg") || l.includes("pregnancy test");
+  };
+
   const uniq = (names: string[]): string[] => {
     const out: string[] = [];
     for (const n of names) {
       const key = n.trim().toLowerCase();
       if (!key) continue;
+      if (isExcludedBiomarker(n)) continue;
       if (globalSeenBiomarkers.has(key)) continue;
       globalSeenBiomarkers.add(key);
       out.push(n);

@@ -75,6 +75,7 @@ export function CollapsibleCheckCard({
   expanded,
   onToggle,
   onUpdateStatus,
+  onUploadResult,
   cardRef,
 }: {
   check: CheckRecommendation;
@@ -82,6 +83,7 @@ export function CollapsibleCheckCard({
   expanded: boolean;
   onToggle: () => void;
   onUpdateStatus: (key: string, status: CheckStatus) => void;
+  onUploadResult?: () => void;
   cardRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const priority = priorityFromFinal(finalRec, check);
@@ -195,6 +197,16 @@ export function CollapsibleCheckCard({
               checkKey={check.checkKey}
               checkName={check.checkName}
             />
+          )}
+
+          {onUploadResult && !isDone && (
+            <button
+              type="button"
+              onClick={onUploadResult}
+              className="rounded-[12px] border border-black/[0.1] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
+            >
+              Upload result
+            </button>
           )}
 
           <button
