@@ -93,7 +93,7 @@ interface DomainGroup {
   missing: number;
 }
 
-type Tab = "overview" | "biomarkers" | "screenings" | "timeline";
+type Tab = "biomarkers" | "screenings" | "timeline";
 
 interface TimelineEvent {
   label: string;
@@ -641,7 +641,7 @@ export default function HealthWalletPage() {
   const userId = session?.user?.email ?? (typeof window !== "undefined" ? `anon:${getOrCreateAnonId()}` : null);
   const { data: recs, isLoading } = useRecommendations(userId);
 
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("biomarkers");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [scPlannedDates, setScPlannedDates] = useState<Record<string, string>>({});
 
@@ -774,7 +774,6 @@ export default function HealthWalletPage() {
     missing: isDE ? "Fehlend" : "Missing",
     planned: isDE ? "Geplant" : "Planned",
     criticalMissing: isDE ? "Kritisch fehlend" : "Critical missing",
-    overviewTab: isDE ? "Übersicht" : "Overview",
     biomarkersTab: isDE ? "Biomarker" : "Biomarkers",
     screeningsTab: "Screenings",
     timelineTab: "Timeline",
@@ -806,7 +805,6 @@ export default function HealthWalletPage() {
   };
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "overview", label: L.overviewTab },
     { id: "biomarkers", label: L.biomarkersTab },
     { id: "screenings", label: L.screeningsTab },
     { id: "timeline", label: L.timelineTab },
@@ -907,124 +905,6 @@ export default function HealthWalletPage() {
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-24 animate-pulse rounded-[20px] bg-[#f0f0ef]" />
             ))}
-          </div>
-        )}
-
-        {/* ── Tab: Overview ── */}
-        {!isLoading && tab === "overview" && (
-          <div className="space-y-4">
-            {wallet.groups.length === 0 && (
-              <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
-                <p className="text-[0.9375rem] text-[#737373]">{L.empty}</p>
-                <Link href="/health-journey" className="mt-4 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white hover:brightness-[0.9]">
-                  {isDE ? "Assessment starten" : "Start assessment"}
-                </Link>
-              </div>
-            )}
-
-            {wallet.groups.map((group) => {
-              const pct = group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
-              const statusLabel =
-                group.completed === group.total && group.total > 0
-                  ? isDE ? "Vollständig" : "Complete"
-                  : group.completed > 0
-                    ? L.partiallyComplete
-                    : L.notStarted;
-
-              const previewItems = group.isScreening
-                ? group.screenings.slice(0, 4).map((s) => s.name)
-                : group.biomarkers.slice(0, 4).map((b) => b.name);
-
-              const nextMissing = group.isScreening
-                ? group.screenings.find((s) => s.status === "missing")?.name
-                : group.biomarkers.find((b) => b.entries.length === 0)?.name;
-
-              return (
-                <div key={group.checkKey} className="rounded-[20px] border border-black/[0.08] bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.03)] md:p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {priorityPill(group.priority)}
-                        <span className="text-[0.625rem] font-semibold uppercase tracking-[0.1em] text-[#a3a3a3]">
-                          {group.isScreening ? L.groupScreenings : L.groupBiomarkers}
-                        </span>
-                      </div>
-                      <h3 className="mt-2 text-[1rem] font-semibold tracking-tight text-[#0c0c0c]">
-                        {group.name}
-                      </h3>
-
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {previewItems.map((item) => (
-                          <span key={item} className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2.5 py-0.5 text-[0.75rem] text-[#525252]">
-                            {item}
-                          </span>
-                        ))}
-                        {group.total > 4 && (
-                          <span className="rounded-full border border-black/[0.08] bg-[#fafaf9] px-2.5 py-0.5 text-[0.75rem] text-[#a3a3a3]">
-                            +{group.total - 4} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-[1.5rem] font-semibold tabular-nums leading-none text-[#0c0c0c]">
-                        {group.completed}/{group.total}
-                      </p>
-                      <p className="mt-0.5 text-[0.75rem] text-[#737373]">{statusLabel}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 h-1.5 w-full rounded-full bg-[#f0f0ef]">
-                    <div className="h-1.5 rounded-full bg-[#0c0c0c] transition-all duration-700" style={{ width: `${pct}%` }} />
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap gap-3 text-[0.8125rem] text-[#737373]">
-                      <span>{group.completed} {L.completed.toLowerCase()}</span>
-                      {group.planned > 0 && <span>{group.planned} {L.planned.toLowerCase()}</span>}
-                      <span>{group.missing} {L.missing.toLowerCase()}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {nextMissing && (
-                        <p className="text-[0.8125rem] text-[#737373]">
-                          {isDE ? "Nächste:" : "Next:"} <span className="font-medium text-[#0c0c0c]">{nextMissing}</span>
-                        </p>
-                      )}
-                      <RemindMeButton
-                        checkKey={group.checkKey}
-                        checkName={group.name}
-                        isDE={isDE}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setTab(group.isScreening ? "screenings" : "biomarkers")}
-                        className="rounded-[10px] border border-black/[0.1] px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
-                      >
-                        {L.viewDetails}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {wallet.groups.length > 0 && (
-              <Link
-                href="/results/action-plan"
-                className="flex items-center justify-between rounded-[20px] border border-black/[0.08] bg-[#0c0c0c] p-5 text-white shadow-[0_1px_0_rgba(0,0,0,0.03)] transition-[filter] hover:brightness-[0.88]"
-              >
-                <div>
-                  <p className="text-[0.9375rem] font-semibold">{L.openActionPlan}</p>
-                  <p className="mt-0.5 text-[0.8125rem] text-white/60">
-                    {isDE ? "Labs, Heimtests, Arztbesuche planen" : "Plan labs, home tests, doctor visits"}
-                  </p>
-                </div>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="shrink-0 opacity-60">
-                  <path d="M4 10h12M11 4l6 6-6 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-            )}
           </div>
         )}
 
