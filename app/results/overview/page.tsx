@@ -95,6 +95,36 @@ interface DomainGroup {
 
 type Tab = "biomarkers" | "screenings" | "timeline";
 
+// ── Staleness helpers ─────────────────────────────────────────────────────────
+
+const CHECK_KEY_RETEST_MONTHS: Record<string, number> = {
+  preventive_baseline:     12,
+  iron_panel:               6,
+  thyroid_panel:           12,
+  hormone_panel:            6,
+  cardiovascular_panel:    12,
+  metabolic_health_panel:   6,
+  std_sti_screen:          12,
+  cervical_screening:      36,
+  breast_health_check:     24,
+  colorectal_cancer_screen:120,
+  bone_density_scan:       24,
+  mental_health_assessment:12,
+  sleep_assessment:        12,
+  dermatology_screening:   12,
+  dental_health_check:      6,
+  eye_health_check:        24,
+  hearing_test:            24,
+};
+
+function monthsSinceDate(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  return (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+}
+
 interface TimelineEvent {
   label: string;
   sub: string;
@@ -173,10 +203,14 @@ function PriorityPill({ priority }: { priority: Priority }) {
 
 // ── BiomarkerResultCard ───────────────────────────────────────────────────────
 
-function BiomarkerResultCard({ bm }: { bm: WalletBiomarker }) {
+function BiomarkerResultCard({ bm, retestMonths = 12 }: { bm: WalletBiomarker; retestMonths?: number }) {
   const entries = bm.entries;
   const latest = entries[entries.length - 1];
   const numeric = entries.map((e) => e.numericValue).filter((v): v is number => v !== null);
+
+  const monthsAgo = monthsSinceDate(latest.date);
+  const isOverdue = monthsAgo !== null && monthsAgo > retestMonths;
+  const overdueBy = isOverdue && monthsAgo !== null ? monthsAgo - retestMonths : 0;
 
   const bgBorder: Record<BiomarkerResultStatus, string> = {
     in_range: "bg-[#f0fdf4] border-green-100",
@@ -192,7 +226,7 @@ function BiomarkerResultCard({ bm }: { bm: WalletBiomarker }) {
   };
 
   return (
-    <div className={`rounded-[14px] border p-3.5 ${bgBorder[latest.status] ?? bgBorder.unknown}`}>
+    <div className={`rounded-[14px] border p-3.5 ${isOverdue ? "bg-amber-50 border-amber-200" : (bgBorder[latest.status] ?? bgBorder.unknown)}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[0.875rem] font-semibold text-[#0c0c0c]">{bm.name}</p>
@@ -204,11 +238,26 @@ function BiomarkerResultCard({ bm }: { bm: WalletBiomarker }) {
             )}
             {latest.date && <span className="text-[0.75rem] text-[#a3a3a3]">{latest.date}</span>}
           </div>
-          {latest.fileName && <p className="mt-0.5 truncate text-[0.7rem] text-[#a3a3a3]">{latest.fileName}</p>}
-          {latest.status === "out_of_range" && (
+
+          {/* Staleness signals */}
+          {isOverdue ? (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" className="shrink-0 text-[#d97706]">
+                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.25"/>
+                <path d="M6 3.5v3l1.5 1.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+              </svg>
+              <span className="text-[0.75rem] font-semibold text-[#92400e]">
+                {overdueBy}m overdue — retest recommended
+              </span>
+            </div>
+          ) : monthsAgo !== null && monthsAgo >= 6 ? (
+            <p className="mt-1 text-[0.72rem] text-[#a3a3a3]">{monthsAgo} months ago</p>
+          ) : null}
+
+          {latest.status === "out_of_range" && !isOverdue && (
             <p className="mt-1.5 text-[0.75rem] font-medium text-[#dc2626]">Consult your doctor</p>
           )}
-          {latest.status === "borderline" && (
+          {latest.status === "borderline" && !isOverdue && (
             <p className="mt-1.5 text-[0.75rem] text-[#d97706]">Monitor closely</p>
           )}
         </div>
@@ -237,9 +286,19 @@ function BiomarkerGroupCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
+  const retestMonths = CHECK_KEY_RETEST_MONTHS[group.checkKey] ?? 12;
   const completed = group.biomarkers.filter((b) => b.entries.length > 0);
   const missing = group.biomarkers.filter((b) => b.entries.length === 0);
   const pct = group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
+
+  // Panel-level staleness: count biomarkers whose latest entry is overdue
+  const overdueCompleted = completed.filter((b) => {
+    const latest = b.entries[b.entries.length - 1];
+    const months = monthsSinceDate(latest?.date ?? "");
+    return months !== null && months > retestMonths;
+  });
+  const panelOverdue = overdueCompleted.length > 0;
+  const allOverdue = overdueCompleted.length === completed.length && completed.length > 0;
 
   const CHIP_MAX = 4;
   const visibleMissing = expanded ? missing : missing.slice(0, CHIP_MAX);
@@ -258,8 +317,30 @@ function BiomarkerGroupCard({
   const showToggle = completed.length > 3 || missing.length > CHIP_MAX;
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-black/[0.08] bg-white shadow-[0_1px_0_rgba(0,0,0,0.03)]">
+    <div className={`overflow-hidden rounded-[20px] border bg-white shadow-[0_1px_0_rgba(0,0,0,0.03)] ${panelOverdue ? "border-amber-200" : "border-black/[0.08]"}`}>
       <div className="p-5 md:p-6">
+
+        {/* Panel-level overdue banner */}
+        {panelOverdue && (
+          <div className="mb-4 flex items-start gap-3 rounded-[14px] border border-amber-200 bg-amber-50 px-4 py-3">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-[#d97706]">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M8 5v4l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <div className="min-w-0">
+              <p className="text-[0.8125rem] font-semibold text-[#92400e]">
+                {allOverdue
+                  ? `Results are outdated — this panel should be redone`
+                  : `${overdueCompleted.length} result${overdueCompleted.length > 1 ? "s" : ""} need retesting`}
+              </p>
+              <p className="mt-0.5 text-[0.775rem] text-[#92400e]">
+                Recommended every {retestMonths} month{retestMonths > 1 ? "s" : ""}.
+                Upload new results or book a test below.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header row */}
         <div className="flex items-start gap-4">
           <div className="relative shrink-0">
@@ -297,7 +378,7 @@ function BiomarkerGroupCard({
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(expanded ? completed : completed.slice(0, 3)).map((bm) => (
-                <BiomarkerResultCard key={bm.key} bm={bm} />
+                <BiomarkerResultCard key={bm.key} bm={bm} retestMonths={retestMonths} />
               ))}
               {!expanded && completed.length > 3 && (
                 <button
@@ -367,26 +448,44 @@ function ScreeningCard({
   sc,
   groupName,
   plannedDate,
+  retestMonths = 12,
 }: {
   sc: WalletScreening;
   groupName: string;
   plannedDate: string | null;
+  retestMonths?: number;
 }) {
   const displayStatus =
     sc.status === "done" ? "completed"
     : sc.status === "planned" ? "planned"
     : "recommended";
 
+  const isDone = displayStatus === "completed";
+
+  // Staleness for completed screenings
+  const monthsAgo = isDone && sc.result?.date ? monthsSinceDate(sc.result.date) : null;
+  const isOverdue = monthsAgo !== null && monthsAgo > retestMonths;
+  const overdueBy = isOverdue && monthsAgo !== null ? monthsAgo - retestMonths : 0;
+
   const dot = {
     recommended: "bg-[#0c0c0c]",
     planned: "bg-[#525252]",
-    completed: "bg-[#16a34a]",
+    completed: isOverdue ? "bg-[#d97706]" : "bg-[#16a34a]",
   }[displayStatus];
 
-  const labelText = { recommended: "Recommended", planned: "Planned", completed: "Completed" }[displayStatus];
-  const labelClass = { recommended: "text-[#0c0c0c]", planned: "text-[#525252]", completed: "text-[#16a34a]" }[displayStatus];
-  const isDone = displayStatus === "completed";
-  const cardBg = isDone ? "bg-[#fafaf9] border-black/[0.05]" : "bg-white border-black/[0.08]";
+  const labelText = {
+    recommended: "Recommended",
+    planned: "Planned",
+    completed: isOverdue ? `Done · ${overdueBy}m overdue` : "Completed",
+  }[displayStatus];
+  const labelClass = {
+    recommended: "text-[#0c0c0c]",
+    planned: "text-[#525252]",
+    completed: isOverdue ? "text-[#d97706]" : "text-[#16a34a]",
+  }[displayStatus];
+  const cardBg = isDone
+    ? isOverdue ? "bg-amber-50 border-amber-200" : "bg-[#fafaf9] border-black/[0.05]"
+    : "bg-white border-black/[0.08]";
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -408,6 +507,11 @@ function ScreeningCard({
               <p className="text-[0.8125rem] text-[#737373]">
                 Completed: {sc.result.date}
                 {sc.result.notes ? ` · ${sc.result.notes}` : ""}
+              </p>
+            )}
+            {isOverdue && (
+              <p className="text-[0.775rem] font-semibold text-[#92400e]">
+                Due for repeat — recommended every {retestMonths} months
               </p>
             )}
             {displayStatus === "planned" && plannedDate && (
@@ -986,6 +1090,7 @@ export default function HealthWalletPage() {
                           sc={sc}
                           groupName={group.name}
                           plannedDate={plannedDate}
+                          retestMonths={CHECK_KEY_RETEST_MONTHS[group.checkKey] ?? 12}
                         />
                       );
                     })}
