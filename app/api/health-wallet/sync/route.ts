@@ -3,10 +3,15 @@
  * Body: { documentId: string }
  *
  * Reads HealthObservation rows for the given document, maps them to
- * BiomarkerWalletEntry objects (for localStorage) and upserts UserCheckResult
- * + UserCheckStatus DB records.
+ * WalletSyncEntry objects (for localStorage) and writes:
+ *   - UserCheckStatus  upsert  → only for observations that match a known panel
+ *   - UserCheckResult  create  → for ALL observations (panel-linked or "additional")
  *
- * Returns: { walletEntries: WalletSyncEntry[], checkKeys: string[], summary: UploadSummary }
+ * Observations whose bin does not map to a known panel are stored with
+ * checkKey = "additional_biomarkers" and isAdditional = true.
+ * No UserCheckStatus row is created for them.
+ *
+ * Returns: { walletEntries: WalletSyncEntry[], checkKeys: string[], additionalCount: number, summary: UploadSummary }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -25,6 +30,10 @@ export interface WalletSyncEntry {
   fileName: string | null;
   fileType: string | null;
   status: BiomarkerResultStatus;
+  /** Null for "additional" biomarkers not linked to a recommended panel */
+  panelKey: string | null;
+  /** True when this biomarker has no matching recommended panel */
+  isAdditional: boolean;
   /** Months since the test date. null if no date on file. */
   monthsSinceTest: number | null;
   /** True if monthsSinceTest > recommended retesting interval for this bin */
@@ -36,12 +45,13 @@ export interface WalletSyncEntry {
 
 export interface UploadSummary {
   totalAdded: number;
+  additionalCount: number;
   outOfRange: { name: string; value: string; date: string }[];
   borderline: { name: string; value: string; date: string }[];
   overdue: { name: string; monthsOverdue: number; recommendedEveryMonths: number }[];
 }
 
-// Coarse bin slug → canonical check_key mapping
+// Coarse bin slug → canonical check_key mapping (only known panels)
 const BIN_TO_CHECK_KEY: Record<string, string> = {
   general_labs:         "preventive_baseline",
   haematology:          "preventive_baseline",
@@ -75,6 +85,9 @@ const BIN_TO_CHECK_KEY: Record<string, string> = {
   vision:               "eye_health_check",
   hearing:              "hearing_test",
 };
+
+// check_key used for observations that don't belong to any recommended panel
+const ADDITIONAL_CHECK_KEY = "additional_biomarkers";
 
 // Recommended retesting interval in months per bin
 const BIN_RETEST_MONTHS: Record<string, number> = {
@@ -155,7 +168,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Document not found" }, { status: 404 });
   }
 
-  // Fetch observations
+  // Fetch all observations for this document
   const observations = await prisma.healthObservation.findMany({
     where: { documentId, userEmail },
     orderBy: [{ observationDate: "desc" }, { canonicalMetricName: "asc" }],
@@ -165,14 +178,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       walletEntries: [],
       checkKeys: [],
-      summary: { totalAdded: 0, outOfRange: [], borderline: [], overdue: [] },
+      additionalCount: 0,
+      summary: { totalAdded: 0, additionalCount: 0, outOfRange: [], borderline: [], overdue: [] },
     });
   }
 
   const now = new Date();
   const nowISO = now.toISOString();
   const walletEntries: WalletSyncEntry[] = [];
-  const checkKeySet = new Set<string>();
+
+  // Collect panel check keys (only for observations with a real panel mapping)
+  const panelCheckKeySet = new Set<string>();
+  let additionalCount = 0;
 
   // Summary accumulators
   const outOfRange: UploadSummary["outOfRange"] = [];
@@ -189,6 +206,10 @@ export async function POST(req: NextRequest) {
     const valueStr = obs.valueText ?? (obs.numericValue != null ? String(obs.numericValue) : "");
     const status = flagToStatus(obs.flag);
     const binKey = obs.bin?.toLowerCase() ?? "";
+
+    // Panel linkage — null when the bin isn't in the known map
+    const panelKey = BIN_TO_CHECK_KEY[binKey] ?? null;
+    const isAdditional = panelKey === null;
 
     // Staleness
     const retestMonths = BIN_RETEST_MONTHS[binKey] ?? 12;
@@ -214,15 +235,19 @@ export async function POST(req: NextRequest) {
       fileName: upload.fileName,
       fileType: upload.mimeType,
       status,
+      panelKey,
+      isAdditional,
       monthsSinceTest,
       isOverdue,
       overdueByMonths,
       savedAt: nowISO,
     });
 
-    // Map bin → checkKey
-    const ckRaw = BIN_TO_CHECK_KEY[binKey] ?? "preventive_baseline";
-    checkKeySet.add(ckRaw);
+    if (panelKey) {
+      panelCheckKeySet.add(panelKey);
+    } else {
+      additionalCount++;
+    }
 
     // Summary: out of range / borderline
     const bioName = obs.displayName ?? metricName;
@@ -233,19 +258,20 @@ export async function POST(req: NextRequest) {
       borderlineList.push({ name: bioName, value: valLabel, date: dateStr });
     }
 
-    // Summary: overdue — one entry per bin (avoid repeating for each biomarker in the same panel)
+    // Overdue — one entry per bin
     if (isOverdue && !seenOverdueBins.has(binKey)) {
       seenOverdueBins.add(binKey);
       overdueList.push({ name: bioName, monthsOverdue: overdueByMonths, recommendedEveryMonths: retestMonths });
     }
   }
 
-  const checkKeys = Array.from(checkKeySet);
-
-  // Upsert UserCheckStatus → result_uploaded for each matched check
+  const checkKeys = Array.from(panelCheckKeySet);
   const firstObs = observations.find((o) => o.observationDate != null);
   const testDate = firstObs?.observationDate ?? null;
 
+  // ── DB writes ──────────────────────────────────────────────────────────────
+
+  // 1. Upsert UserCheckStatus + UserCheckResult only for REAL panel-linked observations
   for (const checkKey of checkKeys) {
     try {
       await prisma.userCheckStatus.upsert({
@@ -271,12 +297,34 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 2. Store additional biomarkers in DB under ADDITIONAL_CHECK_KEY
+  //    — no UserCheckStatus upsert (these aren't recommended panels)
+  if (additionalCount > 0) {
+    try {
+      await prisma.userCheckResult.create({
+        data: {
+          userEmail,
+          checkKey: ADDITIONAL_CHECK_KEY,
+          documentId,
+          fileName: upload.fileName,
+          fileType: upload.mimeType,
+          source: "lab",
+          testDate,
+          notes: `Additional biomarkers synced from ${upload.fileName} (${additionalCount} values)`,
+        },
+      });
+    } catch (err) {
+      console.error(`[wallet-sync] error storing additional biomarkers:`, err);
+    }
+  }
+
   const summary: UploadSummary = {
     totalAdded: walletEntries.length,
+    additionalCount,
     outOfRange,
     borderline: borderlineList,
     overdue: overdueList,
   };
 
-  return NextResponse.json({ walletEntries, checkKeys, summary });
+  return NextResponse.json({ walletEntries, checkKeys, additionalCount, summary });
 }

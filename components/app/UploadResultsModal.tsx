@@ -141,6 +141,8 @@ function ReviewStep({
       fileName: null,
       fileType: null,
       status: newStatus,
+      panelKey: null,
+      isAdditional: true,
       monthsSinceTest: null,
       isOverdue: false,
       overdueByMonths: 0,

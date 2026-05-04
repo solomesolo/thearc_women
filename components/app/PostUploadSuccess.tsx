@@ -216,6 +216,9 @@ export function PostUploadSuccess({
   const previousCompletion = Math.round((previousCount / safeTotal) * 100);
   const newCompletion = Math.round((newCount / safeTotal) * 100);
 
+  const panelEntries = addedEntries.filter((e) => !e.isAdditional);
+  const additionalEntries = addedEntries.filter((e) => e.isAdditional);
+
   const categories = addedEntries.map((e) => categorizeByName(e.biomarkerName));
   const insights = selectInsights(categories, lang);
 
@@ -243,11 +246,25 @@ export function PostUploadSuccess({
               ? (lang === "de" ? "1 Wert hinzugefügt" : "1 value added")
               : (lang === "de" ? `${addedEntries.length} Werte hinzugefügt` : `${addedEntries.length} values added`)}
           </h3>
-          {previousCount > 0 && (
+          {panelEntries.length > 0 && (
             <p className="text-[0.8125rem] text-[#737373] mt-0.5">
               {lang === "de"
-                ? `Health Wallet ${previousCount} → ${newCount} Einträge`
-                : `Health Wallet ${previousCount} → ${newCount} entries`}
+                ? `${panelEntries.length} zu empfohlenen Panels zugeordnet`
+                : `${panelEntries.length} linked to recommended panels`}
+              {additionalEntries.length > 0 && (
+                <span className="text-[#a3a3a3]">
+                  {lang === "de"
+                    ? ` · ${additionalEntries.length} zusätzlich`
+                    : ` · ${additionalEntries.length} additional`}
+                </span>
+              )}
+            </p>
+          )}
+          {panelEntries.length === 0 && additionalEntries.length > 0 && (
+            <p className="text-[0.8125rem] text-[#737373] mt-0.5">
+              {lang === "de"
+                ? `Als zusätzliche Biomarker gespeichert`
+                : `Saved as additional biomarkers`}
             </p>
           )}
         </div>
@@ -255,25 +272,59 @@ export function PostUploadSuccess({
 
       {/* Added biomarkers list */}
       {addedEntries.length > 0 && (
-        <div className="rounded-[14px] bg-[#f7f7f6] px-4 py-3">
-          <p className="text-[0.75rem] font-semibold uppercase tracking-wider text-[#737373] mb-2">
-            {lang === "de" ? "Hinzugefügt" : "Added"}
-          </p>
-          <div className="space-y-1.5">
-            {displayEntries.map((e, i) => (
-              <div key={i} className="flex items-center justify-between gap-3">
-                <span className="text-[0.875rem] text-[#0c0c0c] font-medium truncate">{e.biomarkerName}</span>
-                <span className={`text-[0.875rem] font-semibold tabular-nums flex-shrink-0 ${STATUS_COLOR[e.status] ?? "text-[#737373]"}`}>
-                  {e.value || "—"}
-                </span>
-              </div>
-            ))}
-            {moreCount > 0 && (
-              <p className="text-[0.8rem] text-[#737373] mt-1">
-                {lang === "de" ? `+${moreCount} weitere` : `+${moreCount} more`}
+        <div className="rounded-[14px] bg-[#f7f7f6] px-4 py-3 space-y-3">
+          {/* Panel-linked entries */}
+          {panelEntries.length > 0 && (
+            <div>
+              <p className="text-[0.75rem] font-semibold uppercase tracking-wider text-[#737373] mb-2">
+                {lang === "de" ? "Zu Panels zugeordnet" : "Linked to panels"}
               </p>
-            )}
-          </div>
+              <div className="space-y-1.5">
+                {panelEntries.slice(0, 5).map((e, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3">
+                    <span className="text-[0.875rem] text-[#0c0c0c] font-medium truncate">{e.biomarkerName}</span>
+                    <span className={`text-[0.875rem] font-semibold tabular-nums flex-shrink-0 ${STATUS_COLOR[e.status] ?? "text-[#737373]"}`}>
+                      {e.value || "—"}
+                    </span>
+                  </div>
+                ))}
+                {panelEntries.length > 5 && (
+                  <p className="text-[0.8rem] text-[#737373] mt-1">
+                    +{panelEntries.length - 5} {lang === "de" ? "weitere" : "more"}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Additional (unmapped) entries */}
+          {additionalEntries.length > 0 && (
+            <div>
+              <p className="text-[0.75rem] font-semibold uppercase tracking-wider text-[#a3a3a3] mb-2">
+                {lang === "de" ? "Zusätzliche Biomarker" : "Additional biomarkers"}
+              </p>
+              <div className="space-y-1.5">
+                {additionalEntries.slice(0, 4).map((e, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3">
+                    <span className="text-[0.875rem] text-[#404040] truncate">{e.biomarkerName}</span>
+                    <span className={`text-[0.875rem] font-semibold tabular-nums flex-shrink-0 ${STATUS_COLOR[e.status] ?? "text-[#737373]"}`}>
+                      {e.value || "—"}
+                    </span>
+                  </div>
+                ))}
+                {additionalEntries.length > 4 && (
+                  <p className="text-[0.8rem] text-[#a3a3a3] mt-1">
+                    +{additionalEntries.length - 4} {lang === "de" ? "weitere" : "more"}
+                  </p>
+                )}
+              </div>
+              <p className="mt-2 text-[0.775rem] text-[#a3a3a3]">
+                {lang === "de"
+                  ? "Trends werden gespeichert. Diese sind keinem empfohlenen Panel zugeordnet."
+                  : "Trends stored. These aren't part of a recommended panel — they're in your wallet regardless."}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
