@@ -1737,3 +1737,53 @@ model UserPathwaySchedule {
   @@index([userEmail, timeframe, priorityRank])
   @@map("user_pathway_schedule")
 }
+
+// ─── Settings, Access Codes, Consent, Deletion ───────────────────────────────
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userEmail             String   @unique @map("user_email")
+  language              String   @default("en")
+  emailReminders        Boolean  @default(true) @map("email_reminders")
+  calendarReminders     Boolean  @default(false) @map("calendar_reminders")
+  weeklySummary         Boolean  @default(true) @map("weekly_summary")
+  defaultReminderTiming String   @default("next_week") @map("default_reminder_timing")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("user_settings")
+}
+
+model AccessCode {
+  id          String    @id @default(cuid())
+  ownerEmail  String    @map("owner_email")
+  code        String    @unique
+  status      String    @default("available")
+  usedByEmail String?   @map("used_by_email")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  usedAt      DateTime? @map("used_at") @db.Timestamptz
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz
+
+  @@index([ownerEmail])
+  @@map("access_codes")
+}
+
+model UserConsent {
+  id        String    @id @default(cuid())
+  userEmail String    @unique @map("user_email")
+  givenAt   DateTime  @default(now()) @map("given_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  isActive  Boolean   @default(true) @map("is_active")
+
+  @@map("user_consents")
+}
+
+model DeletionRequest {
+  id          String   @id @default(cuid())
+  userEmail   String   @unique @map("user_email")
+  requestedAt DateTime @default(now()) @map("requested_at") @db.Timestamptz
+  scheduledAt DateTime @map("scheduled_at") @db.Timestamptz
+  status      String   @default("pending")
+
+  @@map("deletion_requests")
+}
