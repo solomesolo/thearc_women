@@ -71,12 +71,38 @@ function ProblemIcon({ variant }: { variant: ProblemIconVariant }) {
 
 type ChecklistItem = { label: string; microtext: string };
 
+type ProblemCard = {
+  icon: "scatter" | "overview" | "unclear" | "followthrough";
+  title: string;
+  body: string;
+};
+
+type ProblemSectionProps = {
+  // When all four are provided the section renders the compact card-only layout
+  // (used by localised pages). When omitted the full combined recognition + cards section renders.
+  label?: string;
+  headline?: string;
+  cards?: readonly ProblemCard[];
+  punchline?: string;
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ProblemSection() {
+export function ProblemSection({
+  label,
+  headline,
+  cards,
+  punchline,
+}: ProblemSectionProps = {}) {
+  const isLocalized = !!(label && headline && cards && punchline);
   const prefersReducedMotion = useReducedMotion();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const resolvedLabel    = label    ?? problem.label;
+  const resolvedHeadline = headline ?? recognition.headline;
+  const resolvedCards    = cards    ?? problem.cards;
+  const resolvedPunchline = punchline ?? problem.punchline;
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -91,6 +117,58 @@ export function ProblemSection() {
     [prefersReducedMotion ? 0 : 14, 0]
   );
 
+  // ── Localized (cards-only) layout ──────────────────────────────────────────
+  if (isLocalized) {
+    return (
+      <Section
+        id="problem"
+        variant="default"
+        className="relative scroll-mt-20 border-t border-black/[0.06] bg-[linear-gradient(180deg,#fafaf9_0%,var(--background)_18%)] py-20 md:py-28 lg:py-32"
+      >
+        <Container>
+          <motion.div
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, ease: easeOut }}
+            className="mx-auto max-w-[44rem] text-center"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">{resolvedLabel}</p>
+            <h2 className="mt-3 text-balance text-[1.75rem] font-medium leading-[1.15] tracking-tight text-[#0c0c0c] sm:text-[1.95rem] md:mt-4 md:text-[2.15rem] lg:text-[2.35rem]">
+              {resolvedHeadline}
+            </h2>
+          </motion.div>
+          <div className="mx-auto mt-12 grid max-w-[56rem] grid-cols-1 gap-4 sm:grid-cols-2 md:mt-14 lg:grid-cols-4 lg:gap-5">
+            {resolvedCards.map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.48, delay: i * (prefersReducedMotion ? 0.03 : 0.07), ease: easeOut }}
+                className="flex flex-col rounded-[16px] border border-black/[0.07] bg-white/[0.5] p-5 md:p-6"
+              >
+                <ProblemIcon variant={card.icon} />
+                <h3 className="mt-4 text-[0.9375rem] font-semibold leading-snug tracking-tight text-[#0c0c0c]">{card.title}</h3>
+                <p className="mt-2 text-[0.875rem] leading-[1.65] text-[#525252]">{card.body}</p>
+              </motion.div>
+            ))}
+          </div>
+          <motion.p
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.22, ease: easeOut }}
+            className="mx-auto mt-10 max-w-[36rem] text-center text-[1rem] font-medium leading-[1.6] text-[#404040] md:mt-12 md:text-[1.0625rem]"
+          >
+            {resolvedPunchline}
+          </motion.p>
+        </Container>
+      </Section>
+    );
+  }
+
+  // ── Full combined layout (EN homepage) ──────────────────────────────────────
   return (
     <Section
       id="problem"
@@ -109,10 +187,10 @@ export function ProblemSection() {
             className="mx-auto max-w-[44rem] text-center"
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#737373]">
-              {problem.label}
+              {resolvedLabel}
             </p>
             <h2 className="mt-3 text-balance text-[1.85rem] font-medium leading-[1.12] tracking-tight text-[#0c0c0c] sm:text-[2.15rem] md:mt-4 md:text-[2.45rem] lg:text-[2.75rem]">
-              {recognition.headline}
+              {resolvedHeadline}
             </h2>
             <div className="mx-auto mt-5 max-w-[38rem] space-y-1 text-[1rem] leading-[1.65] text-[#525252] md:mt-6 md:text-[1.0625rem]">
               {recognition.subheadline.split("\n").map((line) => (
@@ -169,7 +247,7 @@ export function ProblemSection() {
 
           {/* ── Problem cards ── */}
           <div className="mx-auto mt-10 grid max-w-[56rem] grid-cols-1 gap-4 sm:grid-cols-2 md:mt-12 lg:grid-cols-4 lg:gap-5">
-            {problem.cards.map((card, i) => (
+            {resolvedCards.map((card, i) => (
               <motion.div
                 key={card.title}
                 initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
@@ -201,7 +279,7 @@ export function ProblemSection() {
             transition={{ duration: 0.5, delay: 0.22, ease: easeOut }}
             className="mx-auto mt-10 max-w-[36rem] text-center text-[1rem] font-medium leading-[1.6] text-[#404040] md:mt-12 md:text-[1.0625rem]"
           >
-            {problem.punchline}
+            {resolvedPunchline}
           </motion.p>
 
         </Container>
