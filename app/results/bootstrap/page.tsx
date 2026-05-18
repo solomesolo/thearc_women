@@ -87,9 +87,7 @@ export default function ResultsBootstrapPage() {
         await fetch(`/api/recommendations/run/${encodeURIComponent(profileSnapshotId)}`, {
           method: "POST",
           headers: { "x-arc-anon-id": anonId },
-        }).then((r) => {
-          if (!r.ok) throw new Error("recommendations_failed");
-        });
+        }).catch(() => null);
 
         setStep("status");
         await Promise.all([

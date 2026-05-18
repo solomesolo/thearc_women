@@ -20,7 +20,13 @@ export async function POST(_request: Request, context: { params: Promise<{ profi
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
   }
 
-  const payload = await runAndPersistRecommendations(profileSnapshotId);
-  return Response.json(payload);
+  try {
+    const payload = await runAndPersistRecommendations(profileSnapshotId);
+    return Response.json(payload);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[recommendations/run] failed:", message, err);
+    return Response.json({ partial: true, error: message, recommendations: [], top_priorities: [], tests_to_action: 0 }, { status: 200 });
+  }
 }
 
