@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -218,6 +217,14 @@ function CalendarProviderRow({
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  );
+}
+
+function SettingsPageInner() {
   const { data: session } = useSession();
   const locale = useLocale();
   const isDE = locale === "de";

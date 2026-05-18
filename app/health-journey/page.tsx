@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -288,6 +287,14 @@ function Check() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HealthJourneyPage() {
+  return (
+    <Suspense fallback={null}>
+      <HealthJourneyPageInner />
+    </Suspense>
+  );
+}
+
+function HealthJourneyPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status: sessionStatus } = useSession({ required: false });
