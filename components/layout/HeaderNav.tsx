@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/layout/NotificationBell";
 import { setStoredLocale } from "@/lib/i18n/locale";
 import { isDePrefixedPathSupported, shouldStripDePrefix } from "@/lib/i18n/deRouting";
 import { useLocale } from "@/lib/i18n/useLocale";
+import { useEarlyAccessModal } from "@/lib/early-access/EarlyAccessContext";
 
 // hasDE: true = page exists in /de/... as well
 const LINKS: { href: string; label: string; hasDE?: boolean }[] = [
@@ -18,6 +19,19 @@ const LINKS: { href: string; label: string; hasDE?: boolean }[] = [
   { href: "/knowledge", label: "My Health Dashboard" },
   { href: "/upload", label: "Upload Health Data" },
 ];
+
+function appShellBarePath(pathname: string) {
+  return pathname.startsWith("/de") ? pathname.slice(3) || "/" : pathname;
+}
+
+function isAppShellPath(pathname: string) {
+  const bare = appShellBarePath(pathname);
+  return (
+    bare.startsWith("/results") ||
+    bare.startsWith("/app") ||
+    bare.startsWith("/onboarding")
+  );
+}
 
 function LanguageSwitcher({ className }: { className?: string }) {
   const router = useRouter();
@@ -99,6 +113,9 @@ export function HeaderNav() {
   const router = useRouter();
   const pathname = usePathname();
   const isDE = pathname.startsWith("/de");
+  const locale = useLocale();
+  const isAppShell = isAppShellPath(pathname);
+  const { openApply, openInvite } = useEarlyAccessModal();
 
   // If we ever land on `/de/...` for app/onboarding/results routes, strip the prefix to avoid 404s.
   useEffect(() => {
@@ -112,6 +129,8 @@ export function HeaderNav() {
     label,
     href: isDE && hasDE ? "/de" + (href === "/" ? "" : href) : href,
   }));
+
+  const exploreLabel = locale === "de" ? "Entdecken" : "Explore";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -132,20 +151,53 @@ export function HeaderNav() {
   return (
     <>
       <nav
-        className="hidden flex-1 flex-wrap items-center justify-end gap-4 md:flex md:gap-6"
+        className="hidden min-w-0 flex-1 flex-wrap items-center justify-end gap-x-4 gap-y-2 md:flex md:gap-x-5"
         aria-label="Main"
       >
-        {resolvedLinks.map(({ href, label }) => (
-          <Link key={href} href={href} className={linkClass}>
-            {label}
-          </Link>
-        ))}
+        {isAppShell ? (
+          <details className="group relative">
+            <summary
+              className="cursor-pointer list-none rounded-[10px] border border-black/[0.1] bg-black/[0.02] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] hover:bg-black/[0.05] [&::-webkit-details-marker]:hidden"
+            >
+              {exploreLabel}
+              <span className="ml-1 text-[var(--text-secondary)]">▾</span>
+            </summary>
+            <div className="absolute left-0 top-[calc(100%+6px)] z-[120] min-w-[12rem] rounded-[14px] border border-black/[0.08] bg-[var(--background)] py-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+              {resolvedLinks.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="block px-4 py-2.5 text-sm text-[var(--text-secondary)] no-underline hover:bg-black/[0.04] hover:text-[var(--text-primary)]"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </details>
+        ) : (
+          resolvedLinks.map(({ href, label }) => (
+            <Link key={href} href={href} className={linkClass}>
+              {label}
+            </Link>
+          ))
+        )}
         <LanguageSwitcher />
         <NotificationBell />
         <AuthNav />
-        <Link href="/survey" className={ctaClass}>
-          Get Started
-        </Link>
+        {!isAppShell && (
+          <>
+            <button
+              type="button"
+              onClick={openInvite}
+              className="shrink-0 rounded-[14px] border border-black/[0.15] bg-transparent px-3 py-2 text-sm font-medium text-[#404040] no-underline transition-colors hover:bg-black/[0.04] md:px-4"
+            >
+              {locale === "de" ? "Ich habe eine Einladung" : "I have an invitation"}
+            </button>
+            <button type="button" onClick={openApply} className={clsx(ctaClass, "shrink-0 px-3 md:px-4")}>
+              {locale === "de" ? "Mein Health Arc beginnen" : "Begin Your Health Arc"}
+            </button>
+          </>
+        )}
       </nav>
 
       <div className="flex flex-1 items-center justify-end gap-1 md:hidden">
@@ -217,13 +269,24 @@ export function HeaderNav() {
                   className="-mx-2 block w-fit max-w-full rounded-[12px] px-2 py-3 text-[15px] text-[var(--text-primary)] hover:bg-black/[0.04]"
                   onNavigate={() => setOpen(false)}
                 />
-                <Link
-                  href="/survey"
-                  className={clsx(ctaClass, "inline-flex w-full justify-center py-3 text-[15px]")}
-                  onClick={() => setOpen(false)}
-                >
-                  Get Started
-                </Link>
+                {!isAppShell && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setOpen(false); openInvite(); }}
+                      className="w-full rounded-[14px] border border-black/[0.15] bg-transparent px-6 py-3 text-center text-[15px] font-medium text-[#404040] transition-colors hover:bg-black/[0.04]"
+                    >
+                      {locale === "de" ? "Ich habe eine Einladung" : "I have an invitation"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setOpen(false); openApply(); }}
+                      className={clsx(ctaClass, "inline-flex w-full justify-center py-3 text-[15px]")}
+                    >
+                      {locale === "de" ? "Mein Health Arc beginnen" : "Begin Your Health Arc"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

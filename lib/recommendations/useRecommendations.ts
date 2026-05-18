@@ -7,11 +7,21 @@ import type { CheckRecommendation } from "@/lib/recommendations-engine/types";
 
 export type { RecommendationsPayload, CheckStatus };
 
-type State = {
-  data: RecommendationsPayload | null;
-  isLoading: boolean;
-  error: Error | null;
-};
+// ── Module-level in-memory cache (shared across ALL hook instances / pages) ───
+// Navigating between dashboard → wallet → calendar → action-plan never re-fetches
+// until STALE_MS has elapsed. Background-revalidates silently after that.
+
+const MEM_CACHE = new Map<string, RecommendationsPayload>();
+const FETCH_TS  = new Map<string, number>();
+const IN_FLIGHT = new Map<string, Promise<RecommendationsPayload>>();
+const STALE_MS  = 5 * 60 * 1000; // 5 min
+
+function memFresh(userId: string) {
+  const ts = FETCH_TS.get(userId);
+  return !!ts && Date.now() - ts < STALE_MS;
+}
+
+// ── localStorage helpers ──────────────────────────────────────────────────────
 
 const RECS_CACHE_VERSION = 1;
 function recsCacheKey(userId: string) {
@@ -60,58 +70,112 @@ async function fetchRecommendations(userId: string): Promise<RecommendationsPayl
   return res.json();
 }
 
+// ── Deduplicating fetcher ─────────────────────────────────────────────────────
+
+function fetchOnce(userId: string): Promise<RecommendationsPayload> {
+  const existing = IN_FLIGHT.get(userId);
+  if (existing) return existing;
+
+  const promise = fetchRecommendations(userId)
+    .then((data) => {
+      MEM_CACHE.set(userId, data);
+      FETCH_TS.set(userId, Date.now());
+      saveCachedRecommendations(userId, data);
+      return data;
+    })
+    .finally(() => IN_FLIGHT.delete(userId));
+
+  IN_FLIGHT.set(userId, promise);
+  return promise;
+}
+
+// ── State type ────────────────────────────────────────────────────────────────
+
+type State = {
+  data: RecommendationsPayload | null;
+  isLoading: boolean;
+  error: Error | null;
+};
+
+export function invalidateRecsCache(userId?: string) {
+  if (userId) {
+    MEM_CACHE.delete(userId);
+    FETCH_TS.delete(userId);
+    IN_FLIGHT.delete(userId);
+  } else {
+    MEM_CACHE.clear();
+    FETCH_TS.clear();
+    IN_FLIGHT.clear();
+  }
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
 export function useRecommendations(userId: string | null) {
   const [state, setState] = useState<State>(() => {
     if (!userId) return { data: null, isLoading: false, error: null };
+
+    // 1. In-memory cache — fastest path, no flash
+    const memData = MEM_CACHE.get(userId);
+    if (memData) return { data: memData, isLoading: false, error: null };
+
+    // 2. localStorage — show immediately, revalidate in background
     const cached = loadCachedRecommendations(userId);
-    return { data: cached, isLoading: true, error: null };
+    if (cached) {
+      MEM_CACHE.set(userId, cached); // warm memory from disk
+      return { data: cached, isLoading: false, error: null };
+    }
+
+    // 3. Nothing cached — show loading state
+    return { data: null, isLoading: true, error: null };
   });
 
   useEffect(() => {
+    if (!userId) return;
+
+    // Fresh memory cache — skip fetch entirely
+    if (memFresh(userId)) return;
+
     let cancelled = false;
-    if (!userId) {
-      return () => {
-        cancelled = true;
-      };
+
+    // We already have data (memory or localStorage), so don't flash a spinner —
+    // just silently revalidate. Only show isLoading if we have nothing at all.
+    if (!MEM_CACHE.has(userId)) {
+      setState((s) => ({ ...s, isLoading: true, error: null }));
     }
 
-    (async () => {
-      setState((s) => ({ ...s, isLoading: true, error: null }));
-      try {
-        const data = await fetchRecommendations(userId);
-        if (cancelled) return;
-        saveCachedRecommendations(userId, data);
-        setState({ data, isLoading: false, error: null });
-      } catch (e) {
-        if (cancelled) return;
-        const cached = loadCachedRecommendations(userId);
-        setState({
-          data: cached,
-          isLoading: false,
-          error: e instanceof Error ? e : new Error("Failed"),
-        });
-      }
-    })();
+    fetchOnce(userId)
+      .then((data) => {
+        if (!cancelled) setState({ data, isLoading: false, error: null });
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setState((s) => ({
+            data: s.data,           // keep existing data if any
+            isLoading: false,
+            error: e instanceof Error ? e : new Error("Failed"),
+          }));
+        }
+      });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [userId]);
+
+  // ── Actions ─────────────────────────────────────────────────────────────────
 
   const load = useCallback(async () => {
     if (!userId) return;
     setState((s) => ({ ...s, isLoading: true, error: null }));
+    FETCH_TS.delete(userId); // force refetch
     try {
-      const data = await fetchRecommendations(userId);
-      saveCachedRecommendations(userId, data);
+      const data = await fetchOnce(userId);
       setState({ data, isLoading: false, error: null });
     } catch (e) {
-      const cached = loadCachedRecommendations(userId);
-      setState({
-        data: cached,
+      setState((s) => ({
+        data: s.data,
         isLoading: false,
         error: e instanceof Error ? e : new Error("Failed"),
-      });
+      }));
     }
   }, [userId]);
 
@@ -127,49 +191,40 @@ export function useRecommendations(userId: string | null) {
           body: JSON.stringify({ status }),
         },
       );
-      // Optimistic update: flip status in local state immediately.
+      // Optimistic update in both state and memory cache
       setState((s) => {
         if (!s.data) return s;
         const updateBucket = (items: CheckRecommendation[]) =>
           items.map((r) => (r.checkKey === checkKey ? { ...r, status } : r));
 
-        const next_month = updateBucket(s.data.pathway.next_month ?? []);
-        const next_3_months = updateBucket(s.data.pathway.next_3_months ?? []);
-        const next_6_months = updateBucket(s.data.pathway.next_6_months ?? []);
-        const next_year = updateBucket(s.data.pathway.next_year ?? []);
+        const next_month     = updateBucket(s.data.pathway.next_month ?? []);
+        const next_3_months  = updateBucket(s.data.pathway.next_3_months ?? []);
+        const next_6_months  = updateBucket(s.data.pathway.next_6_months ?? []);
+        const next_year      = updateBucket(s.data.pathway.next_year ?? []);
         const optional_later = updateBucket(s.data.pathway.optional_later ?? []);
+        const all = [...next_month, ...next_3_months, ...next_6_months, ...next_year, ...optional_later];
 
-        const all = [
-          ...next_month,
-          ...next_3_months,
-          ...next_6_months,
-          ...next_year,
-          ...optional_later,
-        ];
-
-        const plannedCount = all.filter((r) => r.status === "planned").length;
+        const plannedCount   = all.filter((r) => r.status === "planned").length;
         const completedCount = all.filter((r) => r.status === "completed" || r.status === "result_uploaded").length;
-        const healthScore = all.length > 0 ? Math.round((completedCount / all.length) * 100) : 0;
-        const nextBest = next_month.find((c) => c.status === "missing") ?? next_month[0] ?? all[0] ?? null;
+        const healthScore    = all.length > 0 ? Math.round((completedCount / all.length) * 100) : 0;
+        const nextBest       = next_month.find((c) => c.status === "missing") ?? next_month[0] ?? all[0] ?? null;
 
-        const nextState = {
-          ...s,
-          data: {
-            ...s.data,
-            pathway: { next_month, next_3_months, next_6_months, next_year, optional_later },
-            summary: {
-              ...s.data.summary,
-              plannedCount,
-              completedCount,
-              healthScore,
-              nextBestAction: nextBest
-                ? { checkKey: nextBest.checkKey, checkName: nextBest.checkName, why: nextBest.whyForYou }
-                : null,
-            },
+        const next: RecommendationsPayload = {
+          ...s.data,
+          pathway: { next_month, next_3_months, next_6_months, next_year, optional_later },
+          summary: {
+            ...s.data.summary,
+            plannedCount,
+            completedCount,
+            healthScore,
+            nextBestAction: nextBest
+              ? { checkKey: nextBest.checkKey, checkName: nextBest.checkName, why: nextBest.whyForYou }
+              : null,
           },
         };
-        saveCachedRecommendations(userId, nextState.data);
-        return nextState;
+        MEM_CACHE.set(userId, next);
+        saveCachedRecommendations(userId, next);
+        return { ...s, data: next };
       });
     },
     [userId],
@@ -187,6 +242,7 @@ export function useRecommendations(userId: string | null) {
           body: JSON.stringify({ remindAt, timeframe }),
         },
       );
+      FETCH_TS.delete(userId);
       load();
     },
     [userId, load],
@@ -200,6 +256,7 @@ export function useRecommendations(userId: string | null) {
         `/api/recommendations/${encodeURIComponent(userId)}/${encodeURIComponent(checkKey)}/reminder`,
         { method: "DELETE", headers: { "x-arc-anon-id": anonId } },
       );
+      FETCH_TS.delete(userId);
       load();
     },
     [userId, load],
@@ -217,10 +274,19 @@ export function useRecommendations(userId: string | null) {
           body: JSON.stringify(payload),
         },
       );
+      FETCH_TS.delete(userId);
       load();
     },
     [userId, load],
   );
 
-  return { ...state, reload: load, updateStatus, addReminder, deleteReminder, addResult, flatten: () => flattenPathway(state.data) };
+  return {
+    ...state,
+    reload: load,
+    updateStatus,
+    addReminder,
+    deleteReminder,
+    addResult,
+    flatten: () => flattenPathway(state.data),
+  };
 }

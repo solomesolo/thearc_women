@@ -3,6 +3,39 @@ import { resolveNavigation } from "./navigationResolver";
 import type { NavigationDecision, NavigationInputs, StepKey } from "./navigationTypes";
 import { stepFromQuestionnaireLastStepNumber } from "./routeMapping";
 
+// ── Server-side navigation cache ────────────────────────────────────────────
+// Stored in global so webpack HMR doesn't reset it between hot reloads.
+
+declare global {
+  // eslint-disable-next-line no-var
+  var _navCache: Map<string, { decision: NavigationDecision; ts: number }> | undefined;
+}
+
+const NAV_CACHE: Map<string, { decision: NavigationDecision; ts: number }> =
+  global._navCache ?? (global._navCache = new Map());
+const NAV_SERVER_TTL_MS = 5 * 60 * 1000; // 5 min
+
+function getCachedDecision(key: string): NavigationDecision | null {
+  const entry = NAV_CACHE.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > NAV_SERVER_TTL_MS) {
+    NAV_CACHE.delete(key);
+    return null;
+  }
+  return entry.decision;
+}
+
+function setCachedDecision(key: string, decision: NavigationDecision) {
+  NAV_CACHE.set(key, { decision, ts: Date.now() });
+  // Prune stale entries if cache grows large
+  if (NAV_CACHE.size > 500) {
+    const cutoff = Date.now() - NAV_SERVER_TTL_MS;
+    for (const [k, v] of NAV_CACHE) {
+      if (v.ts < cutoff) NAV_CACHE.delete(k);
+    }
+  }
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -21,6 +54,11 @@ export async function getNavigationDecision(params: {
   source: string | null;
 }): Promise<NavigationDecision> {
   const userEmail = normalizeUserEmail(params.userEmail);
+
+  // Cache key includes route so a redirect-to-survey vs redirect-to-dashboard is distinct.
+  const cacheKey = `${userEmail ?? "anon"}:${params.requestedRoute ?? "/"}`;
+  const cached = getCachedDecision(cacheKey);
+  if (cached) return cached;
 
   // Onboarding state uses existing Engine A questionnaire sessions for correctness.
   let onboardingStatus: "not_started" | "in_progress" | "completed" = "not_started";
@@ -78,9 +116,12 @@ export async function getNavigationDecision(params: {
 
   const decision = resolveNavigation(inputs);
 
-  // Log decision (best effort)
+  // Cache the decision server-side so subsequent page loads are instant.
+  setCachedDecision(cacheKey, decision);
+
+  // Fire-and-forget log — do NOT await, this must never block the response.
   if (userEmail) {
-    await prisma.navigationEvent
+    prisma.navigationEvent
       .create({
         data: {
           userEmail,
@@ -98,6 +139,13 @@ export async function getNavigationDecision(params: {
   }
 
   return decision;
+}
+
+export function clearNavServerCacheForUser(userEmail: string): void {
+  const prefix = userEmail.toLowerCase().trim() + ":";
+  for (const key of NAV_CACHE.keys()) {
+    if (key.startsWith(prefix)) NAV_CACHE.delete(key);
+  }
 }
 
 export async function markResultsSeen(params: { userEmail: string }): Promise<void> {

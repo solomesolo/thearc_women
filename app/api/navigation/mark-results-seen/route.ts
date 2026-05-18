@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { markResultsSeen } from "@/lib/navigation-engine/navigationService";
+import { markResultsSeen, clearNavServerCacheForUser } from "@/lib/navigation-engine/navigationService";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
   }
 
   await markResultsSeen({ userEmail });
+  clearNavServerCacheForUser(userEmail);
   return Response.json({ ok: true, next_default_route: "/app/dashboard" });
 }
 

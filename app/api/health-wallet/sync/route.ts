@@ -1,6 +1,7 @@
 /**
  * POST /api/health-wallet/sync
- * Body: { documentId: string }
+ * Body: { documentId: string, uploadKind?: "lab" | "screening" }
+ * (uploadKind comes from the client; DB `intake_kind` is optional and may be absent.)
  *
  * Reads HealthObservation rows for the given document, maps them to
  * WalletSyncEntry objects (for localStorage) and writes:
@@ -11,12 +12,14 @@
  * checkKey = "additional_biomarkers" and isAdditional = true.
  * No UserCheckStatus row is created for them.
  *
- * Returns: { walletEntries: WalletSyncEntry[], checkKeys: string[], additionalCount: number, summary: UploadSummary }
+ * Returns: { walletEntries, checkKeys, ... } for lab uploads, or
+ * { mode: "screening", screeningDraft, ... } for screening intake (no biomarker rows).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
+import { extractScreeningFromOcrText } from "@/lib/health-wallet/extractScreeningFromText";
 
 type BiomarkerResultStatus = "in_range" | "borderline" | "out_of_range" | "unknown";
 
@@ -149,9 +152,11 @@ export async function POST(req: NextRequest) {
   const userEmail = session.user.email;
 
   let documentId: string;
+  let bodyUploadKind: string | undefined;
   try {
     const body = await req.json();
     documentId = body.documentId;
+    bodyUploadKind = typeof body.uploadKind === "string" ? body.uploadKind : undefined;
     if (!documentId) throw new Error("missing");
   } catch {
     return NextResponse.json({ error: "documentId required" }, { status: 400 });
@@ -159,16 +164,55 @@ export async function POST(req: NextRequest) {
 
   const prisma = getPrisma();
 
-  // Verify ownership
+  // Verify ownership + OCR text for screening path
   const upload = await prisma.healthUpload.findFirst({
     where: { documentId, userEmail },
-    select: { documentId: true, fileName: true, mimeType: true },
+    select: {
+      documentId: true,
+      fileName: true,
+      mimeType: true,
+      ocrResult: { select: { rawText: true } },
+    },
   });
   if (!upload) {
     return NextResponse.json({ error: "Document not found" }, { status: 404 });
   }
 
-  // Fetch all observations for this document
+  const isScreeningIntake = bodyUploadKind?.toLowerCase() === "screening";
+
+  if (isScreeningIntake) {
+    const raw = upload.ocrResult?.rawText ?? "";
+    const extracted = extractScreeningFromOcrText(raw);
+    const emptySummary: UploadSummary = {
+      totalAdded: 0,
+      additionalCount: 0,
+      outOfRange: [],
+      borderline: [],
+      overdue: [],
+    };
+    return NextResponse.json({
+      mode: "screening" as const,
+      walletEntries: [] as WalletSyncEntry[],
+      checkKeys: [] as string[],
+      additionalCount: 0,
+      summary: emptySummary,
+      screeningDraft: {
+        documentId,
+        screeningName: extracted.screeningName,
+        date: extracted.date,
+        findings:
+          extracted.findings ||
+          (raw
+            ? ""
+            : "Document text is not available yet. You can paste findings below, then save."),
+        suggestManualPaste: extracted.suggestManualPaste,
+        fileName: upload.fileName,
+        fileType: upload.mimeType,
+      },
+    });
+  }
+
+  // Fetch all observations for this document (lab / default path)
   const observations = await prisma.healthObservation.findMany({
     where: { documentId, userEmail },
     orderBy: [{ observationDate: "desc" }, { canonicalMetricName: "asc" }],
@@ -176,6 +220,7 @@ export async function POST(req: NextRequest) {
 
   if (!observations.length) {
     return NextResponse.json({
+      mode: "lab" as const,
       walletEntries: [],
       checkKeys: [],
       additionalCount: 0,
@@ -326,5 +371,5 @@ export async function POST(req: NextRequest) {
     overdue: overdueList,
   };
 
-  return NextResponse.json({ walletEntries, checkKeys, additionalCount, summary });
+  return NextResponse.json({ mode: "lab" as const, walletEntries, checkKeys, additionalCount, summary });
 }

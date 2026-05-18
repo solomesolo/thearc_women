@@ -13,12 +13,15 @@ export async function DELETE(
   const { id } = await params;
   const prisma = getPrisma();
 
-  const code = await prisma.accessCode.findFirst({ where: { id, ownerEmail: email } });
-  if (!code) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (code.status !== "available") {
-    return NextResponse.json({ error: "Only available codes can be revoked" }, { status: 400 });
+  try {
+    const code = await prisma.accessCode.findFirst({ where: { id, ownerEmail: email } });
+    if (!code) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (code.status !== "available") {
+      return NextResponse.json({ error: "Only available codes can be revoked" }, { status: 400 });
+    }
+    await prisma.accessCode.update({ where: { id }, data: { status: "revoked" } });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to revoke code" }, { status: 500 });
   }
-
-  await prisma.accessCode.update({ where: { id }, data: { status: "revoked" } });
-  return NextResponse.json({ ok: true });
 }

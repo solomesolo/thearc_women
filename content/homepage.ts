@@ -1,35 +1,114 @@
 export const homepageContent = {
   hero: {
-    eyebrow: "Personalized women's health",
-    headline: "Know what health tests you need—and actually get them done.",
+    eyebrow: "Preventive health for women",
+    headlineLines: [
+      "You're probably",
+      "missing something",
+      "important about",
+      "your health.",
+    ],
+    serifLineIndices: [1, 3] as const,
     supporting:
-      "Your preventive health system for women. See what you're missing, track your results, and take action—all in one place.",
-    secondarySupport:
-      "See what you might be missing in under 2 minutes",
-    ctaPrimaryLabel: "Start free check",
+      "Most women are never shown what they are not checking, postponing, or overlooking. The Arc helps you uncover your health blind spots before they become bigger problems.",
+    ctaPrimaryLabel: "Begin Your Health Arc",
     ctaPrimaryHref: "/onboarding/start",
-    ctaSecondaryLabel: "Upload your lab results",
-    ctaSecondaryHref: "/upload",
-    trustLine:
-      "No medical advice—just structured insights to support your decisions",
-    flowTitle: "How it works",
-    flowSteps: [
-      { title: "Take a quick health check", line: "Get your personalized test roadmap" },
-      { title: "Upload your lab results (optional)", line: "We organize and match them automatically" },
-      { title: "Act on your plan", line: "Book, track, and never miss important checks again" },
-    ],
-    whatsIncludedLabel: "What’s included?",
-    whatsIncludedItems: [
-      "Health completeness score",
-      "Personalized test recommendations",
-      "Lab result parsing (OCR)",
-      "Timeline of upcoming checks",
-      "Action links (book or order tests)",
-      "Simple progress tracking",
-    ],
+    ctaSecondaryLabel: "I have an invitation",
+    ctaSecondaryHref: "/survey",
+    socialProof:
+      "72% of women postpone at least one important health check.",
     imageSrc: "/images/Hero.avif",
     imageAlt:
       "Premium editorial visual showing focus and calm competence",
+  },
+  recognition: {
+    headline: "Most women delay more than they realize.",
+    subheadline:
+      "Not because they do not care.\nBecause nobody built a system designed for women's preventive health.",
+    checklistItems: [
+      {
+        label: "Hormonal changes",
+        microtext: "Many women normalize symptoms for years.",
+      },
+      {
+        label: "Ferritin and iron",
+        microtext: "Exhaustion is often dismissed as stress or busyness.",
+      },
+      {
+        label: "Thyroid health",
+        microtext: "Subtle shifts can go unchecked for years.",
+      },
+      {
+        label: "Vitamin D",
+        microtext: "Rarely tracked unless something already feels wrong.",
+      },
+      {
+        label: "Blood sugar markers",
+        microtext: "Early patterns are easy to miss without context.",
+      },
+      {
+        label: "Cardiovascular screening",
+        microtext: "Risk is often framed around male reference points.",
+      },
+      {
+        label: "Cycle irregularities",
+        microtext: "Irregular cycles get explained away instead of investigated.",
+      },
+      {
+        label: "Stress and sleep patterns",
+        microtext: "Treated as lifestyle, not as signals worth mapping.",
+      },
+      {
+        label: "PCOS or endometriosis signals",
+        microtext: "Pain and patterns are minimized far too often.",
+      },
+    ],
+    revelationPrimary:
+      "Most women recognize at least 3 things they have postponed, ignored, or never checked.",
+    revelationSecondary: "That is not failure.\nIt is missing infrastructure.",
+  },
+  arcExplanation: {
+    headline: "The Arc turns scattered health into clarity.",
+    bodyLead: "The Arc helps women understand:",
+    bodyPoints: [
+      "what may need attention",
+      "what has changed over time",
+      "what may be worth discussing earlier",
+      "where important gaps exist",
+    ],
+    bodyClosing:
+      "Without overwhelming dashboards or fragmented medical records.",
+  },
+  whatWomenMiss: {
+    headline: "What women commonly miss.",
+    cards: [
+      {
+        quote: "I thought being exhausted all the time was normal.",
+        footer: "Later connected with iron deficiency patterns.",
+        wishLine: "I wish I knew earlier.",
+      },
+      {
+        quote: "I postponed hormone testing for 5 years.",
+        footer: "Because nothing felt 'serious enough.'",
+      },
+      {
+        quote:
+          "No one explained cardiovascular risk differently for women.",
+        footer: "Patterns were recognized only after symptoms escalated.",
+        wishLine: "I wish I knew earlier.",
+      },
+    ],
+  },
+  systemFailure: {
+    headline:
+      "Women are expected to manage their health without infrastructure.",
+    copyParagraphs: [
+      "Medical data is fragmented.",
+      "Symptoms are normalized.",
+      "Screenings are delayed.",
+      "Patterns are often recognized too late.",
+    ],
+    closing:
+      "The Arc creates a clearer longitudinal view of women's health over time.",
   },
   whatThisIs: {
     label: "The problem",
@@ -839,24 +918,20 @@ export const homepageContent = {
     },
   },
   finalCta: {
-    headline: "Take control of your health — before something is missed",
-    supporting: "See your personalized health roadmap in under 2 minutes.",
-    ctaPrimaryLabel: "Start free check",
+    headline: "You cannot act on what you never see.",
+    supporting:
+      "Start identifying the health areas you may be overlooking.",
+    ctaPrimaryLabel: "Begin Your Health Arc",
     ctaPrimaryHref: "/onboarding/start",
-    ctaSecondaryLabel: "Upload your lab results",
-    ctaSecondaryHref: "/upload",
-    primaryMicrocopy: "No account required to start",
-    trustSignals: [
-      "No medical advice — just structured insights",
-      "You're in control of your data",
-      "Built for awareness, not diagnosis",
-    ],
-    afterStartLabel: "What happens after I start?",
-    afterStartItems: [
-      "You answer a few health questions",
-      "You get a personalized test roadmap",
-      "You upload lab results if you choose",
-      "You see what's covered and what's missing",
+    ctaSecondaryLabel: "I have an invitation",
+    ctaSecondaryHref: "/survey",
+    hoverSignals: [
+      "Thyroid",
+      "Ferritin",
+      "Hormones",
+      "Sleep",
+      "Cardiovascular",
+      "Cycle",
     ],
   },
   problem: {

@@ -32,6 +32,30 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   webpack(config, { dev, isServer }) {
+    // Filesystem cache speeds up dev rebuilds. Do not set `buildDependencies.config`
+    // to `__filename` here: Next compiles `next.config.ts` to a non-disk
+    // `next.config.compiled.js` path, which breaks PackFileCacheStrategy and can
+    // stall or confuse incremental compilation.
+    if (dev) {
+      config.cache = {
+        type: "filesystem",
+        cacheDirectory: path.resolve(__dirname, ".next-webpack-cache"),
+      };
+    }
+
+    // Exclude large non-source directories from the webpack watcher to
+    // dramatically reduce startup and incremental rebuild time.
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        "**/node_modules/**",
+        "**/node_modules.nosync/**",
+        "**/.git/**",
+        "**/lab-report-ocr-api-main/**",
+        "**/.next-webpack-cache/**",
+      ],
+    };
+
     // Force CJS builds to avoid webpack ESM static-analysis errors:
     // - framer-motion 12.x has ESM circular deps that hang compilation
     // - @prisma/* packages use ESM internally; CJS aliases prevent "Debug is not exported" errors
@@ -92,6 +116,21 @@ const nextConfig: NextConfig = {
             });
           },
         },
+      ];
+    }
+
+    if (process.env.WEBPACK_PROGRESS === "1") {
+      const webpack = require("webpack") as typeof import("webpack");
+      let lastPct = -1;
+      config.plugins = [
+        ...(config.plugins ?? []),
+        new webpack.ProgressPlugin((pct, msg, ...args) => {
+          const p = Math.floor(pct * 100);
+          if (p >= lastPct + 5 || pct >= 1) {
+            lastPct = p;
+            console.warn(`[webpack] ${p}% ${msg} ${args.filter(Boolean).join(" ")}`);
+          }
+        }),
       ];
     }
 

@@ -12,5 +12,6 @@ opencv-python-headless>=4.11.0
 numpy>=1.26.0
 pdf2image>=1.17.0
 pdfplumber>=0.11.0
+pymupdf>=1.24.0
 pandas>=2.0.0
 supabase>=2.0.0

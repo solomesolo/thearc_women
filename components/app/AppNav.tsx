@@ -2,59 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import { clearArcLocalState } from "@/lib/profile-engine-a/frontendClient";
 import { clsx } from "clsx";
+import { useLocale } from "@/lib/i18n/useLocale";
 
 const LINKS = [
-  { href: "/app/dashboard", label: "Dashboard" },
-  { href: "/results/overview", label: "Health Wallet" },
-  { href: "/results/action-plan", label: "Action Plan" },
-  { href: "/my-health-calendar", label: "My Health Calendar" },
+  { href: "/app/dashboard", labelEn: "Dashboard", labelDe: "Dashboard" },
+  { href: "/results/overview", labelEn: "Health Wallet", labelDe: "Gesundheitsakte" },
+  { href: "/results/action-plan", labelEn: "Action Plan", labelDe: "Aktionsplan" },
+  { href: "/my-health-calendar", labelEn: "My Health Calendar", labelDe: "Mein Gesundheitskalender" },
 ];
 
 export function AppNav() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const locale = useLocale();
+  const isDE = locale === "de";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/[0.07] bg-white/[0.85] backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-[72rem] items-center justify-between gap-6 px-5 md:px-8">
-        <Link href="/app/dashboard" className="text-[0.9375rem] font-semibold tracking-tight text-[#0c0c0c]">
-          The Arc
-        </Link>
-
-        <nav className="hidden items-center gap-1 md:flex">
-          {LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={clsx(
-                "rounded-[10px] px-3 py-1.5 text-[0.875rem] transition-colors",
-                pathname === href
-                  ? "bg-black/[0.06] font-medium text-[#0c0c0c]"
-                  : "text-[#737373] hover:bg-black/[0.04] hover:text-[#0c0c0c]"
-              )}
-            >
-              {label}
-            </Link>
-          ))}
+    <header className="sticky top-16 z-[90] border-b border-black/[0.07] bg-white/[0.92] backdrop-blur-sm md:top-[4.5rem]">
+      <div className="mx-auto flex h-12 max-w-[72rem] items-center gap-2 overflow-x-auto px-5 md:gap-4 md:px-8">
+        <nav className="flex min-w-0 flex-1 items-center gap-1 md:gap-1" aria-label="App">
+          {LINKS.map(({ href, labelEn, labelDe }) => {
+            const label = isDE ? labelDe : labelEn;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={clsx(
+                  "shrink-0 rounded-[10px] px-3 py-1.5 text-[0.8125rem] transition-colors md:text-[0.875rem]",
+                  pathname === href
+                    ? "bg-black/[0.07] font-medium text-[#0c0c0c]"
+                    : "text-[#737373] hover:bg-black/[0.04] hover:text-[#0c0c0c]"
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-
-        <div className="flex items-center gap-3">
-          {session?.user?.email && (
-            <span className="hidden text-[0.8125rem] text-[#a3a3a3] md:block">
-              {session.user.email}
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => { clearArcLocalState(); signOut({ callbackUrl: "/" }); }}
-            className="text-[0.8125rem] text-[#737373] hover:text-[#0c0c0c]"
-          >
-            Sign out
-          </button>
-        </div>
       </div>
     </header>
   );

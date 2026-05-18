@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
 import { ENGINE_A_STORAGE, apiBuildProfile, apiClaimSession, apiGetLatestQuestionnaireSession } from "@/lib/profile-engine-a/frontendClient";
 import { invalidateNavCache } from "@/lib/navigation/useNavigationDecision";
+import { invalidateRecsCache } from "@/lib/recommendations/useRecommendations";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,16 +45,26 @@ export default function RegisterPage() {
       });
 
       if (result?.ok) {
+        // Clear any stale cached recommendations from a previous user before loading the dashboard.
+        try {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k?.startsWith("arc.recommendations.cache.")) keysToRemove.push(k);
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+        } catch { /* ignore */ }
+
         const sessionId = typeof window !== "undefined" ? window.localStorage.getItem(ENGINE_A_STORAGE.sessionId) : null;
         if (sessionId) {
           await apiClaimSession(sessionId).catch(() => null);
-          // Claim profile snapshot to auth email and get the snapshot ID.
           const built = await apiBuildProfile(sessionId).catch(() => null);
           const profileSnapshotId = built?.profile_snapshot_id as string | undefined;
           if (profileSnapshotId) {
-            // Re-run recommendations + status + score in parallel under the auth email.
+            // Run recommendations first — recalculate reads from the run's results to create
+            // recommendationInstance rows, so these must be sequential, not parallel.
+            await fetch(`/api/recommendations/run/${encodeURIComponent(profileSnapshotId)}`, { method: "POST" }).catch(() => null);
             await Promise.all([
-              fetch(`/api/recommendations/run/${encodeURIComponent(profileSnapshotId)}`, { method: "POST" }).catch(() => null),
               fetch("/api/status/recalculate", { method: "POST" }).catch(() => null),
               fetch("/api/health-score/calculate", {
                 method: "POST",
@@ -62,13 +73,15 @@ export default function RegisterPage() {
               }).catch(() => null),
             ]);
           }
-          await fetch("/api/navigation/mark-results-seen", { method: "POST" }).catch(() => null);
         }
+        // Always mark results seen (clears server nav cache) even when no sessionId.
+        await fetch("/api/navigation/mark-results-seen", { method: "POST" }).catch(() => null);
+        invalidateRecsCache();
         invalidateNavCache();
         router.push("/app/dashboard");
       } else {
-        invalidateNavCache();
-        router.push("/app/dashboard");
+        setError("Account created but sign-in failed. Please try signing in below.");
+        setMode("signin");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -90,6 +103,15 @@ export default function RegisterPage() {
       });
 
       if (result?.ok) {
+        try {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k?.startsWith("arc.recommendations.cache.")) keysToRemove.push(k);
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+        } catch { /* ignore */ }
+
         const latest = await apiGetLatestQuestionnaireSession().catch(() => ({ session: null }));
         if (latest.session?.status === "in_progress") {
           const step = latest.session.last_step_number;
@@ -97,7 +119,7 @@ export default function RegisterPage() {
           else if (step === 1) router.push("/onboarding/lifestyle");
           else if (step === 2) router.push("/onboarding/health-context");
           else if (step === 3) router.push("/onboarding/test-history");
-          else router.push("/auth/register");
+          else router.push("/results/bootstrap");
           return;
         }
 
@@ -118,6 +140,7 @@ export default function RegisterPage() {
         }
 
         await fetch("/api/navigation/mark-results-seen", { method: "POST" }).catch(() => null);
+        invalidateRecsCache();
         invalidateNavCache();
         router.push("/app/dashboard");
       } else {

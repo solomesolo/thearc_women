@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { useSurvey } from "@/components/onboarding/SurveyProvider";
-import {
-  apiCreateQuestionnaireSession,
-  apiGetOnboardingStatus,
-} from "@/lib/profile-engine-a/frontendClient";
+import { apiCreateQuestionnaireSession } from "@/lib/profile-engine-a/frontendClient";
 import { useLocale } from "@/lib/i18n/useLocale";
 
 // ── localStorage state ────────────────────────────────────────────────────────
@@ -290,7 +287,8 @@ function Check() {
 
 export default function HealthJourneyPage() {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const searchParams = useSearchParams();
+  const { status: sessionStatus } = useSession({ required: false });
   const { setEngineASessionId, clearSurvey } = useSurvey();
   const locale = useLocale();
   const isDE = locale === "de";
@@ -302,35 +300,22 @@ export default function HealthJourneyPage() {
     if (getJourneyState() === "not_started") setJourneyState("journey_seen");
   }, []);
 
+  // After a signOut redirect back here with ?autostart=1, launch the survey
+  // once NextAuth confirms the session is gone.
   useEffect(() => {
-    if (sessionStatus === "loading" || !session?.user?.email) return;
-    apiGetOnboardingStatus()
-      .then((s) => {
-        if (!s) return;
-        if (s.has_completed_profile) { router.replace("/app/dashboard"); return; }
-        if (s.has_incomplete_session && s.session_id && s.resume_step) {
-          setEngineASessionId(s.session_id);
-          router.replace(`/onboarding/${s.resume_step}`);
-        }
-      })
-      .catch(() => {});
-  }, [session, sessionStatus, router, setEngineASessionId]);
+    if (searchParams?.get("autostart") !== "1") return;
+    if (sessionStatus === "loading") return;
+    if (sessionStatus === "unauthenticated") {
+      launchSurvey();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, sessionStatus]);
 
-  async function handleStart() {
-    if (isStarting || sessionStatus === "loading") return;
+  async function launchSurvey() {
     setIsStarting(true);
     setStartError(null);
     clearSurvey();
     try {
-      if (session?.user?.email) {
-        const s = await apiGetOnboardingStatus();
-        if (s?.has_completed_profile) { router.push("/app/dashboard"); return; }
-        if (s?.has_incomplete_session && s?.session_id && s?.resume_step) {
-          setEngineASessionId(s.session_id);
-          router.push(`/onboarding/${s.resume_step}`);
-          return;
-        }
-      }
       const created = await apiCreateQuestionnaireSession();
       setEngineASessionId(created.session_id);
       setJourneyState("consent_given");
@@ -340,6 +325,17 @@ export default function HealthJourneyPage() {
       setStartError(msg ?? (isDE ? "Fehler — bitte erneut versuchen." : "Something went wrong — please try again."));
       setIsStarting(false);
     }
+  }
+
+  function handleStart() {
+    if (isStarting || sessionStatus === "loading") return;
+    if (sessionStatus === "authenticated") {
+      // Full-page sign-out so the auth cookie is definitely gone before any
+      // survey API calls are made. The callback URL auto-starts the survey.
+      signOut({ callbackUrl: "/health-journey?autostart=1" });
+      return;
+    }
+    launchSurvey();
   }
 
   const ctaLabel = isStarting

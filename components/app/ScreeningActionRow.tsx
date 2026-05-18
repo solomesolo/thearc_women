@@ -328,36 +328,6 @@ export function ScreeningActionRow({ screeningName }: { screeningName: string })
 
       {open && (
         <div className="border-t border-black/[0.07]">
-          {/* Metadata: why / where / coverage */}
-          <div className="grid grid-cols-1 divide-y divide-black/[0.07] md:grid-cols-3 md:divide-x md:divide-y-0">
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.whyMatters}</p>
-              <div className="mt-3 rounded-[12px] border border-black/[0.07] bg-[#fafaf9] p-3.5">
-                <p className="text-[0.8125rem] leading-[1.55] text-[#525252]">
-                  {locale === "de" ? meta.why_de : meta.why_en}
-                </p>
-              </div>
-            </div>
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.whereTo}</p>
-              <div className="mt-3 rounded-[12px] border border-black/[0.07] bg-[#fafaf9] p-3.5">
-                <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">
-                  {locale === "de" ? meta.where_de : meta.where_en}
-                </p>
-                <p className="mt-1.5 text-[0.8125rem] text-[#737373]">
-                  {L.waitTime}: {locale === "de" ? meta.wait_de : meta.wait_en}
-                </p>
-              </div>
-            </div>
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.coverage}</p>
-              <div className="mt-3 rounded-[12px] border border-black/[0.07] bg-[#fafaf9] p-3.5">
-                <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{L.covered}</p>
-                <p className="mt-1 text-[0.8125rem] leading-snug text-[#737373]">{L.coveredDetail}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Action buttons */}
           {!isDone && (
             <div className="flex flex-wrap items-center gap-2 border-t border-black/[0.07] px-5 py-4">

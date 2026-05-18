@@ -11,35 +11,28 @@ import { getOrCreateAnonId } from "@/lib/profile-engine-a/frontendClient";
 import dynamic from "next/dynamic";
 import { CollapsibleCheckCard } from "@/components/app/CollapsibleCheckCard";
 import { RemindMeButton } from "@/components/app/RemindMeButton";
-
-const ScreeningActionRow = dynamic(
-  () => import("@/components/app/ScreeningActionRow").then((m) => ({ default: m.ScreeningActionRow })),
-  { loading: () => <div className="h-10 rounded-[18px] bg-[#f0f0ef] animate-pulse" /> },
-);
-const UploadResultsModal = dynamic(
-  () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
-  { ssr: false },
-);
-import { deduplicateScreenings } from "@/lib/screenings/screeningUtils";
+import { ZipPromptBanner } from "@/components/app/ZipPromptBanner";
+import { NominationModule } from "@/components/app/NominationModule";
+import { loadUserZip } from "@/lib/providers-de/useProviderSuggestions";
+import { computeAllSuggestions, prefetchProviderData } from "@/lib/providers-de/clientMatcher";
+import type { ProviderSuggestions } from "@/lib/providers-de/types";
 import type {
   CheckRecommendation,
   CheckStatus,
   FinalRecommendation,
 } from "@/lib/recommendations-engine/types";
 
-const STATUS_BADGE_CLASS: Record<CheckStatus, string> = {
-  missing: "bg-[#0c0c0c] text-white",
-  reminder_set: "bg-[#404040] text-white",
-  planned: "bg-[#525252] text-white",
-  completed: "bg-white text-[#404040] border border-black/[0.12]",
-  result_uploaded: "bg-white text-[#404040] border border-black/[0.12]",
-};
+const UploadResultsModal = dynamic(
+  () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
+  { ssr: false },
+);
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ActionPlanPage() {
   const { data: session } = useSession();
   const locale = useLocale();
+  const isDE = locale === "de";
   const isAnonymous = !session?.user?.email;
   const userId =
     session?.user?.email ??
@@ -50,12 +43,18 @@ export default function ActionPlanPage() {
   const pathway = recs?.pathway;
   const finalRecs = recs?.recommendations ?? [];
   const summary = recs?.summary;
-  // profile reserved for future UI surface (kept in payload)
 
   const [heroWhyOpen, setHeroWhyOpen] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [liveMessage, setLiveMessage] = useState<string>("");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [userZip, setUserZip] = useState<string | null>(() =>
+    typeof window !== "undefined" ? loadUserZip() : null,
+  );
+  const [providerSuggestions, setProviderSuggestions] = useState<Map<string, ProviderSuggestions>>(new Map());
+
+  // Prefetch provider data as soon as the page mounts — before any card opens
+  useEffect(() => { prefetchProviderData(); }, []);
 
   const checkByKey = new Map<string, CheckRecommendation>();
   if (pathway) {
@@ -71,11 +70,9 @@ export default function ActionPlanPage() {
   const screeningChecks = allChecks.filter((c) => c.isScreening);
   const totalChecks = allChecks.length;
 
-  // Use live pathway (not stale pathwayTimeline DB data) so ordering reflects current engine output.
   const checksThisMonth = (pathway?.next_month ?? []).filter((c) => !c.isScreening);
 
   const isHighPriority = (check: CheckRecommendation) => {
-    // preventive_baseline is always the first step when not done.
     if (check.checkKey === "preventive_baseline") {
       return check.status !== "completed" && check.status !== "result_uploaded";
     }
@@ -84,8 +81,8 @@ export default function ActionPlanPage() {
   };
 
   const highPriorityNow = checksThisMonth.filter(isHighPriority);
+  const highPriorityKeys = new Set(highPriorityNow.map((c) => c.checkKey));
 
-  // preventive_baseline is always the starting point when not yet done.
   const baselineCheck = allChecks.find(
     (c) => c.checkKey === "preventive_baseline" && c.status !== "completed" && c.status !== "result_uploaded"
   );
@@ -98,35 +95,49 @@ export default function ActionPlanPage() {
 
   const nextBestCheck = nextBestKey ? checkByKey.get(nextBestKey) ?? null : null;
 
+  // Do soon: next_3_months, excluding checks already shown in highPriorityNow or screenings
+  const doSoonChecks = (pathway?.next_3_months ?? []).filter(
+    (c) => !c.isScreening && !highPriorityKeys.has(c.checkKey)
+  );
+
   const nextBestRef = useRef<HTMLDivElement | null>(null);
   const scrollToNextBest = () => {
     nextBestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Default: first check expanded (initialize once when data becomes available).
   useEffect(() => {
     if (expandedKey || !nextBestKey) return;
     const id = window.setTimeout(() => setExpandedKey(nextBestKey), 0);
     return () => window.clearTimeout(id);
   }, [expandedKey, nextBestKey]);
 
+  // Pre-compute provider suggestions for all checks in one pass whenever
+  // checks or ZIP change. Runs client-side; data is cached after first load.
+  useEffect(() => {
+    if (!allChecks.length) return;
+    const inputs = allChecks.map((c) => ({
+      checkKey: c.checkKey,
+      isScreening: c.isScreening,
+      biomarkers: finalByKey.get(c.checkKey)?.coreTestsNow ?? c.includedTestsPreview ?? [],
+    }));
+    computeAllSuggestions(inputs, userZip).then(setProviderSuggestions);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allChecks.length, userZip]);
+
   const onUpdateStatusWithReward = async (key: string, status: CheckStatus) => {
     const prev = checkByKey.get(key)?.status ?? "missing";
     await updateStatus(key, status);
     if (prev !== status) {
-      if (status === "planned") setLiveMessage("Good start. This check is now in your plan.");
-      if (status === "completed" || status === "result_uploaded") setLiveMessage("Completed. Your health progress has been updated.");
+      if (status === "planned") setLiveMessage(isDE ? "Gut gestartet. Dieser Check ist jetzt in Ihrem Plan." : "Good start. This check is now in your plan.");
+      if (status === "completed" || status === "result_uploaded") setLiveMessage(isDE ? "Abgeschlossen. Ihr Fortschritt wurde aktualisiert." : "Completed. Your health progress has been updated.");
       window.setTimeout(() => setLiveMessage(""), 2200);
     }
   };
 
-  const journeyStep =
-    (summary?.completedCount ?? 0) > 0 ? 3 : (summary?.plannedCount ?? 0) > 0 ? 2 : 1;
-
   const categoryGroups = [
-    { label: "Preventive baseline", keys: new Set(["preventive_baseline"]) },
-    { label: "Heart and metabolic health", keys: new Set(["cardiometabolic_risk"]) },
-    { label: "Iron and blood health", keys: new Set(["iron_ferritin", "fatigue_low_energy_panel"]) },
+    { label: isDE ? "Praventionstests Baseline" : "Preventive baseline", keys: new Set(["preventive_baseline"]) },
+    { label: isDE ? "Herz- und Stoffwechselgesundheit" : "Heart and metabolic health", keys: new Set(["cardiometabolic_risk"]) },
+    { label: isDE ? "Eisen und Blutgesundheit" : "Iron and blood health", keys: new Set(["iron_ferritin", "fatigue_low_energy_panel"]) },
   ] as const;
 
   const categoryProgress = categoryGroups.map((g) => {
@@ -146,9 +157,9 @@ export default function ActionPlanPage() {
         "ANON_COMPLETED_SURVEY_UNREGISTERED",
         "AUTH_PROFILE_READY_NO_RECOMMENDATIONS",
       ]}
-      loadingText={locale === "de" ? "Dein Plan wird geladen…" : "Loading your health plan…"}
+      loadingText={isDE ? "Dein Plan wird geladen…" : "Loading your health plan…"}
     >
-      <div className="mx-auto max-w-[72rem] px-5 py-10 md:px-8">
+      <div className="mx-auto max-w-[72rem] px-5 pb-20 pt-10 md:pb-0 md:px-8">
 
         {/* Page header */}
         <div className="mb-2">
@@ -165,7 +176,7 @@ export default function ActionPlanPage() {
                 strokeLinejoin="round"
               />
             </svg>
-            {locale === "de" ? "Zur Übersicht" : "Back to overview"}
+            {isDE ? "Zur Ubersicht" : "Back to overview"}
           </Link>
         </div>
 
@@ -181,7 +192,9 @@ export default function ActionPlanPage() {
           </p>
           {summary && (
             <p className="mt-2 text-[0.875rem] text-[#737373]">
-              {summary.nextMonthCount} next month · {summary.plannedCount} planned · {summary.completedCount} done
+              {isDE
+                ? `${summary.nextMonthCount} diese Woche · ${summary.plannedCount} geplant · ${summary.completedCount} abgeschlossen`
+                : `${summary.nextMonthCount} this month · ${summary.plannedCount} planned · ${summary.completedCount} done`}
             </p>
           )}
         </div>
@@ -194,16 +207,18 @@ export default function ActionPlanPage() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_20rem]">
           {/* Main */}
           <div className="min-w-0">
-            {/* 1) Next Best Action hero */}
+            {/* Next Best Action hero */}
             <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Your next best action
+                {isDE ? "Ihre nachste Manahme" : "Your next best action"}
               </p>
               <p className="mt-2 text-[1.125rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[1.25rem]">
-                {nextBestCheck?.checkName ?? "Book your preventive health baseline blood test"}
+                {nextBestCheck?.checkName ?? (isDE ? "Praventiven Bluttest planen" : "Book your preventive health baseline blood test")}
               </p>
               <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#737373]">
-                Takes about 5 minutes to plan. This unlocks your first health baseline.
+                {isDE
+                  ? "Etwa 5 Minuten zum Planen. Damit starten Sie Ihre erste Gesundheits-Baseline."
+                  : "Takes about 5 minutes to plan. This unlocks your first health baseline."}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -212,7 +227,7 @@ export default function ActionPlanPage() {
                   onClick={scrollToNextBest}
                   className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
                 >
-                  Start planning
+                  {isDE ? "Jetzt planen" : "Start planning"}
                 </button>
                 <button
                   type="button"
@@ -220,20 +235,20 @@ export default function ActionPlanPage() {
                   aria-expanded={heroWhyOpen}
                   className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
                 >
-                  View why this matters
+                  {isDE ? "Warum das wichtig ist" : "View why this matters"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(true)}
                   className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#404040] transition-colors hover:text-[#0c0c0c]"
                 >
-                  Upload result
+                  {isDE ? "Ergebnis hochladen" : "Upload result"}
                 </button>
                 {nextBestCheck && (
                   <RemindMeButton
                     checkKey={nextBestCheck.checkKey}
                     checkName={nextBestCheck.checkName}
-                    isDE={locale === "de"}
+                    isDE={isDE}
                   />
                 )}
               </div>
@@ -241,27 +256,29 @@ export default function ActionPlanPage() {
               {heroWhyOpen && (
                 <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
                   <p className="text-[0.9375rem] leading-[1.65] text-[#404040]">
-                    {finalByKey.get(nextBestKey ?? "")?.whyRecommendedForYou ?? nextBestCheck?.whyForYou ?? "Recommended based on your health profile."}
+                    {finalByKey.get(nextBestKey ?? "")?.whyRecommendedForYou ?? nextBestCheck?.whyForYou ?? (isDE ? "Empfohlen auf Basis Ihres Gesundheitsprofils." : "Recommended based on your health profile.")}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* 2) Progress summary (replaces health completeness score) */}
+            {/* Progress summary */}
             {summary && (
               <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a3a3a3]">
-                      Your health progress
+                      {isDE ? "Ihr Fortschritt" : "Your health progress"}
                     </p>
                     <p className="mt-1 text-[1.5rem] font-semibold tabular-nums tracking-tight text-[#0c0c0c] md:text-[1.75rem]">
-                      {summary.completedCount} of {totalChecks} checks completed
+                      {isDE
+                        ? `${summary.completedCount} von ${totalChecks} abgeschlossen`
+                        : `${summary.completedCount} of ${totalChecks} checks completed`}
                     </p>
                   </div>
                   <div className="text-right text-[0.875rem] text-[#737373]">
                     <p>
-                      {summary.plannedCount} planned
+                      {summary.plannedCount} {isDE ? "geplant" : "planned"}
                     </p>
                   </div>
                 </div>
@@ -269,7 +286,7 @@ export default function ActionPlanPage() {
                 <div
                   className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0ef]"
                   role="progressbar"
-                  aria-label="Overall health progress"
+                  aria-label={isDE ? "Gesamtfortschritt" : "Overall health progress"}
                   aria-valuenow={totalChecks ? summary.completedCount : 0}
                   aria-valuemin={0}
                   aria-valuemax={Math.max(1, totalChecks)}
@@ -292,7 +309,7 @@ export default function ActionPlanPage() {
                       <div
                         className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white"
                         role="progressbar"
-                        aria-label={`${c.label} progress`}
+                        aria-label={`${c.label} ${isDE ? "Fortschritt" : "progress"}`}
                         aria-valuenow={c.done}
                         aria-valuemin={0}
                         aria-valuemax={Math.max(1, c.total)}
@@ -308,244 +325,241 @@ export default function ActionPlanPage() {
               </div>
             )}
 
-            {/* 3) Journey steps */}
-            <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Journey
-              </p>
-              <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-                {[
-                  { label: "Plan your first check", step: 1 },
-                  { label: "Complete your blood test", step: 2 },
-                  { label: "Review your results", step: 3 },
-                ].map((s) => {
-                  const active = journeyStep === s.step;
-                  const unlocked = journeyStep >= s.step;
-                  return (
-                    <div
-                      key={s.label}
-                      className={`rounded-[16px] border border-black/[0.06] px-4 py-3 ${active ? "bg-[#0c0c0c] text-white" : unlocked ? "bg-[#fafaf9] text-[#0c0c0c]" : "bg-[#fafaf9] text-[#a3a3a3]"}`}
-                      aria-label={`${s.label}${active ? ", active" : unlocked ? "" : ", locked"}`}
-                    >
-                      <p className="text-[0.875rem] font-medium">{s.label}</p>
-                      <p className={`mt-1 text-[0.8125rem] ${active ? "text-white/70" : unlocked ? "text-[#737373]" : "text-[#a3a3a3]"}`}>
-                        {active ? "Current step" : unlocked ? "Unlocked" : "Locked"}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 9) Save progress prompt (softened + repositioned) */}
+            {/* Save progress prompt for anonymous users */}
             {isAnonymous && (
               <div className="mb-6 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">Save your progress</p>
+                    <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">
+                      {isDE ? "Fortschritt speichern" : "Save your progress"}
+                    </p>
                     <p className="mt-1 text-[0.875rem] leading-[1.6] text-[#737373]">
-                      Create a free account to keep your plan, track completed checks, and return to your progress later.
+                      {isDE
+                        ? "Erstellen Sie ein kostenloses Konto, um Ihren Plan zu behalten und Ihren Fortschritt zu verfolgen."
+                        : "Create a free account to keep your plan, track completed checks, and return to your progress later."}
                     </p>
                   </div>
                   <Link
                     href="/auth/register"
                     className="shrink-0 rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
                   >
-                    Create free account
+                    {isDE ? "Kostenloses Konto erstellen" : "Create free account"}
                   </Link>
                 </div>
               </div>
             )}
 
-            {/* Checks */}
+            {/* ZIP prompt */}
+            <ZipPromptBanner
+              isDE={isDE}
+              onZipSaved={(z) => setUserZip(z)}
+            />
+
+            {/* Check list */}
             <div className="space-y-5">
-          {isLoading && (
-            <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
-              {locale === "de" ? "Lädt…" : "Loading your action plan…"}
-            </div>
-          )}
-
-          {error && !isLoading && (
-            <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
-              We couldn&apos;t load your action plan.{" "}
-              <button
-                type="button"
-                className="underline underline-offset-2 text-[#0c0c0c]"
-                onClick={reload}
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {!isLoading &&
-            ((!pathway || Object.values(pathway).every((x) => x.length === 0)) &&
-              (!finalRecs || finalRecs.length === 0)) &&
-            !error && (
-            <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
-              <p>No recommendations yet.</p>
-              <Link
-                href="/health-journey"
-                className="mt-3 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.9375rem] font-medium text-white hover:brightness-[0.9]"
-              >
-                {locale === "de" ? "Assessment starten" : "Start assessment"}
-              </Link>
-            </div>
-          )}
-
-          {highPriorityNow.length ? (
-            <div className="space-y-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Do now
-              </p>
-              {highPriorityNow.slice(0, 3).map((check) => (
-                <CollapsibleCheckCard
-                  key={check.checkKey}
-                  check={check}
-                  finalRec={finalByKey.get(check.checkKey) ?? null}
-                  expanded={expandedKey === check.checkKey}
-                  onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
-                  onUpdateStatus={onUpdateStatusWithReward}
-                  onUploadResult={() => setShowUploadModal(true)}
-                  cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {/* Preventive screenings — live section */}
-          {screeningChecks.length > 0 && screeningChecks.map((sc) => {
-            const isDone = sc.status === "completed" || sc.status === "result_uploaded";
-            const nextStatus: CheckStatus = sc.status === "missing" ? "planned" : sc.status === "planned" ? "completed" : sc.status;
-            const ctaLabel = sc.status === "missing"
-              ? (locale === "de" ? "Als geplant markieren" : "Mark as planned")
-              : sc.status === "planned"
-                ? (locale === "de" ? "Als erledigt markieren" : "Mark as completed")
-                : (locale === "de" ? "Erledigt" : "Completed");
-            const statusLabel = sc.status === "planned"
-              ? (locale === "de" ? "Geplant" : "Planned")
-              : isDone
-                ? (locale === "de" ? "Erledigt" : "Done")
-                : (locale === "de" ? "Offen" : "Not started");
-
-            const allTests = (sc.includedTestsByCategory ?? []).flatMap((cat) => cat.tests);
-            const uniqueTests = deduplicateScreenings(allTests);
-
-            return (
-              <div key={sc.checkKey} className="mt-8 rounded-[20px] border border-black/[0.08] bg-white p-5 md:p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                      {locale === "de" ? "Vorsorgeuntersuchungen" : "Preventive screenings"}
-                    </p>
-                    <h2 className="mt-1 text-[1.0625rem] font-semibold leading-snug text-[#0c0c0c]">
-                      {sc.checkName}
-                    </h2>
-                    {sc.shortSummary && (
-                      <p className="mt-1 text-[0.9375rem] leading-[1.6] text-[#737373]">
-                        {sc.shortSummary}
-                      </p>
-                    )}
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] ${STATUS_BADGE_CLASS[sc.status]}`}>
-                    {statusLabel}
-                  </span>
+              {isLoading && (
+                <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
+                  {isDE ? "Ladt…" : "Loading your action plan…"}
                 </div>
+              )}
 
-                {/* Why this matters for you */}
-                {sc.whyForYou && (
-                  <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                      {locale === "de" ? "Warum für Sie?" : "Why this matters for you"}
-                    </p>
-                    <p className="mt-2 text-[0.9375rem] leading-[1.65] text-[#404040]">
-                      {sc.whyForYou}
-                    </p>
-                  </div>
-                )}
-
-                {/* Individual screening tests */}
-                {uniqueTests.length > 0 && (
-                  <div className="mt-5 space-y-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                      {locale === "de" ? "Ihre Vorsorge-Untersuchungen" : "Your recommended screenings"}
-                    </p>
-                    {uniqueTests.map((testName) => (
-                      <ScreeningActionRow key={testName} screeningName={testName} />
-                    ))}
-                  </div>
-                )}
-
-                {/* CTA */}
-                <div className="mt-5 flex flex-wrap items-center gap-2">
+              {error && !isLoading && (
+                <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
+                  {isDE ? "Ihr Aktionsplan konnte nicht geladen werden." : "We couldn't load your action plan."}{" "}
                   <button
                     type="button"
-                    onClick={() => onUpdateStatusWithReward(sc.checkKey, nextStatus)}
-                    disabled={isDone}
-                    className="rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="underline underline-offset-2 text-[#0c0c0c]"
+                    onClick={reload}
                   >
-                    {ctaLabel}
+                    {isDE ? "Erneut versuchen" : "Retry"}
                   </button>
-                  {sc.status !== "missing" && !isDone && (
-                    <button
-                      type="button"
-                      onClick={() => onUpdateStatusWithReward(sc.checkKey, "missing")}
-                      className="rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#737373] transition-colors hover:text-[#0c0c0c]"
-                    >
-                      {locale === "de" ? "Zurücksetzen" : "Reset"}
-                    </button>
-                  )}
-                  {!isDone && (
-                    <RemindMeButton
-                      checkKey={sc.checkKey}
-                      checkName={sc.checkName}
-                      isDE={locale === "de"}
-                    />
-                  )}
-                  <span className="rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[#737373]">
-                    {locale === "de" ? "GKV übernommen" : "GKV covered"}
-                  </span>
                 </div>
-              </div>
-            );
-          })}
+              )}
+
+              {!isLoading &&
+                ((!pathway || Object.values(pathway).every((x) => x.length === 0)) &&
+                  (!finalRecs || finalRecs.length === 0)) &&
+                !error && (
+                  <div className="rounded-[20px] border border-black/[0.08] bg-white p-6 text-[0.9375rem] text-[#737373]">
+                    <p>{isDE ? "Noch keine Empfehlungen." : "No recommendations yet."}</p>
+                    <Link
+                      href="/health-journey"
+                      className="mt-3 inline-flex rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.9375rem] font-medium text-white hover:brightness-[0.9]"
+                    >
+                      {isDE ? "Assessment starten" : "Start assessment"}
+                    </Link>
+                  </div>
+                )}
+
+              {/* Section: Do now */}
+              {highPriorityNow.length > 0 && (
+                <div className="space-y-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                    {isDE ? "Jetzt erledigen" : "Do now"}
+                  </p>
+                  {highPriorityNow.slice(0, 3).map((check) => (
+                    <CollapsibleCheckCard
+                      key={check.checkKey}
+                      check={check}
+                      finalRec={finalByKey.get(check.checkKey) ?? null}
+                      expanded={expandedKey === check.checkKey}
+                      onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
+                      onUpdateStatus={onUpdateStatusWithReward}
+                      onUploadResult={() => setShowUploadModal(true)}
+                      cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
+                      isDE={isDE}
+                      providerSuggestions={providerSuggestions.get(check.checkKey) ?? null}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Section: Screenings */}
+              {screeningChecks.length > 0 && (
+                <div className="space-y-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                    {isDE ? "Vorsorgeuntersuchungen" : "Screenings"}
+                  </p>
+                  {screeningChecks.map((check) => (
+                    <CollapsibleCheckCard
+                      key={check.checkKey}
+                      check={check}
+                      finalRec={finalByKey.get(check.checkKey) ?? null}
+                      expanded={expandedKey === check.checkKey}
+                      onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
+                      onUpdateStatus={onUpdateStatusWithReward}
+                      onUploadResult={() => setShowUploadModal(true)}
+                      cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
+                      isDE={isDE}
+                      providerSuggestions={providerSuggestions.get(check.checkKey) ?? null}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Section: Do soon */}
+              {doSoonChecks.length > 0 && (
+                <div className="space-y-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                    {isDE ? "Bald erledigen" : "Do soon"}
+                  </p>
+                  {doSoonChecks.map((check) => (
+                    <CollapsibleCheckCard
+                      key={check.checkKey}
+                      check={check}
+                      finalRec={finalByKey.get(check.checkKey) ?? null}
+                      expanded={expandedKey === check.checkKey}
+                      onToggle={() => setExpandedKey((k) => (k === check.checkKey ? null : check.checkKey))}
+                      onUpdateStatus={onUpdateStatusWithReward}
+                      onUploadResult={() => setShowUploadModal(true)}
+                      cardRef={check.checkKey === nextBestKey ? nextBestRef : undefined}
+                      isDE={isDE}
+                      providerSuggestions={providerSuggestions.get(check.checkKey) ?? null}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <NominationModule />
             </div>
           </div>
 
-          {/* 10) Sticky progress summary (desktop only) */}
+          {/* Sticky right column (desktop) */}
           <aside className="hidden md:block">
-            <div className="sticky top-6 rounded-[20px] border border-black/[0.08] bg-white p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
-                Current progress
-              </p>
-              <div className="mt-3 space-y-1 text-[0.9375rem] text-[#404040]">
-                <p><span className="font-medium">{summary?.completedCount ?? 0}</span> completed</p>
-                <p><span className="font-medium">{summary?.plannedCount ?? 0}</span> planned</p>
-              </div>
-              <div className="mt-4 rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#737373]">
-                  Next action
+            <div className="sticky top-6 space-y-4">
+
+              {/* Progress card */}
+              <div className="rounded-[20px] border border-black/[0.08] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                  {isDE ? "Ihr Fortschritt" : "Your progress"}
                 </p>
-                <p className="mt-2 text-[0.875rem] leading-[1.55] text-[#404040]">
-                  {nextBestCheck?.checkName ?? "Continue your plan"}
-                </p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-3 py-2.5">
+                    <p className="text-[1.25rem] font-semibold tabular-nums text-[#0c0c0c]">{summary?.completedCount ?? 0}</p>
+                    <p className="text-[0.75rem] text-[#737373]">{isDE ? "Abgeschlossen" : "Completed"}</p>
+                  </div>
+                  <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-3 py-2.5">
+                    <p className="text-[1.25rem] font-semibold tabular-nums text-[#0c0c0c]">{summary?.plannedCount ?? 0}</p>
+                    <p className="text-[0.75rem] text-[#737373]">{isDE ? "Geplant" : "Planned"}</p>
+                  </div>
+                </div>
+                {totalChecks > 0 && (
+                  <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#f0f0ef]">
+                    <div
+                      className="h-full rounded-full bg-[#0c0c0c] transition-all"
+                      style={{ width: `${Math.round(((summary?.completedCount ?? 0) / totalChecks) * 100)}%` }}
+                    />
+                  </div>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={scrollToNextBest}
-                className="mt-4 w-full rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
-              >
-                Continue
-              </button>
+
+              {/* Next action card */}
+              <div className="rounded-[20px] border border-black/[0.08] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                  {isDE ? "Nachste empfohlene Manahme" : "Next recommended"}
+                </p>
+                <p className="mt-2 text-[0.9375rem] font-medium leading-snug text-[#0c0c0c]">
+                  {nextBestCheck?.checkName ?? (isDE ? "Plan wird geladen…" : "Loading your plan…")}
+                </p>
+                {nextBestCheck?.shortSummary && (
+                  <p className="mt-1 text-[0.8125rem] text-[#737373] line-clamp-2">{nextBestCheck.shortSummary}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={scrollToNextBest}
+                  className="mt-4 w-full rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white transition-[filter] hover:brightness-[0.88]"
+                >
+                  {isDE ? "Weiter" : "Continue"}
+                </button>
+              </div>
+
+              {/* Quick upload */}
+              <div className="rounded-[20px] border border-black/[0.08] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">
+                  {isDE ? "Ergebnisse hochladen" : "Upload results"}
+                </p>
+                <p className="mt-2 text-[0.8125rem] text-[#737373]">
+                  {isDE
+                    ? "Haben Sie bereits Ergebnisse? Hochladen und wir speichern die passenden Werte."
+                    : "Already have results? Upload and we'll save the matching values."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(true)}
+                  className="mt-3 w-full rounded-[12px] border border-black/[0.1] px-4 py-2.5 text-[0.875rem] font-medium text-[#0c0c0c] transition-colors hover:bg-[#fafaf9]"
+                >
+                  {isDE ? "Ergebnis hochladen" : "Upload result"}
+                </button>
+              </div>
+
             </div>
           </aside>
         </div>
       </div>
 
+      {/* Mobile sticky bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden border-t border-black/[0.08] bg-white/95 backdrop-blur-sm px-5 py-3 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[0.75rem] text-[#737373]">
+            {summary?.completedCount ?? 0} {isDE ? "abgeschlossen" : "completed"} · {summary?.plannedCount ?? 0} {isDE ? "geplant" : "planned"}
+          </p>
+          <p className="text-[0.8125rem] font-medium text-[#0c0c0c] truncate max-w-[200px]">
+            {nextBestCheck?.checkName ?? (isDE ? "Weiter" : "Continue")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={scrollToNextBest}
+          className="shrink-0 rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-medium text-white"
+        >
+          {isDE ? "Weiter" : "Continue"}
+        </button>
+      </div>
+
       <UploadResultsModal
         open={showUploadModal}
         onClose={() => setShowUploadModal(false)}
+        locale={isDE ? "de" : "en"}
       />
     </ProtectedRouteGate>
   );

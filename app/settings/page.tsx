@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { setStoredLocale } from "@/lib/i18n/locale";
 import { clearArcLocalState } from "@/lib/profile-engine-a/frontendClient";
@@ -25,10 +26,30 @@ interface SettingsData {
 interface AccessCode {
   id: string;
   code: string;
+  token?: string;
   status: "available" | "used" | "revoked" | "expired";
   createdAt: string;
   usedAt: string | null;
   expiresAt: string | null;
+  offline?: boolean;
+}
+
+interface CalendarConnection {
+  id: string;
+  provider: "google" | "outlook" | "ical";
+  label: string | null;
+  calendarId: string | null;
+  icalFeedToken: string | null;
+  createdAt: string;
+}
+
+interface CalendarState {
+  connections: CalendarConnection[];
+  loading: boolean;
+  connecting: string | null; // provider being connected
+  copiedFeed: boolean;
+  disconnecting: string | null;
+  error: string | null;
 }
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
@@ -99,17 +120,143 @@ function StatusChip({ status }: { status: "available" | "used" | "revoked" | "ex
   );
 }
 
+// ── Calendar provider icons ───────────────────────────────────────────────────
+
+function GoogleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+function OutlookIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+      <rect width="14" height="14" x="1" y="5" rx="2" fill="#0078D4"/>
+      <rect width="14" height="14" x="9" y="5" rx="2" fill="#28A8E8"/>
+      <path d="M9 5h6v14H9z" fill="#50D9FF" opacity=".5"/>
+      <rect width="8" height="8" x="13" y="1" rx="1.5" fill="#0078D4"/>
+      <path d="M4 9h6v6H4z" rx="1" fill="white" opacity=".9"/>
+      <text x="4.5" y="17.5" fontSize="7" fontWeight="bold" fill="#0078D4" fontFamily="sans-serif">O</text>
+    </svg>
+  );
+}
+
+function ICalIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="4" width="18" height="17" rx="2" stroke="#737373" strokeWidth="1.5"/>
+      <path d="M3 9h18" stroke="#737373" strokeWidth="1.5"/>
+      <path d="M8 2v4M16 2v4" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 13h3M8 16.5h5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+type CalL = { subscribe: string; disconnect: string; connected: string };
+
+function CalendarProviderRow({
+  icon, name, hint, connected, connecting, disconnecting, onConnect, onDisconnect, L,
+}: {
+  icon: React.ReactNode;
+  name: string;
+  hint: string;
+  connected: boolean;
+  connecting: boolean;
+  disconnecting: boolean;
+  onConnect: () => void;
+  onDisconnect?: () => void;
+  L: CalL;
+}) {
+  return (
+    <div className="rounded-[14px] border border-black/[0.07] bg-[#fafaf9] px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/[0.08]">
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[0.9375rem] font-medium text-[#0c0c0c]">{name}</span>
+            {connected && (
+              <span className="rounded-full border border-green-100 bg-[#f0fdf4] px-2 py-0.5 text-[0.7rem] font-semibold text-[#16a34a]">
+                {L.connected}
+              </span>
+            )}
+          </div>
+          {!connected && <p className="mt-0.5 text-[0.8125rem] text-[#737373]">{hint}</p>}
+        </div>
+        {connected ? (
+          <button
+            type="button"
+            onClick={onDisconnect}
+            disabled={disconnecting}
+            className="shrink-0 rounded-[10px] border border-red-100 px-3 py-1.5 text-[0.8125rem] font-medium text-[#dc2626] hover:bg-red-50 transition-colors disabled:opacity-40"
+          >
+            {disconnecting ? "…" : L.disconnect}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onConnect}
+            disabled={connecting}
+            className="shrink-0 rounded-[10px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#0c0c0c] hover:bg-[#f0f0ef] transition-colors disabled:opacity-40"
+          >
+            {connecting ? "…" : L.subscribe}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const locale = useLocale();
   const isDE = locale === "de";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Clear OAuth result query params after reading them
+  useEffect(() => {
+    const connected = searchParams.get("calendar_connected");
+    const error = searchParams.get("calendar_error");
+    if (connected || error) {
+      if (error) setCal((prev) => ({ ...prev, error: `Connection failed (${error}).` }));
+      router.replace("/settings");
+      // Refresh calendar connections after successful connect
+      if (connected) {
+        fetch("/api/calendar/connections")
+          .then((r) => r.json())
+          .then((d) => setCal((prev) => ({ ...prev, connections: d.connections ?? [], error: null })))
+          .catch(() => {});
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [data, setData] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [codes, setCodes] = useState<AccessCode[]>([]);
   const [codesLoading, setCodesLoading] = useState(true);
+
+  // localStorage key for offline (pre-migration) codes
+  const offlineCodesKey = session?.user?.email ? `arc_offline_codes_${session.user.email}` : null;
+
+  function loadOfflineCodes(): AccessCode[] {
+    if (!offlineCodesKey) return [];
+    try { return JSON.parse(localStorage.getItem(offlineCodesKey) ?? "[]"); } catch { return []; }
+  }
+
+  function saveOfflineCodes(list: AccessCode[]) {
+    if (!offlineCodesKey) return;
+    try { localStorage.setItem(offlineCodesKey, JSON.stringify(list.filter((c) => c.offline))); } catch { /* noop */ }
+  }
 
   // Editing states
   const [editingName, setEditingName] = useState(false);
@@ -134,6 +281,16 @@ export default function SettingsPage() {
 
   // Consent revoke
   const [consentRevoking, setConsentRevoking] = useState(false);
+
+  // Calendar connections
+  const [cal, setCal] = useState<CalendarState>({
+    connections: [],
+    loading: true,
+    connecting: null,
+    copiedFeed: false,
+    disconnecting: null,
+    error: null,
+  });
 
   const L = {
     title: isDE ? "Einstellungen" : "Settings",
@@ -177,13 +334,26 @@ export default function SettingsPage() {
 
     connectedAccounts: isDE ? "Verbundene Konten" : "Connected accounts",
     connectedAccountsSubtitle: isDE
-      ? "Verwalten Sie Kalender und E-Mail-Konten für Erinnerungen."
-      : "Manage calendars and email used for reminders.",
+      ? "Verbinden Sie Ihren Kalender, um Gesundheitserinnerungen automatisch einzutragen."
+      : "Connect your calendar to automatically add health reminders.",
     connectedEmail: isDE ? "Verbundene E-Mail" : "Connected email",
-    calendar: isDE ? "Kalender" : "Calendar",
-    notConnected: isDE ? "Nicht verbunden" : "Not connected",
-    connectCalendar: isDE ? "Kalender verbinden" : "Connect calendar",
-    comingSoon: isDE ? "Demnächst" : "Coming soon",
+    calendarGoogle: "Google Calendar",
+    calendarOutlook: isDE ? "Outlook Kalender" : "Outlook Calendar",
+    calendarIcal: "iCalendar",
+    calendarIcalDesc: isDE
+      ? "Abonnieren Sie Ihre Erinnerungen in Apple Calendar, Google Calendar oder jeder anderen App."
+      : "Subscribe to your reminders in Apple Calendar, Google Calendar, or any other app.",
+    subscribe: isDE ? "Abonnieren" : "Subscribe",
+    disconnect: isDE ? "Trennen" : "Disconnect",
+    connected: isDE ? "Abonniert" : "Subscribed",
+    copyLink: isDE ? "Link kopieren" : "Copy link",
+    calCopied: isDE ? "Kopiert!" : "Copied!",
+    generateFeed: isDE ? "Abonnement-Link erstellen" : "Create subscription link",
+    regenerateFeed: isDE ? "Neuen Link erstellen" : "Regenerate link",
+    calendarError: isDE ? "Verbindung fehlgeschlagen." : "Connection failed.",
+    subscribeHint: isDE
+      ? "Öffnet Ihren Kalender, um die Erinnerungen zu abonnieren."
+      : "Opens your calendar app to subscribe to health reminders.",
 
     inviteFriends: isDE ? "Freunde einladen" : "Invite friends",
     inviteSubtitle: isDE
@@ -257,17 +427,40 @@ export default function SettingsPage() {
   // ── Data fetching ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetch("/api/settings")
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+
+    fetch("/api/settings", { signal: ctrl.signal })
       .then((r) => r.json())
       .then((d) => { setData(d); setNameInput(d.user?.name ?? ""); })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { clearTimeout(t); setLoading(false); });
 
-    fetch("/api/access-codes")
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 8000);
+
+    fetch("/api/access-codes", { signal: ctrl2.signal })
       .then((r) => r.json())
-      .then((d) => setCodes(d.codes ?? []))
+      .then((d) => {
+        const serverCodes: AccessCode[] = d.codes ?? [];
+        // Merge offline codes — keep only those whose code string isn't already in server list
+        const serverCodeStrings = new Set(serverCodes.map((c) => c.code));
+        const offline = loadOfflineCodes().filter((c) => !serverCodeStrings.has(c.code));
+        setCodes([...offline, ...serverCodes]);
+      })
+      .catch(() => {
+        // Server unreachable — show only offline codes
+        setCodes(loadOfflineCodes());
+      })
+      .finally(() => { clearTimeout(t2); setCodesLoading(false); });
+
+    const ctrl3 = new AbortController();
+    const t3 = setTimeout(() => ctrl3.abort(), 8000);
+    fetch("/api/calendar/connections", { signal: ctrl3.signal })
+      .then((r) => r.json())
+      .then((d) => setCal((prev) => ({ ...prev, connections: d.connections ?? [] })))
       .catch(() => {})
-      .finally(() => setCodesLoading(false));
+      .finally(() => { clearTimeout(t3); setCal((prev) => ({ ...prev, loading: false })); });
   }, []);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
@@ -312,7 +505,12 @@ export default function SettingsPage() {
     const res = await fetch("/api/access-codes", { method: "POST" });
     const d = await res.json();
     if (res.ok) {
-      setCodes((prev) => [d.code, ...prev]);
+      const newCode: AccessCode = d.code;
+      setCodes((prev) => {
+        const updated = [newCode, ...prev];
+        if (newCode.offline) saveOfflineCodes(updated);
+        return updated;
+      });
     } else {
       setCodeError(d.error ?? "Failed to generate code");
     }
@@ -327,9 +525,19 @@ export default function SettingsPage() {
 
   async function revokeCode(id: string) {
     setRevokingId(id);
+    // Offline codes are only in localStorage — just mark them revoked locally
+    if (id.startsWith("offline:")) {
+      setCodes((prev) => {
+        const updated = prev.map((c) => c.id === id ? { ...c, status: "revoked" as const } : c);
+        saveOfflineCodes(updated);
+        return updated;
+      });
+      setRevokingId(null);
+      return;
+    }
     const res = await fetch(`/api/access-codes/${id}`, { method: "DELETE" });
     if (res.ok) {
-      setCodes((prev) => prev.map((c) => c.id === id ? { ...c, status: "revoked" } : c));
+      setCodes((prev) => prev.map((c) => c.id === id ? { ...c, status: "revoked" as const } : c));
     }
     setRevokingId(null);
   }
@@ -345,6 +553,63 @@ export default function SettingsPage() {
     }
     setConsentRevoking(false);
   }
+
+  // Returns the ICS feed URL for a given token
+  const icsUrl = useCallback((token: string) =>
+    `${window.location.origin}/api/calendar/ics/${token}/arc-health.ics`, []);
+
+  // Connect a calendar provider: creates/gets feed token, then opens the subscription deep-link
+  const connectCalendar = useCallback(async (provider: "google" | "outlook" | "ical") => {
+    setCal((prev) => ({ ...prev, connecting: provider, error: null }));
+    const res = await fetch("/api/calendar/connections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider }),
+    });
+    const d = await res.json();
+    if (!res.ok) {
+      setCal((prev) => ({ ...prev, connecting: null, error: d.error ?? "Failed" }));
+      return;
+    }
+
+    const token: string = d.token;
+    const feedUrl = `${window.location.origin}/api/calendar/ics/${token}/arc-health.ics`;
+    const webcalUrl = feedUrl.replace(/^https?:/, "webcal:");
+
+    // Open provider-specific deep link to subscribe
+    if (provider === "google") {
+      window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`, "_blank");
+    } else if (provider === "outlook") {
+      window.open(`https://outlook.live.com/calendar/0/addcalendar?url=${encodeURIComponent(webcalUrl)}&name=${encodeURIComponent("The Arc Health")}`, "_blank");
+    }
+    // iCal: handled separately via copyIcalFeed
+
+    const LABELS: Record<string, string> = { google: "Google Calendar", outlook: "Outlook Calendar", ical: "iCalendar" };
+    setCal((prev) => ({
+      ...prev,
+      connecting: null,
+      connections: [
+        ...prev.connections.filter((c) => c.provider !== provider),
+        { id: d.id, provider, label: LABELS[provider], calendarId: null, icalFeedToken: token, createdAt: new Date().toISOString() },
+      ],
+    }));
+  }, []);
+
+  const copyIcalFeed = useCallback(async (token: string) => {
+    await navigator.clipboard.writeText(icsUrl(token));
+    setCal((prev) => ({ ...prev, copiedFeed: true }));
+    setTimeout(() => setCal((prev) => ({ ...prev, copiedFeed: false })), 2000);
+  }, [icsUrl]);
+
+  const disconnectCalendar = useCallback(async (id: string) => {
+    setCal((prev) => ({ ...prev, disconnecting: id, error: null }));
+    const res = await fetch(`/api/calendar/connections/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setCal((prev) => ({ ...prev, disconnecting: null, connections: prev.connections.filter((c) => c.id !== id) }));
+    } else {
+      setCal((prev) => ({ ...prev, disconnecting: null, error: "Failed to disconnect" }));
+    }
+  }, []);
 
   async function submitDelete() {
     if (deleteInput !== L.deleteConfirmWord) return;
@@ -378,9 +643,17 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-12 md:px-8">
-        <div className="mb-8 space-y-2">
-          <div className="h-7 w-40 animate-pulse rounded-[10px] bg-[#f0f0ef]" />
-          <div className="h-4 w-72 animate-pulse rounded-[8px] bg-[#f0f0ef]" />
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-7 w-40 animate-pulse rounded-[10px] bg-[#f0f0ef]" />
+            <div className="h-4 w-72 animate-pulse rounded-[8px] bg-[#f0f0ef]" />
+          </div>
+          <Link href="/dashboard" className="shrink-0 flex items-center gap-1.5 rounded-[10px] border border-black/[0.1] bg-white px-3 py-2 text-[0.8125rem] font-medium text-[#404040] hover:bg-[#f0f0ef] transition-colors mt-1">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M8.5 2.5 3.5 7l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {isDE ? "Zum Dashboard" : "Back to dashboard"}
+          </Link>
         </div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="mb-5 h-40 animate-pulse rounded-[20px] bg-[#f0f0ef]" />
@@ -400,9 +673,20 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl px-5 py-12 md:px-8">
       {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-[1.625rem] font-semibold tracking-tight text-[#0c0c0c]">{L.title}</h1>
-        <p className="mt-1 text-[0.9375rem] text-[#737373]">{L.subtitle}</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[1.625rem] font-semibold tracking-tight text-[#0c0c0c]">{L.title}</h1>
+          <p className="mt-1 text-[0.9375rem] text-[#737373]">{L.subtitle}</p>
+        </div>
+        <Link
+          href="/dashboard"
+          className="shrink-0 flex items-center gap-1.5 rounded-[10px] border border-black/[0.1] bg-white px-3 py-2 text-[0.8125rem] font-medium text-[#404040] hover:bg-[#f0f0ef] transition-colors mt-1"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+            <path d="M8.5 2.5 3.5 7l5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {isDE ? "Zum Dashboard" : "Back to dashboard"}
+        </Link>
       </div>
 
       <div className="space-y-5">
@@ -564,15 +848,129 @@ export default function SettingsPage() {
             label={L.connectedEmail}
             value={<span className="font-mono text-[0.9rem]">{data?.user.email ?? session?.user?.email}</span>}
           />
-          <FieldRow
-            label={L.calendar}
-            value={<span className="text-[#a3a3a3]">{L.notConnected}</span>}
-            action={
-              <span className="rounded-full border border-black/[0.08] bg-[#f5f5f4] px-2.5 py-1 text-[0.75rem] text-[#a3a3a3]">
-                {L.comingSoon}
-              </span>
-            }
-          />
+
+          {cal.error && (
+            <p className="mb-3 text-[0.8125rem] text-[#dc2626]">{L.calendarError}</p>
+          )}
+
+          <div className="mt-4 space-y-3">
+            {/* Google Calendar */}
+            {(() => {
+              const conn = cal.connections.find((c) => c.provider === "google");
+              return (
+                <CalendarProviderRow
+                  icon={<GoogleIcon />}
+                  name={L.calendarGoogle}
+                  hint={L.subscribeHint}
+                  connected={!!conn}
+                  connecting={cal.connecting === "google"}
+                  disconnecting={cal.disconnecting === conn?.id}
+                  onConnect={() => connectCalendar("google")}
+                  onDisconnect={conn ? () => disconnectCalendar(conn.id) : undefined}
+                  L={L}
+                />
+              );
+            })()}
+
+            {/* Outlook */}
+            {(() => {
+              const conn = cal.connections.find((c) => c.provider === "outlook");
+              return (
+                <CalendarProviderRow
+                  icon={<OutlookIcon />}
+                  name={L.calendarOutlook}
+                  hint={L.subscribeHint}
+                  connected={!!conn}
+                  connecting={cal.connecting === "outlook"}
+                  disconnecting={cal.disconnecting === conn?.id}
+                  onConnect={() => connectCalendar("outlook")}
+                  onDisconnect={conn ? () => disconnectCalendar(conn.id) : undefined}
+                  L={L}
+                />
+              );
+            })()}
+
+            {/* iCalendar — copy URL for Apple Calendar / any app */}
+            {(() => {
+              const conn = cal.connections.find((c) => c.provider === "ical");
+              return (
+                <div className="rounded-[14px] border border-black/[0.07] bg-[#fafaf9] p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/[0.08]">
+                      <ICalIcon />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[0.9375rem] font-medium text-[#0c0c0c]">{L.calendarIcal}</span>
+                        {conn && (
+                          <span className="rounded-full border border-green-100 bg-[#f0fdf4] px-2 py-0.5 text-[0.7rem] font-semibold text-[#16a34a]">
+                            {L.connected}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[0.8125rem] text-[#737373]">{L.calendarIcalDesc}</p>
+
+                      {conn?.icalFeedToken ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => copyIcalFeed(conn.icalFeedToken!)}
+                            className="rounded-[10px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#0c0c0c] hover:bg-[#f5f5f4] transition-colors"
+                          >
+                            {cal.copiedFeed ? L.calCopied : L.copyLink}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setCal((prev) => ({ ...prev, connecting: "ical" }));
+                              const res = await fetch("/api/calendar/connections", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ provider: "ical", regenerate: true }),
+                              });
+                              const d = await res.json();
+                              if (res.ok) {
+                                setCal((prev) => ({
+                                  ...prev,
+                                  connecting: null,
+                                  connections: prev.connections.map((c) =>
+                                    c.provider === "ical" ? { ...c, icalFeedToken: d.token } : c
+                                  ),
+                                }));
+                              } else {
+                                setCal((prev) => ({ ...prev, connecting: null }));
+                              }
+                            }}
+                            disabled={cal.connecting === "ical"}
+                            className="rounded-[10px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#737373] hover:bg-[#f5f5f4] transition-colors disabled:opacity-40"
+                          >
+                            {cal.connecting === "ical" ? "…" : L.regenerateFeed}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => disconnectCalendar(conn.id)}
+                            disabled={cal.disconnecting === conn.id}
+                            className="rounded-[10px] border border-red-100 px-3 py-1.5 text-[0.8125rem] font-medium text-[#dc2626] hover:bg-red-50 transition-colors disabled:opacity-40"
+                          >
+                            {L.disconnect}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => connectCalendar("ical")}
+                          disabled={cal.connecting === "ical"}
+                          className="mt-3 rounded-[10px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#0c0c0c] hover:bg-[#f5f5f4] transition-colors disabled:opacity-40"
+                        >
+                          {cal.connecting === "ical" ? "…" : L.generateFeed}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
         </SectionCard>
 
         {/* ── Access codes ── */}

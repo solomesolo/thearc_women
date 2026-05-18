@@ -1,10 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/useLocale";
-import { InsuranceAndDoctorGuidanceCard } from "@/components/app/InsuranceAndDoctorGuidanceCard";
-import { useBiomarkerGuidance } from "@/lib/doctor-guidance/useBiomarkerGuidance";
 
 // ── Health Wallet storage ─────────────────────────────────────────────────────
 
@@ -68,7 +65,7 @@ const STATUS_OPTIONS: { value: BiomarkerResultStatus; labelEn: string; labelDe: 
 export function BiomarkerActionRow({
   biomarkerName,
   biomarkerKey,
-  country,
+  country: _country,
 }: {
   biomarkerName: string;
   biomarkerKey: string;
@@ -89,8 +86,6 @@ export function BiomarkerActionRow({
   const [resultNotes, setResultNotes] = useState("");
   const [resultStatus, setResultStatus] = useState<BiomarkerResultStatus>("unknown");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { data: guidance, isLoading } = useBiomarkerGuidance(open ? biomarkerKey : null, country);
-
   const latest = history.length > 0 ? history[history.length - 1] : null;
   const isSaved = latest !== null;
 
@@ -125,15 +120,6 @@ export function BiomarkerActionRow({
     fileSelected: isDE ? "Datei ausgewählt" : "File selected",
     saveBtn: isDE ? "In Wallet speichern" : "Save to Wallet",
     cancelBtn: isDE ? "Abbrechen" : "Cancel",
-    bookLab: isDE ? "Im Labor buchen" : "Book at a lab",
-    homeTest: isDE ? "Heimtest" : "Home test",
-    throughDoctor: isDE ? "Beim Arzt" : "Through your doctor",
-    localLab: isDE ? "Nächstes Labor" : "Local lab",
-    chooseLab: isDE ? "Labor in der Nähe wählen" : "Choose a nearby lab",
-    openMaps: isDE ? "In Maps öffnen" : "Open in Maps",
-    homeTestOpt: isDE ? "Heimtest-Option" : "Home test option",
-    ifAvail: isDE ? "Falls in Ihrer Region verfügbar" : "If available in your area",
-    orderOnline: isDE ? "Online bestellen" : "Order online",
     consultDoctor: isDE ? "Mit dem Arzt besprechen" : "Consult your doctor",
     history: isDE ? "Verlauf" : "History",
     noHistory: isDE ? "Noch keine Einträge" : "No entries yet",
@@ -365,43 +351,6 @@ export function BiomarkerActionRow({
             </div>
           )}
 
-          {/* Booking / coverage panels */}
-          <div className="grid grid-cols-1 divide-y divide-black/[0.07] md:grid-cols-3 md:divide-x md:divide-y-0">
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.bookLab}</p>
-              <div className="mt-3 rounded-[12px] border border-black/[0.07] bg-[#fafaf9] p-3.5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{L.localLab}</span>
-                  <span className="shrink-0 text-[0.9375rem] font-semibold text-[#0c0c0c]">—</span>
-                </div>
-                <p className="mt-1 text-[0.8125rem] leading-snug text-[#737373]">{L.chooseLab}</p>
-                <Link href="#" className="mt-2.5 inline-flex items-center gap-1 rounded-[8px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:bg-[#f0f0ef]">
-                  {L.openMaps}
-                </Link>
-              </div>
-            </div>
-
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.homeTest}</p>
-              <div className="mt-3 rounded-[12px] border border-black/[0.07] bg-[#fafaf9] p-3.5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{L.homeTestOpt}</span>
-                  <span className="shrink-0 text-[0.9375rem] font-semibold text-[#0c0c0c]">—</span>
-                </div>
-                <p className="mt-1 text-[0.8125rem] leading-snug text-[#737373]">{L.ifAvail}</p>
-                <Link href="#" className="mt-2.5 inline-flex items-center gap-1 rounded-[8px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-colors hover:bg-[#f0f0ef]">
-                  {L.orderOnline}
-                </Link>
-              </div>
-            </div>
-
-            <div className="px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#737373]">{L.throughDoctor}</p>
-              <div className="mt-3">
-                <InsuranceAndDoctorGuidanceCard guidance={guidance} isLoading={isLoading} country={country} />
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>

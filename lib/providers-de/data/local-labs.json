@@ -1,0 +1,1238 @@
+[
+  {
+    "id": 10,
+    "name": "Labor Brunner",
+    "location": "Konstanz, Germany",
+    "cityTags": [
+      "konstanz"
+    ],
+    "url": "https://www.labor-brunner.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 11,
+    "name": "UMG Labor Göttingen",
+    "location": "Göttingen, Germany",
+    "cityTags": [
+      "goettingen"
+    ],
+    "url": "https://labor.umg.eu/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "preventive_checkups",
+      "health_check"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 12,
+    "name": "Mein Direktlabor (Labor Staber München)",
+    "location": "Munich, Germany",
+    "cityTags": [
+      "munich"
+    ],
+    "url": "https://www.meindirektlabor.de/termine/anfrage/labor-staber-muenchen/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 13,
+    "name": "SYNLAB MVZ Labor München Zentrum",
+    "location": "Munich, Germany",
+    "cityTags": [
+      "munich"
+    ],
+    "url": "https://www.synlab.de/lab/muenchen-lmz",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "bacteriology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 14,
+    "name": "Labor Becker MVZ",
+    "location": "Munich, Germany",
+    "cityTags": [
+      "munich"
+    ],
+    "url": "https://www.labor-becker.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "urine_tests",
+      "endocrinology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 15,
+    "name": "Labor Dr. Gärtner (Meine Laborambulanz)",
+    "location": "Munich, Germany (Ravensburg Network)",
+    "cityTags": [],
+    "url": "https://www.labor-gaertner.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "drug_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 16,
+    "name": "Mein Labor Berlin (Labor Berlin)",
+    "location": "Berlin, Germany",
+    "cityTags": [],
+    "url": "https://mein.laborberlin.com/",
+    "logo": "",
+    "serviceTypes": [],
+    "noReferral": false
+  },
+  {
+    "id": 17,
+    "name": "IMD Institut für Medizinische Diagnostik Berlin",
+    "location": "Berlin, Germany",
+    "cityTags": [],
+    "url": "https://www.imd-berlin.de/",
+    "logo": "",
+    "serviceTypes": [],
+    "noReferral": false
+  },
+  {
+    "id": 18,
+    "name": "Labor 28 MVZ GmbH",
+    "location": "Berlin, Germany",
+    "cityTags": [],
+    "url": "https://www.labor28.de/fuer-patienten/",
+    "logo": "",
+    "serviceTypes": [],
+    "noReferral": false
+  },
+  {
+    "id": 19,
+    "name": "Mein Direktlabor (Bioscientia Berlin-Marzahn)",
+    "location": "Berlin, Germany",
+    "cityTags": [],
+    "url": "https://www.meindirektlabor.de/standorte/standort/bioscientia-berlin-marzahn/",
+    "logo": "",
+    "serviceTypes": [],
+    "noReferral": false
+  },
+  {
+    "id": 20,
+    "name": "Mein Direktlabor (Labor Stephansplatz)",
+    "location": "Hamburg, Germany",
+    "cityTags": [
+      "hamburg"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/labor-stephansplatz/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 21,
+    "name": "Labor Dr. Heidrich & Kollegen",
+    "location": "Hamburg, Germany",
+    "cityTags": [
+      "hamburg"
+    ],
+    "url": "https://www.labor-heidrich.de/fuer-patienten/blutabnahme-direkt-im-labor/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "allergy_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 22,
+    "name": "MVZ Medizinisches Labor Nord (Labor Lademannbogen)",
+    "location": "Hamburg, Germany",
+    "cityTags": [
+      "hamburg"
+    ],
+    "url": "https://www.mln.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "urine_tests",
+      "drug_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 23,
+    "name": "Labor Dr. von Froreich",
+    "location": "Hamburg, Germany",
+    "cityTags": [
+      "hamburg"
+    ],
+    "url": "https://www.labor-froreich.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "specialized_diagnostics",
+      "immunology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 24,
+    "name": "Mein Direktlabor Köln",
+    "location": "Köln-Rodenkirchen, Germany",
+    "cityTags": [
+      "koeln"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/mein-direktlabor-koeln/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 25,
+    "name": "Labor Dr. Wisplinghoff",
+    "location": "Köln, Germany",
+    "cityTags": [
+      "koeln"
+    ],
+    "url": "https://www.wisplinghoff.de/fuer-patienten/ueberblick",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "specialized_diagnostics",
+      "infection_testing",
+      "prenatal_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 26,
+    "name": "Labor Dr. Quade & Kollegen (Laborambulanz)",
+    "location": "Köln-Ossendorf, Germany",
+    "cityTags": [
+      "koeln"
+    ],
+    "url": "https://www.lab-quade.de/fuer_patienten_main.php",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 27,
+    "name": "SYNLAB Köln (PAN Klinik Ambulanz)",
+    "location": "Köln-Innenstadt, Germany",
+    "cityTags": [
+      "koeln"
+    ],
+    "url": "https://www.pan-klinik.de/facharztpraxen/laboratoriumsmedizin/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "travel_medicine"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 28,
+    "name": "IMD Labor Frankfurt",
+    "location": "Frankfurt am Main, Germany",
+    "cityTags": [
+      "frankfurt"
+    ],
+    "url": "https://www.labffm.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "immunology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 29,
+    "name": "MVZ Labor Limbach Frankfurt",
+    "location": "Frankfurt am Main, Germany",
+    "cityTags": [
+      "frankfurt"
+    ],
+    "url": "https://www.labor-limbach-frankfurt.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "preventive_checkups"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 30,
+    "name": "Mein Direktlabor (Bioscientia Frankfurt)",
+    "location": "Frankfurt am Main, Germany",
+    "cityTags": [
+      "frankfurt"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/frankfurt/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 31,
+    "name": "SYNLAB Frankfurt (MVZ Hessen)",
+    "location": "Frankfurt am Main, Germany",
+    "cityTags": [
+      "frankfurt"
+    ],
+    "url": "https://www.synlab.de/lab/hessen",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "saliva_tests",
+      "mpu_testing",
+      "microbiome"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 32,
+    "name": "Labor Enders",
+    "location": "Stuttgart, Germany",
+    "cityTags": [
+      "stuttgart"
+    ],
+    "url": "https://www.labor-enders.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests",
+      "autoimmunity",
+      "genetics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 33,
+    "name": "Bioscientia Labor Stuttgart (Mein Direktlabor)",
+    "location": "Stuttgart / Leinfelden-Echterdingen, Germany",
+    "cityTags": [],
+    "url": "https://www.meindirektlabor.de/standorte/standort/bioscientia-labor-stuttgart/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "microbiome_analysis"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 34,
+    "name": "SYNLAB MVZ Leinfelden",
+    "location": "Stuttgart / Leinfelden-Echterdingen, Germany",
+    "cityTags": [],
+    "url": "https://www.synlab.de/lab/leinfelden",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stis_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 35,
+    "name": "Medizinische Laboratorien Düsseldorf (MVZ)",
+    "location": "Düsseldorf, Germany",
+    "cityTags": [
+      "duesseldorf"
+    ],
+    "url": "https://www.labor-duesseldorf.de/fuer-patienten/laborambulanz/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "laborambulanz"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 36,
+    "name": "Mein Direktlabor Düsseldorf",
+    "location": "Düsseldorf, Germany",
+    "cityTags": [
+      "duesseldorf"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/medizinische-laboratorien-duesseldorf/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 37,
+    "name": "Labor Dr. Wisplinghoff (Standort Düsseldorf)",
+    "location": "Düsseldorf / Cologne, Germany",
+    "cityTags": [
+      "duesseldorf"
+    ],
+    "url": "https://www.wisplinghoff.de/fuer-patienten/individuelle-vorsorge-igel",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "genetics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 38,
+    "name": "SYNLAB MVZ Düsseldorf",
+    "location": "Düsseldorf, Germany",
+    "cityTags": [
+      "duesseldorf"
+    ],
+    "url": "https://www.synlab.de/lab/duesseldorf",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "bacteriology",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 39,
+    "name": "City Labor Leipzig",
+    "location": "Leipzig, Germany",
+    "cityTags": [
+      "leipzig"
+    ],
+    "url": "https://city-labor.com/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "sperm_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 40,
+    "name": "MVZ Labor Leipzig (Dr. Reising-Ackermann)",
+    "location": "Leipzig, Germany",
+    "cityTags": [
+      "leipzig"
+    ],
+    "url": "https://www.labor-leipzig.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "urine_tests",
+      "specialized_diagnostics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 41,
+    "name": "amedes MVZ Halle/Leipzig",
+    "location": "Halle/Leipzig, Germany",
+    "cityTags": [
+      "leipzig",
+      "halle"
+    ],
+    "url": "https://www.amedes-halle-leipzig.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "microbiology",
+      "molecular_diagnostics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 42,
+    "name": "MVZ Dr. Eberhard & Partner Dortmund",
+    "location": "Dortmund, Germany",
+    "cityTags": [
+      "dortmund"
+    ],
+    "url": "https://www.medizin-zentrum-dortmund.de/de/laboratoriumsmedizin/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "private_preventive_medicine"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 43,
+    "name": "LADR Laborzentrum Dortmund (MAZ)",
+    "location": "Dortmund, Germany",
+    "cityTags": [
+      "dortmund"
+    ],
+    "url": "https://www.ladr.de/standortuebersicht/ladr-laborzentrum-dortmund",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 44,
+    "name": "Inuspherese Zentrum Dortmund (Holzwickede)",
+    "location": "Dortmund-Holzwickede, Germany",
+    "cityTags": [
+      "dortmund"
+    ],
+    "url": "https://www.inuspherese-zentrum-dortmund-holzwickede.de/de/diagnostik/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "saliva_tests",
+      "genetic_testing",
+      "hormone_diagnostics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 45,
+    "name": "MVZ Labor Dortmund (Limbach Group)",
+    "location": "Dortmund, Germany",
+    "cityTags": [
+      "dortmund"
+    ],
+    "url": "https://www.labor-dortmund.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 46,
+    "name": "MVZ Labor Limbach Essen (Labor Dr. Eveld)",
+    "location": "Essen, Germany",
+    "cityTags": [
+      "essen"
+    ],
+    "url": "https://www.labor-eveld.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 47,
+    "name": "SYNLAB MVZ Labor Essen",
+    "location": "Essen, Germany",
+    "cityTags": [
+      "essen"
+    ],
+    "url": "https://www.synlab.de/lab/essen",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "infection_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 48,
+    "name": "Medizinisches Labor Essen (MLE)",
+    "location": "Essen, Germany",
+    "cityTags": [
+      "essen"
+    ],
+    "url": "https://www.labor-essen.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "saliva_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 49,
+    "name": "Mein Direktlabor (Labor Bremen)",
+    "location": "Bremen, Germany",
+    "cityTags": [
+      "bremen"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/labor-bremen/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 50,
+    "name": "MVZ Medizinisches Labor Bremen (MLHB)",
+    "location": "Bremen, Germany",
+    "cityTags": [
+      "bremen"
+    ],
+    "url": "https://www.mlhb.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "hormone_tests",
+      "metabolic_panels"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 51,
+    "name": "MVZ Bremen Mitte (Laborservice)",
+    "location": "Bremen, Germany",
+    "cityTags": [
+      "bremen"
+    ],
+    "url": "https://www.mvz-bremen-mitte.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "preventive_checkups"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 52,
+    "name": "Diagnosticum Dresden",
+    "location": "Dresden, Germany",
+    "cityTags": [
+      "dresden"
+    ],
+    "url": "https://www.diagnosticum.eu/dresden",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 53,
+    "name": "Labopart Dresden",
+    "location": "Dresden, Germany",
+    "cityTags": [
+      "dresden"
+    ],
+    "url": "https://labopart.de/unser-labor/standorte/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "microbiology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 54,
+    "name": "Mein Direktlabor Klipphausen (Dresden)",
+    "location": "Klipphausen (Dresden), Germany",
+    "cityTags": [
+      "dresden_area"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/mein-direktlabor-klipphausen/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 55,
+    "name": "IMD Labor Dresden",
+    "location": "Dresden, Germany",
+    "cityTags": [
+      "dresden"
+    ],
+    "url": "https://www.imd-dresden.de/",
+    "logo": "",
+    "serviceTypes": [
+      "immunology",
+      "blood_tests",
+      "saliva_tests",
+      "stool_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 56,
+    "name": "Mein Direktlabor (Labor Staber Nürnberg)",
+    "location": "Nürnberg, Germany",
+    "cityTags": [
+      "nuernberg"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/labor-staber-nuernberg/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 57,
+    "name": "SYNLAB MVZ Nürnberg",
+    "location": "Nürnberg, Germany",
+    "cityTags": [
+      "nuernberg"
+    ],
+    "url": "https://www.synlab.de/lab/nuernberg",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "microbiology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 58,
+    "name": "MVZ Labor Limbach Nürnberg",
+    "location": "Nürnberg, Germany",
+    "cityTags": [
+      "nuernberg"
+    ],
+    "url": "https://www.labor-limbach-nuernberg.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "nutritional_panels"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 59,
+    "name": "Bioscientia MVZ Labor Nordbayern",
+    "location": "Nürnberg, Germany",
+    "cityTags": [
+      "nuernberg"
+    ],
+    "url": "https://www.bioscientia.de/standorte/nuernberg/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 60,
+    "name": "MVZ Medizinisches Labor Hannover (MLH)",
+    "location": "Hannover, Germany",
+    "cityTags": [
+      "hannover"
+    ],
+    "url": "https://www.labor-limbach-hannover.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 61,
+    "name": "amedes experts Hannover",
+    "location": "Hannover, Germany",
+    "cityTags": [
+      "hannover"
+    ],
+    "url": "https://www.amedes-group.com/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "hormone_tests",
+      "genetics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 62,
+    "name": "Internisten-List (Dr. Buck & Dr. Leugner)",
+    "location": "Hannover, Germany",
+    "cityTags": [
+      "hannover"
+    ],
+    "url": "https://www.internisten-list.de/",
+    "logo": "",
+    "serviceTypes": [
+      "in_house_lab",
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "microscopy"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 63,
+    "name": "Gastroenterologische Schwerpunktpraxis (Dr. Jens Müller-Ziehm)",
+    "location": "Hannover/Langenhagen, Germany",
+    "cityTags": [
+      "hannover"
+    ],
+    "url": "https://www.gastro-han.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "liver_diagnostics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 64,
+    "name": "Mein Direktlabor Duisburg (Bioscientia)",
+    "location": "Duisburg, Germany",
+    "cityTags": [
+      "duisburg"
+    ],
+    "url": "https://www.meindirektlabor.de/standorte/standort/labor-duisburg/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "coagulation_specialist"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 65,
+    "name": "mvzlm Ruhr (Contilia Labor)",
+    "location": "Essen / Duisburg Region, Germany",
+    "cityTags": [],
+    "url": "https://mvzlm.de/blutentnahme/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "microbiology"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 66,
+    "name": "Gerinnungszentrum Duisburg",
+    "location": "Duisburg, Germany",
+    "cityTags": [
+      "duisburg"
+    ],
+    "url": "http://www.gerinnungszentrum-duisburg.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "hematology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 67,
+    "name": "MVZ Labor Dr. Stein & Kollegen",
+    "location": "Mönchengladbach / Duisburg Region, Germany",
+    "cityTags": [],
+    "url": "https://www.labor-stein.de/fuer-patienten/mein-direktlabor/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "preventive_care"
+    ],
+    "noReferral": true
+  },
+  {
+    "id": 68,
+    "name": "MedLab Bochum (Praxis für Labormedizin und Mikrobiologie)",
+    "location": "Bochum, Germany",
+    "cityTags": [
+      "bochum"
+    ],
+    "url": "https://medlab-bochum.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "microbiology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 69,
+    "name": "Prof. Dr. Herrmann Facharztpraxis & Labor (Labor Bochum)",
+    "location": "Bochum, Germany",
+    "cityTags": [
+      "bochum"
+    ],
+    "url": "https://www.endo-bochum.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "endocrinology",
+      "metabolic_health"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 70,
+    "name": "MVZ Labor Bochum MLB",
+    "location": "Bochum, Germany",
+    "cityTags": [
+      "bochum"
+    ],
+    "url": "https://labor-augsburg-mvz.de/laborgruppe/mvz-labor-bochum-mlb",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "allergy_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 71,
+    "name": "MVZ Medizinisches Labor Wuppertal (Gesundheitsunion)",
+    "location": "Wuppertal, Germany",
+    "cityTags": [
+      "wuppertal"
+    ],
+    "url": "https://www.doctolib.de/medizinisches-versorgungszentrum-mvz/wuppertal/mvz-die-gesundheitsunion-gmbh-standort-hofaue",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests",
+      "microbiology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 72,
+    "name": "MVZ SYNLAB Wuppertal",
+    "location": "Wuppertal, Germany",
+    "cityTags": [
+      "wuppertal"
+    ],
+    "url": "https://www.zytologie-wuppertal.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "preventive_checkups",
+      "cytology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 73,
+    "name": "Helios Institut für Medizinische Labordiagnostik Wuppertal",
+    "location": "Wuppertal, Germany",
+    "cityTags": [
+      "wuppertal"
+    ],
+    "url": "https://www.helios-gesundheit.de/standorte-angebote/kliniken/wuppertal/leistungen/institute/institut-fuer-medizinische-labordiagnostik/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "coagulation_specialist",
+      "immunology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 74,
+    "name": "CBT Wuppertal (Gerinnungszentrum)",
+    "location": "Wuppertal, Germany",
+    "cityTags": [
+      "wuppertal"
+    ],
+    "url": "https://www.cbtmed.de/praxen/wuppertal/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "coagulation"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 75,
+    "name": "MVZ DIAMEDIS (amedes Group)",
+    "location": "Bielefeld, Germany",
+    "cityTags": [
+      "bielefeld"
+    ],
+    "url": "https://www.diamedis.eu/humanmedizin/fuer-patienten.html",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 76,
+    "name": "Labor Krone (Bielefeld Sampling Site)",
+    "location": "Bielefeld, Germany",
+    "cityTags": [
+      "bielefeld"
+    ],
+    "url": "https://www.laborkrone.de/fuer-patienten/kontakt/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "toxicology",
+      "mpu_testing"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 77,
+    "name": "Labor am Klinikum Bielefeld",
+    "location": "Bielefeld, Germany",
+    "cityTags": [
+      "bielefeld"
+    ],
+    "url": "https://www.klinikumbielefeld.de/mikrobiologie-2.html",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "allergy_testing",
+      "hormone_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 78,
+    "name": "MVZ SYNLAB Bonn GmbH",
+    "location": "Bonn, Germany",
+    "cityTags": [
+      "bonn"
+    ],
+    "url": "https://www.synlab.de/lab/bonn",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 79,
+    "name": "Medbonn - Dr. med. Stefan Trapp",
+    "location": "Bonn, Germany",
+    "cityTags": [
+      "bonn"
+    ],
+    "url": "https://www.medbonn.com/biologische-medizin-2/labordiagnostik/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "stool_tests",
+      "urine_tests",
+      "environmental_medicine"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 80,
+    "name": "LIS Bonn (Labor Wisplinghoff Partner)",
+    "location": "Bonn, Germany",
+    "cityTags": [
+      "bonn"
+    ],
+    "url": "https://lis.koeln/lis-standort-bonn",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "npi_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 81,
+    "name": "Gesundheitspraxis Bonn (IGeL Labor)",
+    "location": "Bonn, Germany",
+    "cityTags": [
+      "bonn"
+    ],
+    "url": "https://www.gesundheitspraxisbonn.de/igel-labor",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 82,
+    "name": "MVZ Labor Münster Hafenweg (Limbach Gruppe)",
+    "location": "Münster, Germany",
+    "cityTags": [
+      "muenster"
+    ],
+    "url": "https://www.labor-muenster.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 83,
+    "name": "MVZ Labor Münster - Dr. Löer, Prof. Cullen und Kollegen",
+    "location": "Münster, Germany",
+    "cityTags": [
+      "muenster"
+    ],
+    "url": "https://www.doctolib.de/medizinisches-versorgungszentrum-mvz/muenster/mvz-labor-munster-dr-loer-prof-cullen-und-kollegen-gbr",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests",
+      "stool_tests",
+      "microbiology",
+      "virology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 84,
+    "name": "UKM Labor (Universitätsklinikum Münster)",
+    "location": "Münster, Germany",
+    "cityTags": [
+      "muenster"
+    ],
+    "url": "https://www.ukm.de/zentrallabor",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 85,
+    "name": "Bioscientia Labor Karlsruhe (Mein Direktlabor)",
+    "location": "Karlsruhe, Germany",
+    "cityTags": [
+      "karlsruhe"
+    ],
+    "url": "https://labor-karlsruhe.bioscientia.de/fuer-patienten/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "saliva_tests",
+      "vaginom_analysis"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 86,
+    "name": "MVZ Labor PD Dr. Volkmann und Kollegen",
+    "location": "Karlsruhe, Germany",
+    "cityTags": [
+      "karlsruhe"
+    ],
+    "url": "https://laborvolkmann.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "specialized_diagnostics",
+      "immunology"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 87,
+    "name": "SYNLAB Praxis für Humangenetik Karlsruhe",
+    "location": "Karlsruhe, Germany",
+    "cityTags": [
+      "karlsruhe"
+    ],
+    "url": "https://www.synlab.com/lab/karlsruhe",
+    "logo": "",
+    "serviceTypes": [
+      "genetic_testing",
+      "blood_tests",
+      "prenatal_diagnostics"
+    ],
+    "noReferral": false
+  },
+  {
+    "id": 88,
+    "name": "SYNLAB MVZ Ettlingen",
+    "location": "Ettlingen (Karlsruhe Area), Germany",
+    "cityTags": [
+      "ettlingen"
+    ],
+    "url": "https://www.synlab.de/lab/ettlingen",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests"
+    ],
+    "noReferral": false
+  }
+]

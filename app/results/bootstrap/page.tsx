@@ -53,10 +53,9 @@ export default function ResultsBootstrapPage() {
   // cancelled flag was set by React StrictMode's double-invoke cleanup.
   useEffect(() => {
     if (step === "done") {
-      const dest = session?.user?.email ? "/app/dashboard" : "/results/overview";
-      router.replace(dest);
+      router.replace("/auth/register");
     }
-  }, [step, router, session?.user?.email]);
+  }, [step, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,12 +72,13 @@ export default function ResultsBootstrapPage() {
       }
 
       try {
-        // Resolve "caller" as late as possible so logged-in sessions don't accidentally run as anon.
-        const effectiveCaller = session?.user?.email ? session.user.email : `anon:${anonId}`;
+        // Every survey is started by launchSurvey() which only runs when sessionStatus === "unauthenticated".
+        // So the questionnaire session is always owned by anon:{anonId}. We therefore ALWAYS redirect
+        // to /auth/register after bootstrap — new users register there, returning users sign in.
+        // Using a fixed constant here prevents useSession mid-flight changes from routing to the old dashboard.
+        const effectiveCaller = `anon:${anonId}`;
 
         setStep("profile");
-        // Always go through apiBuildProfile — it handles idempotency (409 → latest profile).
-        // This ensures the questionnaire session gets marked "completed" in the DB.
         const built = await apiBuildProfile(sessionId);
         const profileSnapshotId = built?.profile_snapshot_id as string | undefined;
         if (!profileSnapshotId) throw new Error("profile_build_missing_snapshot");
@@ -91,7 +91,6 @@ export default function ResultsBootstrapPage() {
           if (!r.ok) throw new Error("recommendations_failed");
         });
 
-        // Run status + score in parallel — they're independent of each other.
         setStep("status");
         await Promise.all([
           fetch("/api/status/recalculate", { method: "POST", headers: { "x-arc-anon-id": anonId } }).then((r) => {
@@ -106,7 +105,6 @@ export default function ResultsBootstrapPage() {
           }),
         ]);
 
-        // Run timeline + summary in parallel.
         setStep("timeline");
         await Promise.all([
           fetch(`/api/timeline/${encodeURIComponent(effectiveCaller)}`, {
@@ -116,7 +114,6 @@ export default function ResultsBootstrapPage() {
           fetch("/api/dashboard/summary", { headers: { "x-arc-anon-id": anonId }, cache: "no-store" }).catch(() => null),
         ]);
 
-        // Mark results as seen so Dashboard is the default landing from this point forward.
         setStep("summary");
         await fetch("/api/navigation/mark-results-seen", {
           method: "POST",
@@ -124,9 +121,7 @@ export default function ResultsBootstrapPage() {
         }).catch(() => null);
 
         setStep("done");
-        // Authenticated users go straight to Dashboard; anon users see results overview.
-        const dest = session?.user?.email ? "/app/dashboard" : "/results/overview";
-        if (!cancelled) router.replace(dest);
+        if (!cancelled) router.replace("/auth/register");
       } catch (e: any) {
         if (cancelled) return;
         setError(e?.message ? String(e.message) : "bootstrap_failed");
@@ -136,7 +131,7 @@ export default function ResultsBootstrapPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, session?.user?.email, sessionStatus]);
+  }, [router, sessionStatus]);
 
   const idx = stepIndex(step);
   const progressPct = Math.min(100, Math.round(((idx + (step === "done" ? 0 : 0.25)) / STEPS.length) * 100));

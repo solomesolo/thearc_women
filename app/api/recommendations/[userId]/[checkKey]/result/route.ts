@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { invalidateRecsCache } from "@/lib/recommendations-engine/recommendationsService";
 
 function getCallerEmail(request: NextRequest, sessionEmail: string | null | undefined) {
   const anonHeader = request.headers.get("x-arc-anon-id")?.trim() || null;
@@ -74,6 +75,7 @@ export async function POST(
     update: { status: "result_uploaded", completedAt: new Date() },
   });
 
+  invalidateRecsCache(targetEmail);
   return Response.json({
     id: result.id,
     documentId: result.documentId,

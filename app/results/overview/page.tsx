@@ -18,6 +18,11 @@ import { HealthWalletHeader } from "@/components/app/HealthWalletHeader";
 import { RemindMeButton } from "@/components/app/RemindMeButton";
 import type { CheckRecommendation } from "@/lib/recommendations-engine/types";
 import { loadScreeningEvents } from "@/lib/calendar/localHealthCalendarStore";
+import {
+  loadScreeningDocumentUploads,
+  removeScreeningDocumentUpload,
+  type ScreeningDocumentUpload,
+} from "@/lib/health-wallet/screeningDocumentUploads";
 
 const UploadResultsModal = dynamic(
   () => import("@/components/app/UploadResultsModal").then((m) => ({ default: m.UploadResultsModal })),
@@ -585,6 +590,7 @@ function generateHealthSummaryPDF(
   screenings: WalletScreening[],
   userName: string | null,
   isDE: boolean,
+  uploadedScreeningDocs: ScreeningDocumentUpload[],
 ) {
   const lang = isDE ? "de" : "en";
   const date = new Date().toLocaleDateString(lang === "de" ? "de-DE" : "en-GB", {
@@ -608,6 +614,8 @@ function generateHealthSummaryPDF(
     completed: isDE ? "Abgeschlossen" : "Completed",
     planned: isDE ? "Geplant" : "Planned",
     missing: isDE ? "Fehlend" : "Missing",
+    uploadedScreeningsTitle: isDE ? "Hochgeladene Vorsorge-Dokumente" : "Uploaded screening documents",
+    findings: isDE ? "Befunde" : "Findings",
     consultNote: isDE
       ? "Bitte besprechen Sie die markierten Werte mit Ihrem Arzt."
       : "Please discuss highlighted values with your doctor.",
@@ -652,6 +660,18 @@ function generateHealthSummaryPDF(
         <td style="padding:8px 4px;color:${statusColor};font-weight:600">${statusTxt}</td>
         <td style="padding:8px 4px;color:#737373">${sc.result?.date || "—"}</td>
         <td style="padding:8px 4px;color:#737373;font-size:12px">${sc.result?.notes || "—"}</td>
+      </tr>`;
+  }).join("");
+
+  const docScRows = uploadedScreeningDocs.map((doc) => {
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const findingsShort = doc.findings.length > 800 ? `${esc(doc.findings.slice(0, 800))}…` : esc(doc.findings || "—");
+    return `
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:8px 4px;font-weight:500">${esc(doc.fileName || (isDE ? "Dokument" : "Document"))}</td>
+        <td style="padding:8px 4px;color:#737373">${doc.date || "—"}</td>
+        <td style="padding:8px 4px;color:#404040;font-size:12px;line-height:1.45">${findingsShort || "—"}</td>
       </tr>`;
   }).join("");
 
@@ -724,6 +744,19 @@ function generateHealthSummaryPDF(
     <tbody>${scRows}</tbody>
   </table>` : ""}
 
+  ${uploadedScreeningDocs.length > 0 ? `
+  <h2>${t.uploadedScreeningsTitle}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>${isDE ? "Datei" : "File"}</th>
+        <th>${t.date}</th>
+        <th>${t.findings}</th>
+      </tr>
+    </thead>
+    <tbody>${docScRows}</tbody>
+  </table>` : ""}
+
   <div class="disclaimer">${t.disclaimer}</div>
 
   <script>window.onload = function() { window.print(); };<\/script>
@@ -747,6 +780,7 @@ export default function HealthWalletPage() {
 
   const [tab, setTab] = useState<Tab>("biomarkers");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [walletRevision, setWalletRevision] = useState(0);
   const [scPlannedDates, setScPlannedDates] = useState<Record<string, string>>({});
 
   // Load screening calendar events from localStorage
@@ -761,6 +795,16 @@ export default function HealthWalletPage() {
       setScPlannedDates(dates);
     } catch { /* ignore */ }
   }, []);
+
+  const [screeningDocUploads, setScreeningDocUploads] = useState<ScreeningDocumentUpload[]>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const refresh = () => setScreeningDocUploads(loadScreeningDocumentUploads());
+    refresh();
+    window.addEventListener("arc_screening_uploads_change", refresh);
+    return () => window.removeEventListener("arc_screening_uploads_change", refresh);
+  }, [walletRevision]);
 
   const [wallet, setWallet] = useState<{
     groups: DomainGroup[];
@@ -844,10 +888,11 @@ export default function HealthWalletPage() {
     }
 
     setWallet({ groups, biomarkers: allBiomarkers, screenings: allScreenings });
-  }, [recs]);
+  }, [recs, walletRevision]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timelineEvents = useMemo((): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
+    const isDe = locale === "de";
     // All individual biomarker entries (not just latest)
     for (const bm of wallet.biomarkers) {
       for (const entry of bm.entries) {
@@ -864,8 +909,22 @@ export default function HealthWalletPage() {
         events.push({ label: sc.name, sub: "Screening planned", date: new Date().toISOString(), type: "planned" });
       }
     }
+    for (const doc of screeningDocUploads) {
+      const excerpt =
+        doc.findings.length > 140 ? `${doc.findings.slice(0, 140)}…` : doc.findings;
+      const sub = [excerpt || null, doc.fileName ? `Source: ${doc.fileName}` : null]
+        .filter(Boolean)
+        .join(" · ") || (isDe ? "Gespeichert" : "Saved");
+      const sortDate = doc.date ? `${doc.date}T12:00:00.000Z` : doc.savedAt;
+      events.push({
+        label: isDe ? "Vorsorge (Dokument)" : "Screening (document)",
+        sub,
+        date: sortDate,
+        type: "completed",
+      });
+    }
     return events.sort((a, b) => b.date.localeCompare(a.date));
-  }, [wallet]);
+  }, [wallet, screeningDocUploads, locale]);
 
   const isDE = locale === "de";
   const L = {
@@ -906,6 +965,14 @@ export default function HealthWalletPage() {
     noItems: isDE ? "Keine Einträge in dieser Kategorie." : "No items in this category.",
     exportPDF: isDE ? "Zusammenfassung exportieren" : "Export for Doctor",
     exportTitle: isDE ? "PDF für Arztbesuch" : "Doctor visit PDF",
+    uploadedScreeningsTitle: isDE ? "Hochgeladene Vorsorge-Dokumente" : "Uploaded screening documents",
+    uploadedScreeningsHint: isDE ? "Befunde aus Ihren hochgeladenen Schreiben" : "Findings from your uploaded letters",
+    findings: isDE ? "Befunde" : "Findings",
+    removeEntry: isDE ? "Entfernen" : "Remove",
+    noScreeningsYet: isDE ? "Noch keine Vorsorge-Einträge" : "No screenings added yet",
+    noScreeningsHint: isDE
+      ? "Sie können vergangene Vorsorge ergänzen oder empfohlene Termine planen."
+      : "You can add past screenings or plan recommended ones.",
   };
 
   const TABS: { id: Tab; label: string }[] = [
@@ -928,7 +995,8 @@ export default function HealthWalletPage() {
 
   const hasExportableData =
     wallet.biomarkers.some((b) => b.entries.length > 0) ||
-    wallet.screenings.some((s) => s.status !== "missing");
+    wallet.screenings.some((s) => s.status !== "missing") ||
+    screeningDocUploads.length > 0;
 
   return (
     <ProtectedRouteGate
@@ -939,30 +1007,50 @@ export default function HealthWalletPage() {
       <div className="mx-auto max-w-[72rem] px-5 py-10 md:px-8">
 
         {/* ── Page header ── */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[1.75rem]">
-            {L.title}
-          </h1>
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-[1.5rem] font-semibold tracking-tight text-[#0c0c0c] md:text-[1.75rem]">
+                {L.title}
+              </h1>
+              <p className="mt-1 text-[0.9375rem] text-[#737373]">{L.subtitle}</p>
+            </div>
 
-          {/* Export for Doctor button */}
-          {hasExportableData && (
+            {/* Primary action — always visible */}
             <button
               type="button"
-              onClick={() =>
-                generateHealthSummaryPDF(
-                  wallet.biomarkers,
-                  wallet.screenings,
-                  session?.user?.name ?? session?.user?.email ?? null,
-                  isDE,
-                )
-              }
-              className="shrink-0 flex items-center gap-2 rounded-[12px] border border-black/[0.12] bg-white px-4 py-2.5 text-[0.875rem] font-medium text-[#0c0c0c] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-[filter] hover:brightness-[0.95]"
+              onClick={() => setShowUploadModal(true)}
+              className="shrink-0 flex items-center gap-2 rounded-[12px] bg-[#0c0c0c] px-4 py-2.5 text-[0.875rem] font-semibold text-white transition-[filter] hover:brightness-[0.88] mt-1"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path d="M3 11v2a1 1 0 001 1h8a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
-              {L.exportPDF}
+              {isDE ? "Ergebnis hinzufügen" : "Add health record"}
             </button>
+          </div>
+
+          {/* Secondary action row */}
+          {hasExportableData && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() =>
+                  generateHealthSummaryPDF(
+                    wallet.biomarkers,
+                    wallet.screenings,
+                    session?.user?.name ?? session?.user?.email ?? null,
+                    isDE,
+                    screeningDocUploads,
+                  )
+                }
+                className="flex items-center gap-2 rounded-[10px] border border-black/[0.1] bg-white px-3 py-1.5 text-[0.8125rem] font-medium text-[#404040] transition-[filter] hover:brightness-[0.95]"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path d="M3 11v2a1 1 0 001 1h8a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {L.exportPDF}
+              </button>
+            </div>
           )}
         </div>
 
@@ -1054,11 +1142,55 @@ export default function HealthWalletPage() {
         {/* ── Tab: Screenings ── */}
         {!isLoading && tab === "screenings" && (
           <div className="space-y-6">
-            {wallet.groups.filter((g) => g.isScreening && g.screenings.length > 0).length === 0 && (
+            {screeningDocUploads.length > 0 && (
+              <div>
+                <h2 className="mb-2 text-[0.9375rem] font-semibold text-[#0c0c0c]">{L.uploadedScreeningsTitle}</h2>
+                <p className="mb-3 text-[0.8125rem] text-[#737373]">{L.uploadedScreeningsHint}</p>
+                <div className="space-y-3">
+                  {screeningDocUploads.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="rounded-[16px] border border-black/[0.08] bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[0.875rem] font-medium text-[#0c0c0c]">
+                            {doc.screeningName || doc.fileName || (isDE ? "Vorsorge-Dokument" : "Screening document")}
+                          </p>
+                          <p className="mt-0.5 text-[0.75rem] text-[#737373]">
+                            {doc.date
+                              ? `${L.savedDate}: ${doc.date}`
+                              : `${L.savedDate}: ${new Date(doc.savedAt).toLocaleDateString(isDE ? "de-DE" : "en-GB")}`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            removeScreeningDocumentUpload(doc.id);
+                          }}
+                          className="shrink-0 rounded-full border border-black/[0.12] px-3 py-1 text-[0.75rem] font-medium text-[#525252] hover:bg-[#fafaf9]"
+                        >
+                          {L.removeEntry}
+                        </button>
+                      </div>
+                      <p className="mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[#a3a3a3]">
+                        {L.findings}
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-[#404040]">
+                        {doc.findings || (isDE ? "—" : "—")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {wallet.groups.filter((g) => g.isScreening && g.screenings.length > 0).length === 0 &&
+              screeningDocUploads.length === 0 && (
               <div className="rounded-[20px] border border-black/[0.08] bg-white p-8 text-center">
-                <p className="text-[0.9375rem] font-semibold text-[#404040]">No screenings added yet</p>
+                <p className="text-[0.9375rem] font-semibold text-[#404040]">{L.noScreeningsYet}</p>
                 <p className="mt-1.5 text-[0.8125rem] text-[#737373]">
-                  You can add past screenings or plan recommended ones.
+                  {L.noScreeningsHint}
                 </p>
                 <Link
                   href="/results/action-plan"
@@ -1185,6 +1317,8 @@ export default function HealthWalletPage() {
       <UploadResultsModal
         open={showUploadModal}
         onClose={() => setShowUploadModal(false)}
+        locale={isDE ? "de" : "en"}
+        onSynced={() => setWalletRevision((r) => r + 1)}
       />
     </ProtectedRouteGate>
   );

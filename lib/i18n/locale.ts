@@ -17,8 +17,13 @@ export function getStoredLocale(): Locale {
 
 export function setStoredLocale(locale: Locale) {
   if (typeof window === "undefined") return;
+  const normalized = normalizeLocale(locale);
   try {
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    const prev = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+    if (prev !== normalized) {
+      window.dispatchEvent(new Event("arc_locale_change"));
+    }
   } catch {}
 }
 

@@ -4,12 +4,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { WalletSyncEntry } from "@/app/api/health-wallet/sync/route";
 import { PostUploadSuccess } from "@/components/app/PostUploadSuccess";
 import { useRouter } from "next/navigation";
+import {
+  getUploadHealthDocumentTexts,
+  type UploadDocumentKind,
+  type UploadHealthDocumentLocale,
+} from "@/content/uploadHealthDocumentModal";
+import { appendScreeningDocumentUpload } from "@/lib/health-wallet/screeningDocumentUploads";
+import { addBackgroundTask } from "@/lib/health-wallet/backgroundProcessing";
 
 type BiomarkerResultStatus = "in_range" | "borderline" | "out_of_range" | "unknown";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Step = "upload" | "processing" | "review" | "done";
+type Step = "choose_kind" | "upload" | "processing" | "review" | "done";
+
+type SyncMode = "lab" | "screening";
+
+interface ScreeningReviewState {
+  documentId: string;
+  screeningName: string;
+  date: string;
+  findings: string;
+  fileName: string | null;
+  fileType: string | null;
+  suggestManualPaste?: boolean;
+}
 
 interface PipelineStatus {
   isComplete: boolean;
@@ -20,14 +39,14 @@ interface PipelineStatus {
   fileName: string;
 }
 
-const PIPELINE_STEPS = [
-  { key: "ocr",           label: "Reading document" },
-  { key: "classify",      label: "Identifying document type" },
-  { key: "extract",       label: "Extracting health data" },
-  { key: "bin_map",       label: "Categorising results" },
-  { key: "normalize",     label: "Normalising values" },
-  { key: "longitudinal",  label: "Saving to your health record" },
-  { key: "interventions", label: "Updating care plan" },
+const PIPELINE_STEP_KEYS = [
+  "ocr",
+  "classify",
+  "extract",
+  "bin_map",
+  "normalize",
+  "longitudinal",
+  "interventions",
 ] as const;
 
 // ── Wallet persistence helper ─────────────────────────────────────────────────
@@ -76,10 +95,16 @@ function ReviewStep({
   entries,
   onChange,
   syncError,
+  copy,
 }: {
   entries: WalletSyncEntry[];
   onChange: (next: WalletSyncEntry[]) => void;
   syncError: string | null;
+  copy: {
+    hint: string;
+    noValuesTitle: string;
+    noValuesBody: string;
+  };
 }) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -158,14 +183,14 @@ function ReviewStep({
   return (
     <div className="space-y-3">
       <p className="text-[0.8125rem] text-[#737373]">
-        Check values below — correct any errors before saving, or add missing ones manually.
+        {copy.hint}
       </p>
 
       {entries.length === 0 && !showAddForm && (
         <div className="rounded-[14px] bg-[#f7f7f6] px-4 py-6 text-center">
-          <p className="text-[0.9375rem] font-semibold text-[#404040]">No values extracted</p>
+          <p className="text-[0.9375rem] font-semibold text-[#404040]">{copy.noValuesTitle}</p>
           <p className="text-[0.8125rem] text-[#737373] mt-1">
-            The document may not contain structured lab values. Add results manually below.
+            {copy.noValuesBody}
           </p>
         </div>
       )}
@@ -421,14 +446,19 @@ export function UploadResultsModal({
   open,
   onClose,
   onSynced,
+  locale = "en",
 }: {
   open: boolean;
   onClose: () => void;
   /** Called after wallet is updated — parent can trigger re-renders / nav cache busts */
   onSynced?: (checkKeys: string[]) => void;
+  /** UI copy for document-type choice and upload instructions */
+  locale?: UploadHealthDocumentLocale;
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("upload");
+  const t = getUploadHealthDocumentTexts(locale);
+  const [step, setStep] = useState<Step>("choose_kind");
+  const [documentKind, setDocumentKind] = useState<UploadDocumentKind | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -437,6 +467,8 @@ export function UploadResultsModal({
   const [fileName, setFileName] = useState<string>("");
   const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus | null>(null);
   const [walletEntries, setWalletEntries] = useState<WalletSyncEntry[]>([]);
+  const [syncMode, setSyncMode] = useState<SyncMode>("lab");
+  const [screeningReview, setScreeningReview] = useState<ScreeningReviewState | null>(null);
   const [syncedCheckKeys, setSyncedCheckKeys] = useState<string[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -460,7 +492,8 @@ export function UploadResultsModal({
       } catch { /* ignore */ }
       setSnapshotCount(count);
 
-      setStep("upload");
+      setStep("choose_kind");
+      setDocumentKind(null);
       setConsentGiven(false);
       setDragOver(false);
       setUploading(false);
@@ -469,6 +502,8 @@ export function UploadResultsModal({
       setFileName("");
       setPipelineStatus(null);
       setWalletEntries([]);
+      setSyncMode("lab");
+      setScreeningReview(null);
       setSyncedCheckKeys([]);
       setSyncing(false);
       setSyncError(null);
@@ -486,8 +521,13 @@ export function UploadResultsModal({
 
   // ── File upload ────────────────────────────────────────────────────────────
   const handleFile = useCallback(async (file: File) => {
+    const texts = getUploadHealthDocumentTexts(locale);
     if (!consentGiven) {
-      setUploadError("Please confirm your consent before uploading.");
+      const err =
+        documentKind === "screening"
+          ? texts.upload.screening.consentError
+          : texts.upload.lab.consentError;
+      setUploadError(err);
       return;
     }
     setConsentCookie();
@@ -497,6 +537,7 @@ export function UploadResultsModal({
 
     const fd = new FormData();
     fd.append("file", file);
+    fd.append("uploadKind", documentKind === "screening" ? "screening" : "lab");
 
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });
@@ -508,16 +549,16 @@ export function UploadResultsModal({
       if (!docId) throw new Error("No document ID returned.");
       setDocumentId(docId);
       setStep("processing");
-      startPolling(docId);
+      startPolling(docId, documentKind ?? "lab", file.name);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
-  }, [consentGiven]);
+  }, [consentGiven, documentKind, locale]);
 
   // ── Pipeline polling ───────────────────────────────────────────────────────
-  function startPolling(docId: string) {
+  function startPolling(docId: string, uploadKind: UploadDocumentKind, sourceFileName: string) {
     const poll = async () => {
       try {
         const res = await fetch(`/api/health-data/upload/${docId}/status`);
@@ -541,7 +582,7 @@ export function UploadResultsModal({
 
         if (isComplete || hasError) {
           // Move to review (even if there's an error — may have partial results)
-          await loadWalletEntries(docId);
+          await loadWalletEntries(docId, uploadKind, sourceFileName);
         } else {
           pollingRef.current = setTimeout(poll, 2500);
         }
@@ -552,34 +593,92 @@ export function UploadResultsModal({
     poll();
   }
 
-  async function loadWalletEntries(docId: string) {
+  async function loadWalletEntries(
+    docId: string,
+    uploadKind: UploadDocumentKind,
+    sourceFileName: string,
+  ) {
     try {
-      // DB records created here (UserCheckStatus + UserCheckResult upserts)
       const res = await fetch("/api/health-wallet/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: docId }),
+        body: JSON.stringify({
+          documentId: docId,
+          uploadKind: uploadKind === "screening" ? "screening" : "lab",
+        }),
       });
       const data = await res.json();
-      setWalletEntries(data.walletEntries ?? []);
-      setSyncedCheckKeys(data.checkKeys ?? []);
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Sync failed");
+      }
+      if (data.mode === "screening" && data.screeningDraft) {
+        setSyncMode("screening");
+        setScreeningReview({
+          documentId: data.screeningDraft.documentId ?? docId,
+          screeningName: data.screeningDraft.screeningName ?? "",
+          date: data.screeningDraft.date ?? "",
+          findings: data.screeningDraft.findings ?? "",
+          fileName: data.screeningDraft.fileName ?? sourceFileName,
+          fileType: data.screeningDraft.fileType ?? null,
+          suggestManualPaste: Boolean(data.screeningDraft.suggestManualPaste),
+        });
+        setWalletEntries([]);
+        setSyncedCheckKeys([]);
+      } else {
+        setSyncMode("lab");
+        setScreeningReview(null);
+        setWalletEntries(data.walletEntries ?? []);
+        setSyncedCheckKeys(data.checkKeys ?? []);
+      }
     } catch {
-      setWalletEntries([]);
-      setSyncedCheckKeys([]);
+      if (uploadKind === "screening") {
+        setSyncMode("screening");
+        setScreeningReview({
+          documentId: docId,
+          screeningName: "",
+          date: "",
+          findings: "",
+          fileName: sourceFileName,
+          fileType: null,
+          suggestManualPaste: true,
+        });
+        setWalletEntries([]);
+        setSyncedCheckKeys([]);
+      } else {
+        setSyncMode("lab");
+        setScreeningReview(null);
+        setWalletEntries([]);
+        setSyncedCheckKeys([]);
+      }
     }
     setStep("review");
   }
 
-  // ── Save to wallet — localStorage only (DB already written in loadWalletEntries) ──
+  // ── Save to wallet — localStorage; lab path also relied on DB sync in loadWalletEntries ──
   function handleSave() {
     setSyncing(true);
     setSyncError(null);
     try {
-      persistWalletEntries(walletEntries);
-      setStep("done");
-      onSynced?.(syncedCheckKeys);
+      if (syncMode === "screening" && screeningReview) {
+        appendScreeningDocumentUpload({
+          id: crypto.randomUUID(),
+          documentId: screeningReview.documentId,
+          screeningName: screeningReview.screeningName.trim(),
+          date: screeningReview.date.trim(),
+          findings: screeningReview.findings.trim(),
+          fileName: screeningReview.fileName,
+          fileType: screeningReview.fileType,
+          savedAt: new Date().toISOString(),
+        });
+        setStep("done");
+        onSynced?.([]);
+      } else {
+        persistWalletEntries(walletEntries);
+        setStep("done");
+        onSynced?.(syncedCheckKeys);
+      }
     } catch {
-      setSyncError("Failed to save results. Please try again.");
+      setSyncError(getUploadHealthDocumentTexts(locale).saveWalletError);
     } finally {
       setSyncing(false);
     }
@@ -611,6 +710,29 @@ export function UploadResultsModal({
 
   if (!open) return null;
 
+  const uploadCopy = documentKind ? t.upload[documentKind] : t.upload.lab;
+
+  const reviewMainTitle =
+    syncMode === "screening"
+      ? t.screeningReview.title
+      : walletEntries.length === 0
+        ? t.review.noValuesTitle
+        : locale === "de"
+          ? `${walletEntries.length} Wert${walletEntries.length > 1 ? "e" : ""} erkannt — bitte prüfen und korrigieren`
+          : `${walletEntries.length} value${walletEntries.length > 1 ? "s" : ""} extracted — review and correct`;
+
+  const savePrimaryLabel = syncing
+    ? t.reviewFooter.saving
+    : syncMode === "screening"
+      ? t.screeningReview.save
+      : walletEntries.length === 0
+        ? t.reviewFooter.saveNone
+        : walletEntries.length === 1
+          ? t.reviewFooter.saveOne
+          : locale === "de"
+            ? `${walletEntries.length}${t.reviewFooter.saveManySuffix}`
+            : `${t.reviewFooter.saveManyPrefix}${walletEntries.length}${t.reviewFooter.saveManySuffix}`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       {/* Backdrop */}
@@ -625,23 +747,26 @@ export function UploadResultsModal({
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-black/[0.06]">
           <div>
             <p className="text-[0.75rem] font-semibold uppercase tracking-wider text-[#737373]">
-              {step === "upload" && "Upload document"}
-              {step === "processing" && "Analysing document"}
-              {step === "review" && "Review results"}
-              {step === "done" && "Results"}
+              {step === "choose_kind" && t.chooseKind.eyebrow}
+              {step === "upload" && uploadCopy.eyebrow}
+              {step === "processing" && t.processing.eyebrow}
+              {step === "review" && t.review.eyebrow}
+              {step === "done" && t.done.eyebrow}
             </p>
             <h2 className="mt-0.5 text-[1.0625rem] font-semibold text-[#0c0c0c]">
-              {step === "upload" && "Add your lab results"}
-              {step === "processing" && `Reading ${fileName || "your document"}…`}
-              {step === "review" && (walletEntries.length === 0 ? "No values extracted" : `${walletEntries.length} value${walletEntries.length > 1 ? "s" : ""} extracted — review and correct`)}
-              {step === "done" && "Health Wallet updated"}
+              {step === "choose_kind" && t.chooseKind.title}
+              {step === "upload" && uploadCopy.title}
+              {step === "processing" &&
+                `${t.processing.readingVerb} ${fileName || t.processing.readingPlaceholder}…`}
+              {step === "review" && reviewMainTitle}
+              {step === "done" && t.done.title}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full p-2 hover:bg-[#f0f0ef] transition-colors"
-            aria-label="Close"
+            aria-label={locale === "de" ? "Schließen" : "Close"}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3 3l12 12M15 3L3 15" stroke="#0c0c0c" strokeWidth="1.75" strokeLinecap="round"/>
@@ -652,23 +777,53 @@ export function UploadResultsModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
+          {step === "choose_kind" && (
+            <div className="space-y-4">
+              <p className="text-[0.8125rem] text-[#737373] leading-relaxed">{t.chooseKind.subtitle}</p>
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocumentKind("lab");
+                    setStep("upload");
+                    setConsentGiven(false);
+                    setUploadError(null);
+                  }}
+                  className="rounded-[18px] border border-black/[0.1] bg-[#fafaf9] px-4 py-4 text-left transition-colors hover:border-black/[0.22] hover:bg-[#f5f5f3]"
+                >
+                  <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{t.chooseKind.labTitle}</p>
+                  <p className="mt-1 text-[0.8125rem] text-[#525252] leading-snug">{t.chooseKind.labBody}</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocumentKind("screening");
+                    setStep("upload");
+                    setConsentGiven(false);
+                    setUploadError(null);
+                  }}
+                  className="rounded-[18px] border border-black/[0.1] bg-[#fafaf9] px-4 py-4 text-left transition-colors hover:border-black/[0.22] hover:bg-[#f5f5f3]"
+                >
+                  <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">{t.chooseKind.screeningTitle}</p>
+                  <p className="mt-1 text-[0.8125rem] text-[#525252] leading-snug">{t.chooseKind.screeningBody}</p>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── UPLOAD STEP ── */}
           {step === "upload" && (
             <>
-              {/* Policy note */}
               <div className="rounded-[14px] bg-[#f7f7f6] px-4 py-3 text-[0.8125rem] text-[#404040] leading-relaxed">
-                <p className="font-semibold text-[#0c0c0c] mb-1">Best results from these documents:</p>
+                <p className="font-semibold text-[#0c0c0c] mb-1">{uploadCopy.policyTitle}</p>
                 <ul className="space-y-0.5 list-disc list-inside text-[0.8rem]">
-                  <li>Blood test panel (PDF or photo)</li>
-                  <li>Lab report (any language)</li>
-                  <li>Screening letter or GP letter</li>
+                  {uploadCopy.policyBullets.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
                 </ul>
-                <p className="mt-2 text-[0.775rem] text-[#737373]">
-                  Supported formats: PDF, JPG, PNG · Max 20 MB per file
-                </p>
+                <p className="mt-2 text-[0.775rem] text-[#737373]">{uploadCopy.policyFootnote}</p>
               </div>
 
-              {/* Consent */}
               <label className="flex items-start gap-3 cursor-pointer group">
                 <span className="mt-0.5 flex-shrink-0">
                   <input
@@ -678,12 +833,9 @@ export function UploadResultsModal({
                     className="h-4 w-4 rounded border-black/20 accent-[#0c0c0c]"
                   />
                 </span>
-                <span className="text-[0.8125rem] text-[#404040] leading-snug">
-                  I consent to Arc Woman processing my health document to extract biomarker values and store them securely in my personal health record.
-                </span>
+                <span className="text-[0.8125rem] text-[#404040] leading-snug">{uploadCopy.consent}</span>
               </label>
 
-              {/* Drop zone */}
               <div
                 onDrop={onDrop}
                 onDragOver={onDragOver}
@@ -699,9 +851,9 @@ export function UploadResultsModal({
                 </svg>
                 <div className="text-center">
                   <p className="text-[0.9375rem] font-semibold text-[#0c0c0c]">
-                    {uploading ? "Uploading…" : "Drop file here or tap to choose"}
+                    {uploading ? t.uploading : uploadCopy.dropTitle}
                   </p>
-                  <p className="text-[0.8rem] text-[#737373] mt-0.5">PDF, JPG or PNG</p>
+                  <p className="text-[0.8rem] text-[#737373] mt-0.5">{uploadCopy.dropSubtitle}</p>
                 </div>
               </div>
               <input
@@ -722,11 +874,12 @@ export function UploadResultsModal({
           {/* ── PROCESSING STEP ── */}
           {step === "processing" && (
             <div className="space-y-3">
-              {PIPELINE_STEPS.map((s) => {
-                const done = pipelineStatus?.completedSteps.includes(s.key);
-                const active = pipelineStatus?.currentStep === s.key;
+              {PIPELINE_STEP_KEYS.map((key) => {
+                const done = pipelineStatus?.completedSteps.includes(key);
+                const active = pipelineStatus?.currentStep === key;
+                const label = t.pipeline[key];
                 return (
-                  <div key={s.key} className="flex items-center gap-3">
+                  <div key={key} className="flex items-center gap-3">
                     <span className="flex-shrink-0 h-5 w-5 flex items-center justify-center">
                       {done ? (
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -740,7 +893,7 @@ export function UploadResultsModal({
                       )}
                     </span>
                     <span className={`text-[0.875rem] ${done ? "text-[#404040]" : active ? "font-semibold text-[#0c0c0c]" : "text-[#a3a3a3]"}`}>
-                      {s.label}
+                      {label}
                     </span>
                   </div>
                 );
@@ -748,21 +901,103 @@ export function UploadResultsModal({
 
               {pipelineStatus?.hasError && (
                 <div className="rounded-[12px] bg-red-50 border border-red-200 px-4 py-3 mt-4">
-                  <p className="text-[0.8125rem] text-[#dc2626] font-semibold">Processing issue</p>
+                  <p className="text-[0.8125rem] text-[#dc2626] font-semibold">{t.errors.processingIssue}</p>
                   <p className="text-[0.8rem] text-[#dc2626] mt-0.5">
-                    {pipelineStatus.errorMessage ?? "We had trouble reading the document. Any values found will still appear below."}
+                    {pipelineStatus.errorMessage ?? t.errors.processingFallback}
                   </p>
+                </div>
+              )}
+
+              {/* Estimated time — shown in both languages so users aren't confused */}
+              {!pipelineStatus?.hasError && (
+                <div className="flex items-center gap-2 pt-3 border-t border-black/[0.06]">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className="flex-shrink-0 text-[#a3a3a3]" aria-hidden>
+                    <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M6.5 3.5v3l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="text-[0.775rem] text-[#a3a3a3]">{t.processing.estimatedTime}</span>
                 </div>
               )}
             </div>
           )}
 
           {/* ── REVIEW STEP ── */}
-          {step === "review" && (
+          {step === "review" && syncMode === "screening" && screeningReview && (
+            <div className="space-y-4">
+              <p className="text-[0.8125rem] text-[#737373] leading-relaxed">{t.screeningReview.hint}</p>
+              {screeningReview.suggestManualPaste && (
+                <div className="rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[0.8125rem] leading-snug text-amber-950">
+                  {t.screeningReview.ocrUnreadableHint}
+                </div>
+              )}
+              {screeningReview.fileName && (
+                <p className="text-[0.75rem] text-[#a3a3a3]">
+                  {locale === "de" ? "Datei: " : "File: "}
+                  <span className="text-[#525252]">{screeningReview.fileName}</span>
+                </p>
+              )}
+              <div>
+                <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[#737373] mb-1.5">
+                  {locale === "de" ? "Name der Untersuchung" : "Screening name"}
+                </label>
+                <input
+                  type="text"
+                  value={screeningReview.screeningName}
+                  onChange={(e) =>
+                    setScreeningReview((prev) =>
+                      prev ? { ...prev, screeningName: e.target.value } : prev,
+                    )
+                  }
+                  placeholder={locale === "de" ? "z.B. MRT, Mammographie, Koloskopie…" : "e.g. MRI, Mammography, Colonoscopy…"}
+                  className="w-full rounded-[12px] border border-black/[0.12] bg-white px-3 py-2.5 text-[0.875rem] text-[#0c0c0c]"
+                />
+              </div>
+              <div>
+                <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[#737373] mb-1.5">
+                  {t.screeningReview.dateLabel}
+                </label>
+                <input
+                  type="date"
+                  value={screeningReview.date}
+                  onChange={(e) =>
+                    setScreeningReview((prev) =>
+                      prev ? { ...prev, date: e.target.value } : prev,
+                    )
+                  }
+                  className="w-full rounded-[12px] border border-black/[0.12] bg-white px-3 py-2.5 text-[0.875rem] text-[#0c0c0c]"
+                />
+              </div>
+              <div>
+                <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[#737373] mb-1.5">
+                  {t.screeningReview.findingsLabel}
+                </label>
+                <textarea
+                  value={screeningReview.findings}
+                  onChange={(e) =>
+                    setScreeningReview((prev) =>
+                      prev ? { ...prev, findings: e.target.value } : prev,
+                    )
+                  }
+                  rows={8}
+                  placeholder={t.screeningReview.findingsPlaceholder}
+                  className="w-full resize-y rounded-[12px] border border-black/[0.12] bg-white px-3 py-2.5 text-[0.875rem] text-[#0c0c0c] leading-relaxed min-h-[140px]"
+                />
+              </div>
+              {syncError && (
+                <p className="text-[0.8125rem] text-[#dc2626]">{syncError}</p>
+              )}
+            </div>
+          )}
+          {step === "review" && syncMode === "lab" && (
             <ReviewStep
               entries={walletEntries}
               onChange={setWalletEntries}
               syncError={syncError}
+              copy={{
+                hint: t.review.hint,
+                noValuesTitle: t.review.noValuesTitle,
+                noValuesBody: t.review.noValuesBody,
+              }}
             />
           )}
 
@@ -771,6 +1006,25 @@ export function UploadResultsModal({
             const missingNames = Object.keys(ALL_CHECK_KEYS)
               .filter((k) => !syncedCheckKeys.includes(k))
               .map((k) => ALL_CHECK_KEYS[k]);
+
+            if (syncMode === "screening") {
+              return (
+                <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-6 text-center space-y-3">
+                  <p className="text-[0.9375rem] font-semibold text-[#404040]">{t.screeningReview.doneTitle}</p>
+                  <p className="text-[0.8125rem] text-[#737373]">{t.screeningReview.doneBody}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      router.push("/results/overview");
+                    }}
+                    className="w-full rounded-full bg-[#0c0c0c] py-3 text-[0.9375rem] font-semibold text-white hover:bg-[#1f1f1f] transition-colors"
+                  >
+                    {locale === "de" ? "Zur Health Wallet" : "View Health Wallet"}
+                  </button>
+                </div>
+              );
+            }
 
             if (walletEntries.length > 0) {
               return (
@@ -781,17 +1035,15 @@ export function UploadResultsModal({
                   nextMissingNames={missingNames}
                   onClose={onClose}
                   onViewWallet={() => { onClose(); router.push("/results/overview"); }}
+                  language={locale}
                 />
               );
             }
 
-            // Fallback: no entries extracted or added
             return (
               <div className="rounded-[14px] border border-black/[0.06] bg-[#fafaf9] px-4 py-6 text-center space-y-1">
-                <p className="text-[0.9375rem] font-semibold text-[#404040]">Nothing saved</p>
-                <p className="text-[0.8125rem] text-[#737373]">
-                  No values were extracted or added. Try uploading a clearer document.
-                </p>
+                <p className="text-[0.9375rem] font-semibold text-[#404040]">{t.doneEmpty.title}</p>
+                <p className="text-[0.8125rem] text-[#737373]">{t.doneEmpty.body}</p>
               </div>
             );
           })()}
@@ -799,22 +1051,58 @@ export function UploadResultsModal({
 
         {/* Footer */}
         <div className="px-6 pb-6 pt-3 border-t border-black/[0.06] flex gap-3">
-          {step === "upload" && (
+          {step === "choose_kind" && (
             <button
               type="button"
               onClick={onClose}
               className="flex-1 rounded-full border border-black/[0.12] py-3 text-[0.9375rem] font-semibold text-[#404040] hover:bg-[#f0f0ef] transition-colors"
             >
-              Cancel
+              {t.chooseKind.cancel}
             </button>
+          )}
+          {step === "upload" && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("choose_kind");
+                  setDocumentKind(null);
+                  setConsentGiven(false);
+                  setUploadError(null);
+                }}
+                className="flex-1 rounded-full border border-black/[0.12] py-3 text-[0.9375rem] font-semibold text-[#404040] hover:bg-[#f0f0ef] transition-colors"
+              >
+                {uploadCopy.back}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-full border border-black/[0.12] py-3 text-[0.9375rem] font-semibold text-[#404040] hover:bg-[#f0f0ef] transition-colors"
+              >
+                {uploadCopy.cancel}
+              </button>
+            </>
           )}
           {step === "processing" && (
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                if (documentId && documentKind) {
+                  addBackgroundTask({
+                    id: crypto.randomUUID(),
+                    docId: documentId,
+                    uploadKind: documentKind,
+                    fileName: fileName,
+                    locale: locale,
+                    startedAt: new Date().toISOString(),
+                  });
+                }
+                if (pollingRef.current) clearTimeout(pollingRef.current);
+                onClose();
+              }}
               className="flex-1 rounded-full border border-black/[0.12] py-3 text-[0.9375rem] font-semibold text-[#404040] hover:bg-[#f0f0ef] transition-colors"
             >
-              Run in background
+              {t.processingFooter.background}
             </button>
           )}
           {step === "review" && (
@@ -824,7 +1112,7 @@ export function UploadResultsModal({
                 onClick={onClose}
                 className="rounded-full border border-black/[0.12] px-5 py-3 text-[0.9375rem] font-semibold text-[#404040] hover:bg-[#f0f0ef] transition-colors"
               >
-                Cancel
+                {t.reviewFooter.cancel}
               </button>
               <button
                 type="button"
@@ -832,15 +1120,10 @@ export function UploadResultsModal({
                 disabled={syncing}
                 className="flex-1 rounded-full bg-[#0c0c0c] py-3 text-[0.9375rem] font-semibold text-white hover:bg-[#1f1f1f] transition-colors disabled:opacity-40"
               >
-                {syncing
-                  ? "Saving…"
-                  : walletEntries.length === 0
-                    ? "Save (no values)"
-                    : `Save ${walletEntries.length} value${walletEntries.length > 1 ? "s" : ""}`}
+                {savePrimaryLabel}
               </button>
             </>
           )}
-          {/* Done step CTAs are rendered inside PostUploadSuccess */}
         </div>
       </div>
     </div>

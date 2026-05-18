@@ -20,6 +20,26 @@ function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string)
   });
 }
 
+// ── Per-process subscriber status cache ──────────────────────────────────────
+// Keyed by email, 10-minute TTL. Survives HMR via global.
+declare global {
+  // eslint-disable-next-line no-var
+  var _subscriberCache: Map<string, { isActive: boolean; ts: number }> | undefined;
+}
+const SUBSCRIBER_CACHE: Map<string, { isActive: boolean; ts: number }> =
+  global._subscriberCache ?? (global._subscriberCache = new Map());
+const SUBSCRIBER_TTL_MS = 10 * 60 * 1000;
+
+function getCachedSubscriber(email: string): boolean | null {
+  const entry = SUBSCRIBER_CACHE.get(email);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > SUBSCRIBER_TTL_MS) { SUBSCRIBER_CACHE.delete(email); return null; }
+  return entry.isActive;
+}
+function setCachedSubscriber(email: string, isActive: boolean) {
+  SUBSCRIBER_CACHE.set(email, { isActive, ts: Date.now() });
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -68,25 +88,36 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (!session?.user) return session;
-      session.user.email = token.email as string;
+      const email = token.email as string;
+      session.user.email = email;
+
       const disableLookup = process.env.DISABLE_SUBSCRIBER_LOOKUP === "1";
-      const lookupTimeoutMs = Number(process.env.SUBSCRIBER_LOOKUP_TIMEOUT_MS ?? 1500);
       if (disableLookup) {
         (session.user as { isSubscriber?: boolean }).isSubscriber = false;
         return session;
       }
 
+      // Check in-process cache first — avoids a DB round-trip on every page load.
+      const cached = getCachedSubscriber(email);
+      if (cached !== null) {
+        (session.user as { isSubscriber?: boolean }).isSubscriber = cached;
+        return session;
+      }
+
+      // Tight timeout: subscriber status is optional UI sugar, never worth blocking on.
+      const lookupTimeoutMs = Number(process.env.SUBSCRIBER_LOOKUP_TIMEOUT_MS ?? 400);
       try {
         const sub = await withTimeout(
-          prisma.subscriber.findUnique({
-            where: { email: token.email as string },
-          }),
+          prisma.subscriber.findUnique({ where: { email } }),
           lookupTimeoutMs,
-          `subscriber_lookup_timeout_${lookupTimeoutMs}ms`
+          `subscriber_lookup_timeout`,
         );
-        (session.user as { isSubscriber?: boolean }).isSubscriber = sub?.isActive ?? false;
+        const isActive = sub?.isActive ?? false;
+        setCachedSubscriber(email, isActive);
+        (session.user as { isSubscriber?: boolean }).isSubscriber = isActive;
       } catch {
-        // Keep auth/session fast and resilient; subscriber status is optional UI personalization.
+        // Keep session fast — subscriber status is optional.
+        setCachedSubscriber(email, false);
         (session.user as { isSubscriber?: boolean }).isSubscriber = false;
       }
       return session;

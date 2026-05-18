@@ -1,0 +1,1997 @@
+[
+  {
+    "id": 1,
+    "name": "Praxis Carsten Beck",
+    "city": "Berlin",
+    "postcode": "10435",
+    "address": "Schwedter Str. 37",
+    "url": "https://www.hausarzt-beck.de/igel/",
+    "specialty": "Internal medicine / general practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "men's health",
+      "preventive diagnostics",
+      "infectious disease"
+    ],
+    "serviceNames": [
+      "Basis-Checkup",
+      "Erweiterter Checkup",
+      "STD blood test",
+      "PSA determination"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 2,
+    "name": "Praxisgemeinschaft Detmolder Straße 10",
+    "city": "Berlin",
+    "postcode": "10715",
+    "address": "Detmolder Straße 10",
+    "url": "https://www.praxis-detmolder10.de/leistungen/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "immunity",
+      "preventive diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Kleiner Gesundheitscheck",
+      "Großer Gesundheitscheck",
+      "Vitamin D blood test",
+      "Antibody check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 3,
+    "name": "Praxis Dr. Sabine Aign",
+    "city": "Berlin",
+    "postcode": "12555",
+    "address": "Annenallee 1",
+    "url": "https://hausarzt-aign.de/leistungen/igel/",
+    "specialty": "Internal medicine / nephrology / general practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "IGeL preventive services",
+      "Vitamin build-up injections"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 4,
+    "name": "Kantpraxis Berlin",
+    "city": "Berlin",
+    "postcode": "10719",
+    "address": "Kurfürstendamm 42",
+    "url": "https://www.kantpraxis.de/fachgebiete/diagnostik-und-labor",
+    "specialty": "Internal medicine / preventive medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "laboratory diagnostics",
+      "preventive diagnostics"
+    ],
+    "serviceNames": [
+      "Private blood check-up",
+      "Health check packages"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 5,
+    "name": "MVZ Allgemeinmedizin am Friedrichshain",
+    "city": "Berlin",
+    "postcode": "10249",
+    "address": "Petersburger Strasse 31",
+    "url": "https://www.mvz-friedrichshain.de/individuelle-gesundheitsleistungen/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Individual check-ups",
+      "Laboratory screening for vitamin deficiency"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 6,
+    "name": "Praxis Dr. med. Anton Kugler",
+    "city": "Berlin",
+    "postcode": "10963",
+    "address": "Askanischer Platz 1",
+    "url": "https://www.doktor-kugler.de/leistungsangebot-individuelle-gesundheitsleistungen-igel/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "laboratory diagnostics",
+      "infectious disease",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Labor-Check",
+      "HIV-Test",
+      "Vitamin injections"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 7,
+    "name": "Praxis für Innere Medizin Berlin-Friedenau",
+    "city": "Berlin",
+    "postcode": "12161",
+    "address": "Bundesallee 104-105",
+    "url": "https://xn--praxis-fr-innere-medizin-2sc.de/vorsorge/",
+    "specialty": "Internal medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive diagnostics",
+      "cardiovascular diagnostics"
+    ],
+    "serviceNames": [
+      "Erweiterter Check-up",
+      "Herz-Kreislauf Check-up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 8,
+    "name": "Praxis Dr. David von Kleist",
+    "city": "Berlin",
+    "postcode": "13597",
+    "address": "Carl-Schurz-Straße 46",
+    "url": "https://www.internist-spandau.de/individuelle-gesundheitsleistungen-igel/",
+    "specialty": "General practice / internal medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "laboratory diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Erweiterte Laborleistungen",
+      "Vitamin and mineral infusions/injections"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 9,
+    "name": "HNO Frau Dr. med. Egle Vabulaite",
+    "city": "Berlin",
+    "postcode": "10719",
+    "address": "Lietzenburger Str. 71",
+    "url": "https://www.hno-dr-vabulaite-charlottenburg.de/labordiagnostik-diagnostik/",
+    "specialty": "ENT / allergology",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "inflammation",
+      "immunity",
+      "laboratory diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "CRP blood test",
+      "Vitamin D determination",
+      "Self-pay blood tests for blood components",
+      "Antibody testing"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 10,
+    "name": "Hausarztpraxis Dr. med. Christine und David Haebler",
+    "city": "Berlin",
+    "postcode": "13509",
+    "address": "Tile-Brügge-Weg 15",
+    "url": "https://haebler-hausarztpraxis.de/igel/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "laboratory diagnostics",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Labor and blood collection appointments",
+      "Tumor M2-PK test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 11,
+    "name": "Hausarztpraxis im Märkischen Viertel D. Weiß",
+    "city": "Berlin",
+    "postcode": "13439",
+    "address": "Senftenberger Ring 3A",
+    "url": "https://www.hausarztpraxismv.de/igel/",
+    "specialty": "General practice / travel medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive diagnostics"
+    ],
+    "serviceNames": [
+      "General-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 12,
+    "name": "Praxis Dr. Carlos Keller",
+    "city": "Hamburg",
+    "postcode": "22147",
+    "address": "Hermann-Balk-Str. 111",
+    "url": "https://praxis-keller-plinke.de/",
+    "specialty": "General medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive laboratory diagnostics",
+      "men's health / cancer screening",
+      "nutrients",
+      "toxicology"
+    ],
+    "serviceNames": [
+      "Large laboratory profile",
+      "PSA quantitative",
+      "Vitamin check",
+      "Heavy metals in blood"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 13,
+    "name": "Praxis für Allgemeinmedizin & Sportmedizin Dr. med. Jurka Lienemann",
+    "city": "Hamburg",
+    "postcode": "22549",
+    "address": "Kroonhorst 9d",
+    "url": "https://www.arztpraxis-hamburg-west.de/",
+    "specialty": "General medicine, sports medicine, naturopathy",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive laboratory diagnostics"
+    ],
+    "serviceNames": [
+      "Extended laboratory Check-up 35"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 14,
+    "name": "Internistische Hausarztpraxis Jessica Pommer",
+    "city": "Hamburg",
+    "postcode": "22339",
+    "address": "Hummelsbütteler Weg 7",
+    "url": "https://hausarztpraxis-pommer.de/",
+    "specialty": "Internal medicine / primary care",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "laboratory diagnostics"
+    ],
+    "serviceNames": [
+      "Extended blood draw after consultation"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 15,
+    "name": "CardioMed am Rothenbaum",
+    "city": "Hamburg",
+    "postcode": "20149",
+    "address": "Hansastraße 2-3",
+    "url": "https://cardiomed-rotherbaum.de/",
+    "specialty": "Cardiology, internal medicine, angiologie",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive laboratory diagnostics"
+    ],
+    "serviceNames": [
+      "Personal Check laboratory diagnostics"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 16,
+    "name": "Dr. med. Marlis Köhnhorn - Fachärztin für Innere Medizin",
+    "city": "Hamburg",
+    "postcode": "20095",
+    "address": "Rathausmarkt 19",
+    "url": "https://internist-praxis.hamburg/",
+    "specialty": "Internal medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "metabolic health",
+      "laboratory diagnostics",
+      "men's health / cancer screening"
+    ],
+    "serviceNames": [
+      "Special laboratory diagnostics",
+      "PSA tumor quick test",
+      "Diabetes early detection"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 17,
+    "name": "Arztpraxis am Michel",
+    "city": "Hamburg",
+    "postcode": "20459",
+    "address": "Martin-Luther-Straße 12 / Wincklerstraße 1",
+    "url": "https://arztpraxis-am-michel.de/",
+    "specialty": "General medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "inflammation",
+      "cardiac marker",
+      "nutrients",
+      "coagulation / thrombosis screening"
+    ],
+    "serviceNames": [
+      "Vitamin D and mineral laboratory tests",
+      "CRP rapid test",
+      "D-dimer rapid test",
+      "Troponin-T rapid test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 18,
+    "name": "SmartPraxis München",
+    "city": "München",
+    "postcode": "80639",
+    "address": "Rosa-Bavarese-Str. 1, 80639 München",
+    "url": "https://www.smartpraxis.de/gesund-bleiben/check-ups/vitamin-d-sonnenvitamin-analyse-in-smartpraxis-muenchen/",
+    "specialty": "General practice / Internal medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive check-up",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D blood test",
+      "Check-up Plus/Premium/Exklusiv with vitamin D"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 19,
+    "name": "Praxis Dr. Ulrike Siegmund",
+    "city": "München",
+    "postcode": "81673",
+    "address": "Schlüsselbergstraße 1, 81673 München",
+    "url": "https://www.praxis-dr-siegmund.de/versorgungsspektrum/vorsorgeuntersuchungen/",
+    "specialty": "Internal medicine / Cardiology",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive lab diagnostics",
+      "special diagnostics"
+    ],
+    "serviceNames": [
+      "Preventive blood values",
+      "Special laboratory testing"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 20,
+    "name": "Hausarztpraxis am Romanplatz",
+    "city": "München",
+    "postcode": "80639",
+    "address": "Romanplatz 9, 80639 München",
+    "url": "https://www.hausarztpraxis-am-romanplatz.de/leistungen/vitamin-d/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive lab diagnostics",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D blood test",
+      "Broader fatigue/nutrient diagnostics"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 21,
+    "name": "Hausarztpraxis Stiglmaierplatz",
+    "city": "München",
+    "postcode": "80333",
+    "address": "Stiglmaierplatz 2, 80333 München",
+    "url": "https://hausarztpraxis-stiglmaierplatz.de/leistungen/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive lab diagnostics",
+      "hematology",
+      "metabolic/liver/kidney/electrolytes"
+    ],
+    "serviceNames": [
+      "Self-pay lab package",
+      "Blood count",
+      "Single markers"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 22,
+    "name": "Praxis Dr. Karl Ludwig Maier",
+    "city": "München",
+    "postcode": "",
+    "address": "München-Kirchtrudering",
+    "url": "https://neu.maier-kl.de/check-ups/laborcheck/",
+    "specialty": "Internal medicine / Preventive medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive lab diagnostics"
+    ],
+    "serviceNames": [
+      "Self-pay laboratory testing"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 23,
+    "name": "Praxis Dr. med. Stephanie Poetsch",
+    "city": "München",
+    "postcode": "81825",
+    "address": "Kreillerstraße 151, 81825 München",
+    "url": "https://hausarzt-dr-poetsch.de/leistungen/individuelle-gesundheitsleistungen",
+    "specialty": "General practice / Internal medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive check-up"
+    ],
+    "serviceNames": [
+      "Extended prevention check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 24,
+    "name": "Hausärzte Pasing Dr. Ina Seelbach",
+    "city": "München",
+    "postcode": "81245",
+    "address": "Gottfried-Keller-Straße 35, 81245 München",
+    "url": "https://www.hausarzt-pasing-seelbach.de/leistungen/",
+    "specialty": "General practice",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive check-up",
+      "nutrients/hormones"
+    ],
+    "serviceNames": [
+      "Check Up Basis",
+      "Check Up Plus",
+      "Extended laboratory diagnostics"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 25,
+    "name": "Ganzheitliches Frauenarzt-Zentrum München",
+    "city": "München",
+    "postcode": "80336",
+    "address": "Sendlinger-Tor-Platz 10, 80336 München",
+    "url": "https://www.villinger-praxis.de/igel-leistungen",
+    "specialty": "Gynecology",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "preventive lab diagnostics",
+      "hormones",
+      "pregnancy diagnostics"
+    ],
+    "serviceNames": [
+      "Blood investigations in health checks",
+      "Hormone level testing",
+      "Pregnancy self-pay lab tests"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 26,
+    "name": "Menopausezentrum Schwabing",
+    "city": "München",
+    "postcode": "80801",
+    "address": "Franz-Joseph-Straße 35, 80801 München",
+    "url": "https://www.menopause-zentrum-schwabing.de/",
+    "specialty": "Gynecology / Menopause medicine",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones"
+    ],
+    "serviceNames": [
+      "Menopause self-pay consultation"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 27,
+    "name": "Frauenärztin am Sendlinger Tor - Dr. Harriet Freund",
+    "city": "München",
+    "postcode": "80336",
+    "address": "Sendlinger-Tor-Platz 7, 80336 München",
+    "url": "https://www.frauenaerztin-am-sendlinger-tor.de/gynaekologie/hormonlabor/",
+    "specialty": "Gynecology",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "intolerance / nutrition",
+      "hormones"
+    ],
+    "serviceNames": [
+      "Hormone status / hormone laboratory",
+      "Food testing"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 28,
+    "name": "Hausarztpraxis am Rudolfplatz",
+    "city": "Köln",
+    "postcode": "50674",
+    "address": "Habsburgerring 1",
+    "url": "https://www.hausarzt-rudolfplatz.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D Check",
+      "Großer Check-up Plus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 29,
+    "name": "Urologie am Neumarkt",
+    "city": "Köln",
+    "postcode": "50667",
+    "address": "Schildergasse 120",
+    "url": "https://www.urologie-neumarkt.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 30,
+    "name": "Praxisklinik am Rheinauhafen",
+    "city": "Köln",
+    "postcode": "50678",
+    "address": "Agrippinawerft 6",
+    "url": "https://www.praxisklinik-rheinauhafen.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cardiology",
+      "metabolism"
+    ],
+    "serviceNames": [
+      "Hormonstatus",
+      "Herz-Kreislauf-Profil"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 31,
+    "name": "Frauenärzte am Ring",
+    "city": "Köln",
+    "postcode": "50672",
+    "address": "Hohenzollernring 14",
+    "url": "https://www.frauenaerzte-am-ring-koeln.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "fertility"
+    ],
+    "serviceNames": [
+      "Hormon-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 32,
+    "name": "CONSILIO Haus- und Fachärzte-Team Frankfurt",
+    "city": "Frankfurt am Main",
+    "postcode": "60596",
+    "address": "Gartenstraße 134",
+    "url": "https://www.consilio-aerzte-frankfurt.de",
+    "specialty": "Hausarzt / Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Ganzkörper-Checkup"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 33,
+    "name": "Privatpraxis Prof. Dr. med. Rainer Duchmann",
+    "city": "Frankfurt am Main",
+    "postcode": "60311",
+    "address": "Kaiserstraße 16",
+    "url": "https://privatpraxis-duchmann.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Gesundheits-Check-Up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 34,
+    "name": "MVZ am Salzhaus (Gynäkologie)",
+    "city": "Frankfurt am Main",
+    "postcode": "60311",
+    "address": "Kaiserstraße 6",
+    "url": "https://www.gynprenat.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Hormonstatus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 35,
+    "name": "Agaplesion MVZ Frankfurt (Urologie)",
+    "city": "Frankfurt am Main",
+    "postcode": "60431",
+    "address": "Wilhelm-Epstein-Straße 2",
+    "url": "https://www.mvz-frankfurt.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Screening",
+      "Testosteron-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 36,
+    "name": "Mein Direktlabor Frankfurt (Sonic Healthcare)",
+    "city": "Frankfurt am Main",
+    "postcode": "60327",
+    "address": "Mainzer Landstraße 191",
+    "url": "https://www.meindirektlabor.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "general health",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin-D-Test",
+      "Großes Blutbild"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 37,
+    "name": "Hausarztpraxis B+B - Stefan Blattner",
+    "city": "Stuttgart",
+    "postcode": "70567",
+    "address": "Balinger Str. 80",
+    "url": "https://hausarztpraxis-bb.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Vitamin D Bestimmung",
+      "PSA-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 38,
+    "name": "Hausarzt Stuttgart-Stöckach",
+    "city": "Stuttgart",
+    "postcode": "70190",
+    "address": "Stöckachstraße 16",
+    "url": "https://www.hausarzt-stoeckach.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "infection",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Aufbaukur Vitamin-B12",
+      "HIV-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 39,
+    "name": "Urologische Privatpraxis Stuttgart",
+    "city": "Stuttgart",
+    "postcode": "70173",
+    "address": "Königstraße 70",
+    "url": "https://www.urologie-privatpraxis-stuttgart.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Erweiterte Krebsvorsorge"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 40,
+    "name": "Praxis Dr. med. Christiane Grieb",
+    "city": "Stuttgart",
+    "postcode": "70178",
+    "address": "Rotebühlplatz 9",
+    "url": "https://www.praxis-dr-grieb.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Großes Laborprofil"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 41,
+    "name": "Hausarztpraxis Marc A. Nüchter",
+    "city": "Düsseldorf",
+    "postcode": "40599",
+    "address": "Hasselsstraße 49a",
+    "url": "https://www.hausarzt-hassels.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients/vorsorge",
+      "therapy"
+    ],
+    "serviceNames": [
+      "Erweiterte Laborwerte",
+      "Aufbaukur"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 42,
+    "name": "Arztpraxis Dr. med. Lysson",
+    "city": "Düsseldorf",
+    "postcode": "40549",
+    "address": "Heerdter Landstraße 7",
+    "url": "http://backup.dr-lysson.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Großes Blutbild"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 43,
+    "name": "Frauenärzte Düsseldorf-Kaiserswerth",
+    "city": "Düsseldorf",
+    "postcode": "40489",
+    "address": "An der Diakonie 12",
+    "url": "https://www.frauenaerzte-kaiserswerth.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "fertility",
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Großer Hormonstatus",
+      "Anti-Müller-Hormon"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 44,
+    "name": "Dr. med. Klaus Lübbers",
+    "city": "Düsseldorf",
+    "postcode": "40210",
+    "address": "Kreuzstraße 60",
+    "url": "https://www.frauenarzt-dr-luebbers.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Check-up Labordiagnostik",
+      "Hormon Analysen"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 45,
+    "name": "CheckUp Praxis MCS (Dr. med. P. Sowa)",
+    "city": "Düsseldorf",
+    "postcode": "40477",
+    "address": "Marc-Chagall-Str. 108",
+    "url": "https://checkup-praxis-mcs.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Premium CheckUp Lab"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 46,
+    "name": "Hausarztpraxis Dr. med. Höne-Römmer",
+    "city": "Leipzig",
+    "postcode": "04299",
+    "address": "Holzhäuser Str. 75",
+    "url": "https://praxis-hoene.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Test",
+      "Hormonstatus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 47,
+    "name": "Frauenärztin Dr. med. Christiane Biesold",
+    "city": "Leipzig",
+    "postcode": "04177",
+    "address": "Lindenauer Markt 19A",
+    "url": "https://www.dr-biesold.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "fertility"
+    ],
+    "serviceNames": [
+      "Hormonanalysen"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 48,
+    "name": "Mein Labor Leipzig (MVZ Labor Leipzig)",
+    "city": "Leipzig",
+    "postcode": "04289",
+    "address": "Strümpellstraße 40",
+    "url": "https://mein-labor-leipzig.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Gesund & Fit Plus",
+      "Hormonstatus prämenopausal"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 49,
+    "name": "Hausarztpraxis Krause & Morsch",
+    "city": "Leipzig",
+    "postcode": "04158",
+    "address": "Bahnhofstraße 5, Gebäude 1",
+    "url": "https://krausemorsch.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin-D-Bestimmung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 50,
+    "name": "Helios Prevention Center (HPC) Leipzig",
+    "city": "Leipzig",
+    "postcode": "04289",
+    "address": "Strümpellstraße 41",
+    "url": "https://www.helios-gesundheit.de/hpc-leipzig",
+    "specialty": "Internist / Präventionsmediziner",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Individueller Check-Up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 51,
+    "name": "Hausärzte am Hellweg",
+    "city": "Dortmund",
+    "postcode": "44309",
+    "address": "Brackeler Hellweg 119",
+    "url": "https://hausaerzte-am-hellweg.de",
+    "specialty": "Hausarzt / Diabetologie",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "labor",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Wunschblutabnahme",
+      "Vitaminkur (Medivitan)"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 52,
+    "name": "Dr. med. Matthias Bramkamp",
+    "city": "Dortmund",
+    "postcode": "44149",
+    "address": "Wittener Str. 110",
+    "url": "https://www.praxis-bramkamp.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D Mangel Check",
+      "Hormon-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 53,
+    "name": "Hausarztpraxis Christina Çiçek",
+    "city": "Dortmund",
+    "postcode": "44269",
+    "address": "Gevelsbergstraße 1",
+    "url": "https://www.hausarzt-dortmund-schueren.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Erweiterter Check-Up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 54,
+    "name": "Urologie am Westfalenpark",
+    "city": "Dortmund",
+    "postcode": "44139",
+    "address": "Ruhrallee 81",
+    "url": "https://www.urologie-dortmund.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Bestimmung",
+      "Hormonstatus Mann"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 55,
+    "name": "Hausarztzentrum Holsterhausen",
+    "city": "Essen",
+    "postcode": "45147",
+    "address": "Gemarkenstraße 59",
+    "url": "https://www.hausarztzentrum-holsterhausen.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "minerals",
+      "nutrients",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Vitamin D Check",
+      "PSA-Wert",
+      "Ferritin"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 56,
+    "name": "Zentrum für Funktionelle Medizin (Dr. med. Bernd-Michael Löffler)",
+    "city": "Essen",
+    "postcode": "45131",
+    "address": "Rüttenscheider Str. 194-196",
+    "url": "https://zentrum-funktionelle-medizin.de",
+    "specialty": "Internist / Funktionelle Medizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "diagnostics"
+    ],
+    "serviceNames": [
+      "Labordiagnostik (Umfassend)"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 57,
+    "name": "MVZ Labor Essen Nienkampstraße (Limbach Gruppe)",
+    "city": "Essen",
+    "postcode": "45326",
+    "address": "Nienkampstraße 100",
+    "url": "https://www.labor-eveld.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Veganer/Vegetarier Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 58,
+    "name": "Hausarztpraxis Dr. med. Christiane Vogel-Römer",
+    "city": "Essen",
+    "postcode": "45130",
+    "address": "Witteringstraße 11",
+    "url": "https://www.hausarztpraxis-vogel-roemer.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones"
+    ],
+    "serviceNames": [
+      "Schilddrüsen-Vorsorge"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 59,
+    "name": "Hausarztpraxis Dr. Juricke (Check-Up Bremen)",
+    "city": "Bremen",
+    "postcode": "28279",
+    "address": "Steinsetzerstraße 11",
+    "url": "https://checkup-bremen.de",
+    "specialty": "Hausarzt / Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "diagnostics",
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Organcheck Labor",
+      "Erweiterter Check-Up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 60,
+    "name": "Medizinisches Labor Bremen (Sonic Healthcare)",
+    "city": "Bremen",
+    "postcode": "28357",
+    "address": "Haferwende 12",
+    "url": "https://www.mlhb.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D Bestimmung",
+      "Hormonstatus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 61,
+    "name": "Urologische Praxis Bremen City (Dr. med. S. Wagner)",
+    "city": "Bremen",
+    "postcode": "28195",
+    "address": "Sögestraße 48",
+    "url": "https://urologie-bremen-city.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Bestimmung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 62,
+    "name": "Praxis am Markt (Dr. med. A. Meyer)",
+    "city": "Bremen",
+    "postcode": "28195",
+    "address": "Am Markt 11",
+    "url": "https://www.praxis-am-markt-bremen.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Intervall-Check-up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 63,
+    "name": "Diagnosticum Dresden",
+    "city": "Dresden",
+    "postcode": "01187",
+    "address": "Bayreuther Str. 30",
+    "url": "https://www.diagnosticum.eu/dresden",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Vegetarier-Check",
+      "Vitamin D (25-OH)",
+      "PSA-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 64,
+    "name": "Frauenarzt-Praxis Dr. Katrin Hänseroth",
+    "city": "Dresden",
+    "postcode": "01069",
+    "address": "Prager Str. 8a",
+    "url": "https://frauenarzt-dresden.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Hormonanalyse"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 65,
+    "name": "Hausarztzentrum Eigen",
+    "city": "Dresden",
+    "postcode": "01109",
+    "address": "Königsbrücker Landstraße 57",
+    "url": "https://www.hausarztzentrumeigen.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "thyroid",
+      "minerals",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D Check",
+      "TSH basal",
+      "Ferritin"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 66,
+    "name": "LABOPART Medizinische Laboratorien Dresden",
+    "city": "Dresden",
+    "postcode": "01159",
+    "address": "Hainsberger Str. 10",
+    "url": "https://labopart.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Vorsorge-Labor"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 67,
+    "name": "Dr. Berndt & Partner (Hausarzt-Zentrum)",
+    "city": "Hannover",
+    "postcode": "30161",
+    "address": "Voßstr. 24",
+    "url": "https://www.praxis-dr-berndt.de",
+    "specialty": "Hausarzt / Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "infection",
+      "vorsorge",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Checkup-Ergänzung I",
+      "Vitamin D",
+      "HIV-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 68,
+    "name": "Labor Limbach Hannover (MLH)",
+    "city": "Hannover",
+    "postcode": "30449",
+    "address": "Roesebeckstraße 15",
+    "url": "https://www.labor-limbach-hannover.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "metabolism",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D 3",
+      "Basis-Profil Mann",
+      "Lipidstatus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 69,
+    "name": "Praxis Dr. med. Antje Bierschwale",
+    "city": "Hannover",
+    "postcode": "30159",
+    "address": "Georgstraße 19",
+    "url": "https://praxis-dr-bierschwale.de",
+    "specialty": "Hausarzt / Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Erweiterte Blutuntersuchung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 70,
+    "name": "Praxis Jonathan Joshi",
+    "city": "Hannover",
+    "postcode": "30159",
+    "address": "Georgstraße 38",
+    "url": "https://www.praxis-joshi.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 71,
+    "name": "Hausarztpraxis Dr. med. Christiane Noe",
+    "city": "Nürnberg",
+    "postcode": "90411",
+    "address": "Am Schwedenbrunnen 22",
+    "url": "https://www.praxis-dr-noe.de",
+    "specialty": "Hausarzt / Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "diagnostics"
+    ],
+    "serviceNames": [
+      "Spezielle Blutuntersuchungen"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 72,
+    "name": "MVZ Labor Limbach Nürnberg",
+    "city": "Nürnberg",
+    "postcode": "90471",
+    "address": "Lina-Ammon-Straße 28",
+    "url": "https://www.labor-limbach-nuernberg.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Veganer & Vegetarier Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 73,
+    "name": "Frauenarztpraxis am Stadtpark (Dr. med. Kerstin Haffner)",
+    "city": "Nürnberg",
+    "postcode": "90482",
+    "address": "Schmausenbuckstraße 4",
+    "url": "https://www.frauenarztpraxis-haffner.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "prenatal",
+      "pregnancy"
+    ],
+    "serviceNames": [
+      "Toxoplasmose-Test",
+      "NIPT"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 74,
+    "name": "Mögeldorfer Ärztezentrum (MÄZ) - Hautärzte",
+    "city": "Nürnberg",
+    "postcode": "90482",
+    "address": "Ostendstraße 229",
+    "url": "https://www.hautaerzte-nbg.de",
+    "specialty": "Dermatologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Labor-Check Vitamine"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 75,
+    "name": "Urologicum Duisburg",
+    "city": "Duisburg",
+    "postcode": "47051",
+    "address": "Königstraße 13",
+    "url": "https://www.urologicum-duisburg.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Modul IGeL-08 (Männliche Hormone)",
+      "PSA-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 76,
+    "name": "Dr. med. Eun-Jo Park & Hyung-Joon Park",
+    "city": "Duisburg",
+    "postcode": "47167",
+    "address": "Weseler Str. 120",
+    "url": "https://praxis-drpark.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D Check",
+      "Eisenstatus"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 77,
+    "name": "Frauenarztpraxis Natalya Rodzina",
+    "city": "Duisburg",
+    "postcode": "47137",
+    "address": "Von-der-Mark-Straße 34",
+    "url": "https://www.frauenaerzte-im-netz.de/aerzte/duisburg/rodzina",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "infection",
+      "hormones"
+    ],
+    "serviceNames": [
+      "Infektions-Checkup",
+      "Hormonspiegel-Analyse"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 78,
+    "name": "Hausarzt Duisburg-Süd (Lehrpraxis)",
+    "city": "Duisburg",
+    "postcode": "47259",
+    "address": "Düsseldorfer Landstraße 353",
+    "url": "https://www.hausarzt-duisburg-sued.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "metabolism",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitaminwerte-Bestimmung",
+      "Stoffwechsel-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 79,
+    "name": "Vitamed Bochum (Dr. med. P. Sowa)",
+    "city": "Bochum",
+    "postcode": "44787",
+    "address": "Kortumstraße 46-48",
+    "url": "https://www.vitamed-bochum.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Vorsorge Labor"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 80,
+    "name": "MedLab Bochum (Labor-Zentrum)",
+    "city": "Bochum",
+    "postcode": "44787",
+    "address": "Viktoriastraße 45",
+    "url": "https://medlab-bochum.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "vorsorge",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Hormonstatus Frau",
+      "Kleines Blutbild",
+      "Vitamin D"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 81,
+    "name": "Zentrum für Gynäkologie (Dr. med. Loch)",
+    "city": "Bochum",
+    "postcode": "44801",
+    "address": "Buscheyplatz 15",
+    "url": "https://www.praxis-dr-loch.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Hormondiagnostik"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 82,
+    "name": "Klinik für Urologie Bochum (Augusta Kliniken)",
+    "city": "Bochum",
+    "postcode": "44791",
+    "address": "Bergstraße 26",
+    "url": "https://www.urologie-klinik-bochum.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Wert Bestimmung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 83,
+    "name": "Kinderarztpraxis Sinha",
+    "city": "Wuppertal",
+    "postcode": "42103",
+    "address": "Hofaue 93",
+    "url": "https://www.kinderarzt-sinha.de",
+    "specialty": "Kinder- und Jugendmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "allergy",
+      "labor"
+    ],
+    "serviceNames": [
+      "Blutentnahme (IGeL)",
+      "Labordiagnostik (Allergie/RAST)"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 84,
+    "name": "Hausärzte Cronenberg",
+    "city": "Wuppertal",
+    "postcode": "42349",
+    "address": "Hauptstraße 45",
+    "url": "https://www.hausärzte-cronenberg.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin D-Spiegel Messung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 85,
+    "name": "Yevia - Frauenheilkunde & Geburtshilfe",
+    "city": "Wuppertal",
+    "postcode": "42103",
+    "address": "Herzogstraße 12",
+    "url": "https://yevia.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "prenatal"
+    ],
+    "serviceNames": [
+      "Präeklampsie-Screening",
+      "NIPT (Harmony/Panorama)"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 86,
+    "name": "Kindergesundheit im Tal",
+    "city": "Wuppertal",
+    "postcode": "42285",
+    "address": "Friedrich-Engels-Allee 127",
+    "url": "https://www.kindergesundheit-im-tal.de",
+    "specialty": "Kinder- und Jugendmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Erweitertes Laborprofil"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 87,
+    "name": "Hausärztliche Praxis Baysal & Gilles",
+    "city": "Bielefeld",
+    "postcode": "33611",
+    "address": "Westerfeldstraße 1",
+    "url": "https://hausarztpraxis-schildesche.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Individuelle Blutuntersuchung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 88,
+    "name": "ALTA Klinik Bielefeld",
+    "city": "Bielefeld",
+    "postcode": "33602",
+    "address": "Alfred-Bozi-Str. 25",
+    "url": "https://www.alta-klinik.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Test"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 89,
+    "name": "Frauenarztpraxis am Kesselbrink",
+    "city": "Bielefeld",
+    "postcode": "33602",
+    "address": "Friedrich-Ebert-Straße 4",
+    "url": "https://frauenarztpraxis-kesselbrink.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Hormonanalyse"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 90,
+    "name": "Hausarztpraxis Dr. med. Peter Schuberth",
+    "city": "Bielefeld",
+    "postcode": "33602",
+    "address": "Ritterstraße 2",
+    "url": "https://www.hausarzt-bielefeld-city.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Erweiterte Labordiagnostik"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 91,
+    "name": "Gesundheitspraxis Bonn",
+    "city": "Bonn",
+    "postcode": "53123",
+    "address": "Am Burgweiher 54",
+    "url": "https://www.gesundheitspraxisbonn.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "organ function",
+      "cardiovascular",
+      "metabolism"
+    ],
+    "serviceNames": [
+      "Leber-Profil",
+      "Stoffwechsel/Zucker",
+      "Fettstoffwechsel"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 92,
+    "name": "Beta Prevent (Beta Klinik Bonn)",
+    "city": "Bonn",
+    "postcode": "53227",
+    "address": "Joseph-Schumpeter-Allee 15",
+    "url": "https://www.betaklinik.de",
+    "specialty": "Internist / Präventionsmediziner",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge",
+      "metabolism"
+    ],
+    "serviceNames": [
+      "Beta Basis Check Labor",
+      "Diabetes-Risikoanalyse"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 93,
+    "name": "Hausarzt Hoellger",
+    "city": "Bonn",
+    "postcode": "53229",
+    "address": "Hauptstraße 41",
+    "url": "https://hausarzt-hoellger.de",
+    "specialty": "Hausarzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "vorsorge",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "Ergänzungsprofil Schilddrüse",
+      "PSA (Tumormarker)",
+      "Ergänzungsprofil Groß"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 94,
+    "name": "Privatpraxis Dr. med. Achim Michels",
+    "city": "Bonn",
+    "postcode": "53173",
+    "address": "Moltkestraße 54",
+    "url": "https://dr-achimmichels.de",
+    "specialty": "Internist",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge"
+    ],
+    "serviceNames": [
+      "Laborstatus Komplett"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 95,
+    "name": "Hausarztzentrum Münster (Dr. med. M. Böhm & Kollegen)",
+    "city": "Münster",
+    "postcode": "48143",
+    "address": "Salzstraße 58",
+    "url": "https://www.hausarztzentrum-muenster.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Vitamin-Status",
+      "Erweiterter Check-up"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 96,
+    "name": "Laborärztliche Arbeitsgemeinschaft Münster (LAM)",
+    "city": "Münster",
+    "postcode": "48155",
+    "address": "Hafenweg 9-11",
+    "url": "https://www.lam-muenster.de",
+    "specialty": "Laborarzt / MVZ",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "vorsorge",
+      "nutrients"
+    ],
+    "serviceNames": [
+      "Präventionsprofil Basis",
+      "Vitamin D3 (25-OH)"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 97,
+    "name": "Gynäkologie am Prinzipalmarkt (Dr. med. S. Enneper)",
+    "city": "Münster",
+    "postcode": "48143",
+    "address": "Prinzipalmarkt 11",
+    "url": "https://www.gyn-am-prinzipalmarkt.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "endocrinology"
+    ],
+    "serviceNames": [
+      "Hormon-Check"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 98,
+    "name": "Urologisches Zentrum Münster (UZM)",
+    "city": "Münster",
+    "postcode": "48159",
+    "address": "Dorpatweg 7",
+    "url": "https://www.urologisches-zentrum-muenster.de",
+    "specialty": "Urologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "cancer screening"
+    ],
+    "serviceNames": [
+      "PSA-Bestimmung",
+      "Hormonstatus Mann"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 99,
+    "name": "Frauenärztin Susanne Bässler-Weber",
+    "city": "Karlsruhe",
+    "postcode": "76133",
+    "address": "Kaiserstraße 185",
+    "url": "https://frauenaerztin-karlsruhe.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "infection",
+      "pregnancy"
+    ],
+    "serviceNames": [
+      "Toxoplasmose-Check",
+      "Zytomegalie (CMV)",
+      "Streptokokken-Abstrich"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 100,
+    "name": "Hausarztzentrum am Albtalbahnhof",
+    "city": "Karlsruhe",
+    "postcode": "76135",
+    "address": "Ebertstraße 11",
+    "url": "https://www.hausarztzentrum-karlsruhe.de",
+    "specialty": "Hausarzt / Allgemeinmedizin",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "hormones",
+      "metabolism"
+    ],
+    "serviceNames": [
+      "Stoffwechsel- & Verdauungscheck",
+      "Schilddrüsenuntersuchung"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 101,
+    "name": "HNO am ZKM (Dres. med. H. & M. Lowitz)",
+    "city": "Karlsruhe",
+    "postcode": "76137",
+    "address": "Südendstr. 47",
+    "url": "https://www.hno-am-zkm.de",
+    "specialty": "HNO-Arzt",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "allergy",
+      "infection"
+    ],
+    "serviceNames": [
+      "EAST-Allergietest",
+      "Streptokokken-Schnelltest"
+    ],
+    "lat": null,
+    "lng": null
+  },
+  {
+    "id": 102,
+    "name": "Dr. med. Elke Grote (Frauenheilkunde)",
+    "city": "Karlsruhe",
+    "postcode": "76133",
+    "address": "Kriegsstraße 142",
+    "url": "https://frauenaerztin-grote.de",
+    "specialty": "Gynäkologe",
+    "bloodTestRelevant": true,
+    "serviceCategories": [
+      "prenatal",
+      "pregnancy"
+    ],
+    "serviceNames": [
+      "NIPT (Harmony-Test)",
+      "Ringelröteln-Test"
+    ],
+    "lat": null,
+    "lng": null
+  }
+]

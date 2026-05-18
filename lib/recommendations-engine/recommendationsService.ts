@@ -509,10 +509,50 @@ async function buildFixedSpecResponse(params: {
   return { pathwayTimeline, recommendations };
 }
 
+// ── Server-side recommendations cache ────────────────────────────────────────
+// Stored in global so webpack HMR doesn't reset it between hot reloads.
+
+declare global {
+  // eslint-disable-next-line no-var
+  var _recsServerCache: Map<string, { payload: RecommendationsPayload; ts: number }> | undefined;
+}
+
+const RECS_SERVER_CACHE: Map<string, { payload: RecommendationsPayload; ts: number }> =
+  global._recsServerCache ?? (global._recsServerCache = new Map());
+const RECS_SERVER_TTL_MS = 3 * 60 * 1000; // 3 min
+
+function getServerCached(userEmail: string): RecommendationsPayload | null {
+  const entry = RECS_SERVER_CACHE.get(userEmail);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > RECS_SERVER_TTL_MS) {
+    RECS_SERVER_CACHE.delete(userEmail);
+    return null;
+  }
+  return entry.payload;
+}
+
+function setServerCached(userEmail: string, payload: RecommendationsPayload) {
+  RECS_SERVER_CACHE.set(userEmail, { payload, ts: Date.now() });
+  if (RECS_SERVER_CACHE.size > 200) {
+    const cutoff = Date.now() - RECS_SERVER_TTL_MS;
+    for (const [k, v] of RECS_SERVER_CACHE) {
+      if (v.ts < cutoff) RECS_SERVER_CACHE.delete(k);
+    }
+  }
+}
+
+/** Call this after any mutation (status update, reminder, result upload). */
+export function invalidateRecsCache(userEmail: string) {
+  RECS_SERVER_CACHE.delete(userEmail.trim().toLowerCase());
+}
+
 export async function getRecommendations(params: {
   userEmail: string;
 }): Promise<RecommendationsPayload> {
   const userEmail = params.userEmail.trim().toLowerCase();
+
+  const cached = getServerCached(userEmail);
+  if (cached) return cached;
 
   // Load profile snapshot + questionnaire answers in parallel
   const [snap, session] = await Promise.all([
@@ -698,12 +738,15 @@ export async function getRecommendations(params: {
     healthScore,
   };
 
-  return {
+  const payload: RecommendationsPayload = {
     summary,
     profile: rawAnswers.length ? buildProfileSummary(answersMap, snap) : null,
     pathway,
     ...(fixedSpec ? fixedSpec : {}),
   };
+
+  setServerCached(userEmail, payload);
+  return payload;
 }
 
 export async function updateCheckStatus(params: {

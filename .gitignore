@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+# iCloud/Dropbox-style duplicate tree — breaks Next.js dev bundling if it sits in the repo root
+/node_modules.nosync
 /.pnp
 .pnp.*
 .yarn/*
@@ -19,6 +21,14 @@
 
 # webpack dev cache (redirected out of `.next` — see next.config.ts)
 /.webpack-cache/
+/.next-webpack-cache/
+
+# python
+**/__pycache__/
+*.pyc
+
+# one-off migration helpers (local only)
+run_migration_tmp.*
 
 # production
 /build

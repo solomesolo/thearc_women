@@ -5,10 +5,10 @@ export const homepageDeContent = {
     supporting:
       "Behalte den Überblick über deine Vorsorge. Erkenne, was fehlt, verstehe deine Laborwerte und finde direkt den passenden nächsten Schritt.",
     secondarySupport: "In weniger als 2 Minuten starten — Upload optional",
-    ctaPrimaryLabel: "Kostenlosen Check starten",
+    ctaPrimaryLabel: "Mein Health Arc beginnen",
     ctaPrimaryHref: "/onboarding/start",
-    ctaSecondaryLabel: "Laborwerte hochladen",
-    ctaSecondaryHref: "/upload",
+    ctaSecondaryLabel: "Ich habe eine Einladung",
+    ctaSecondaryHref: "/survey",
     trustLine: "Dauert nur 2 Minuten · Upload optional · Datenschutzorientiert",
     flowTitle: "So funktioniert es",
     flowSteps: [
@@ -335,11 +335,11 @@ export const homepageDeContent = {
     headline: "Behalte den Überblick über deine Vorsorge — bevor etwas übersehen wird",
     supporting:
       "Starte mit einem kurzen Check und finde heraus, welche nächsten Schritte für dich sinnvoll sein könnten.",
-    ctaPrimaryLabel: "Kostenlosen Check starten",
+    ctaPrimaryLabel: "Mein Health Arc beginnen",
     ctaPrimaryHref: "/onboarding/start",
-    ctaSecondaryLabel: "Laborwerte hochladen",
-    ctaSecondaryHref: "/upload",
-    primaryMicrocopy: "In weniger als 2 Minuten",
+    ctaSecondaryLabel: "Ich habe eine Einladung",
+    ctaSecondaryHref: "/survey",
+    primaryMicrocopy: "Early Access — Öffnet in kleinen Gruppen",
     trustSignals: [
       "Keine medizinische Beratung — strukturierte Hinweise",
       "Du behältst die Kontrolle über deine Daten",

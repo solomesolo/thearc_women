@@ -1,67 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
-import { useSession } from "next-auth/react";
-import { useSurvey } from "@/components/onboarding/SurveyProvider";
-import { apiCreateQuestionnaireSession, apiGetOnboardingStatus } from "@/lib/profile-engine-a/frontendClient";
-import { useUserFlowResolver } from "@/lib/profile-engine-a/hooks";
-import { useState } from "react";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { t } from "@/content/i18n/appCopy";
 
 export default function OnboardingStartPage() {
-  const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
-  const { setEngineASessionId, clearSurvey } = useSurvey();
-  const flow = useUserFlowResolver();
   const locale = useLocale();
-  const [isStarting, setIsStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
-
-  async function handleCTA() {
-    if (isStarting) return;
-    setIsStarting(true);
-    setStartError(null);
-
-    // Always wipe stale local survey state before starting.
-    clearSurvey();
-
-    if (session?.user?.email) {
-      // Authenticated: resume incomplete session or start fresh.
-      try {
-        const s = await apiGetOnboardingStatus();
-        if (s?.has_incomplete_session && s?.session_id && typeof s?.resume_step === "string") {
-          setEngineASessionId(s.session_id);
-          router.push(`/onboarding/${s.resume_step}`);
-          return;
-        }
-        if (s?.has_completed_profile) {
-          router.push("/app/dashboard");
-          return;
-        }
-        const created = await apiCreateQuestionnaireSession();
-        setEngineASessionId(created.session_id);
-        router.push("/onboarding/consent");
-        return;
-      } catch (e: any) {
-        setStartError(e?.message ? String(e.message) : "Couldn't start. Please try again.");
-        setIsStarting(false);
-        return;
-      }
-    }
-
-    // Anonymous: always create a fresh session — never auto-resume old ones.
-    // Old sessions may be stale "in_progress" and would skip consent and pre-fill answers.
-    try {
-      const created = await apiCreateQuestionnaireSession();
-      setEngineASessionId(created.session_id);
-      router.push("/onboarding/consent");
-    } catch (e: any) {
-      setStartError(e?.message ? String(e.message) : "Couldn't start. Please try again.");
-      setIsStarting(false);
-    }
-  }
 
   return (
     <OnboardingShell narrow>
@@ -105,28 +50,12 @@ export default function OnboardingStartPage() {
         </div>
 
         {/* CTA */}
-        <button
-          type="button"
-          onClick={handleCTA}
-          disabled={isStarting || sessionStatus === "loading"}
-          className={`mt-8 w-full rounded-[14px] bg-[#0c0c0c] px-6 py-4 text-[1rem] font-medium text-white transition-[filter] hover:brightness-[0.88] active:brightness-[0.8] ${isStarting ? "opacity-90" : ""}`}
+        <Link
+          href="/health-journey"
+          className="mt-8 block w-full rounded-[14px] bg-[#0c0c0c] px-6 py-4 text-center text-[1rem] font-medium text-white no-underline transition-[filter] hover:brightness-[0.88] active:brightness-[0.8]"
         >
-          {isStarting
-            ? t(locale, "common.loading")
-            : session?.user?.email
-              ? flow.hasIncompleteQuestionnaire
-                ? (locale === "de" ? "Assessment fortsetzen" : "Continue assessment")
-                : flow.hasActiveProfile
-                  ? (locale === "de" ? "Zum Dashboard" : "Go to my dashboard")
-                  : (locale === "de" ? "Assessment starten" : "Start assessment")
-              : (locale === "de" ? "Start — dauert 3 Minuten" : "Start — it takes 3 minutes")}
-        </button>
-
-        {startError && (
-          <p className="mt-3 max-w-[420px] text-[0.8125rem] text-[#b91c1c]">
-            {startError}
-          </p>
-        )}
+          {locale === "de" ? "Survey starten" : "Start the survey"}
+        </Link>
 
         <p className="mt-4 text-[0.8125rem] text-[#a3a3a3]">
           Your answers are private and never shared.

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { updateCheckStatus } from "@/lib/recommendations-engine/recommendationsService";
+import { updateCheckStatus, invalidateRecsCache } from "@/lib/recommendations-engine/recommendationsService";
 import type { CheckStatus } from "@/lib/recommendations-engine/types";
 
 const VALID_STATUSES: CheckStatus[] = [
@@ -51,6 +51,7 @@ export async function PATCH(
       checkKey: decodeURIComponent(checkKey),
       status: status as CheckStatus,
     });
+    invalidateRecsCache(targetEmail);
     return Response.json(result);
   } catch (err: unknown) {
     console.error("[recommendations] PATCH status error:", err);

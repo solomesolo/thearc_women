@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { invalidateRecsCache } from "@/lib/recommendations-engine/recommendationsService";
 import type { PathwayTimeframe } from "@/lib/recommendations-engine/types";
 
 function getCallerEmail(request: NextRequest, sessionEmail: string | null | undefined) {
@@ -68,6 +69,7 @@ export async function POST(
     });
   }
 
+  invalidateRecsCache(targetEmail);
   return Response.json({
     id: reminder.id,
     remindAt: reminder.remindAt.toISOString(),
@@ -97,6 +99,7 @@ export async function DELETE(
     data: { status: "dismissed" },
   });
 
+  invalidateRecsCache(targetEmail);
   return Response.json({ ok: true });
 }
 

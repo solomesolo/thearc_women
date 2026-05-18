@@ -18,11 +18,11 @@ export type NavigationGuardState = {
   error: Error | null;
 };
 
-// Module-level cache: keyed by requestedRoute, TTL 20s.
+// Module-level cache: keyed by requestedRoute, TTL 5 min.
 // Prevents duplicate in-flight requests and re-fetching when components remount.
 type CacheEntry = { decision: NavigationDecisionResponse; ts: number };
 const NAV_CACHE = new Map<string, CacheEntry>();
-const NAV_CACHE_TTL_MS = 20_000;
+const NAV_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function getCached(route: string): NavigationDecisionResponse | null {
   const entry = NAV_CACHE.get(route);
@@ -69,6 +69,7 @@ async function fetchNavDecision(route: string): Promise<NavigationDecisionRespon
 
 export function invalidateNavCache() {
   NAV_CACHE.clear();
+  IN_FLIGHT.clear();
 }
 
 export function useNavigationDecision(requestedRoute: string) {

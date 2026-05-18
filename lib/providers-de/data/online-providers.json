@@ -1,0 +1,331 @@
+[
+  {
+    "id": 1,
+    "name": "Probatix",
+    "url": "https://probatix.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "collectionMethod": [
+      "at-home_kit",
+      "pharmacy_pickup"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Mavieme",
+    "url": "https://www.mavie.me/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Cerascreen",
+    "url": "https://www.cerascreen.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "genetic_testing",
+      "hormonal_testing",
+      "inflammation_panels",
+      "vitamin_mineral_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Homed-IQ",
+    "url": "https://www.homediq.com/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "hormonal_testing",
+      "inflammation_panels",
+      "fertility_tests",
+      "cancer_screening",
+      "stool_tests",
+      "vitamin_mineral_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "DoctorBox",
+    "url": "https://shop.doctorbox.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "cancer_screening",
+      "biological_age_test",
+      "stool_tests",
+      "vitamin_mineral_panels",
+      "inflammation_panels",
+      "urine_tests"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Biogena",
+    "url": "https://biogena.com/",
+    "logo": "https://wybfjytfwnpjztswoeyh.supabase.co/storage/v1/object/sign/logos/biogena.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9hOWYwMGQ1Zi05Y2ZiLTQyYjMtODZkMS1lNGQ3OWQ1ZjI4MzEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJsb2dvcy9iaW9nZW5hLnBuZyIsImlhdCI6MTc1MzQ4NDc5MiwiZXhwIjoyMDY4ODQ0NzkyfQ.Fu0JIFQVcrXc2YHqI9LFoo66PmkOseSIDFBuf6cBoGU",
+    "serviceTypes": [
+      "blood_tests",
+      "vitamin_mineral_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Mein Direktlabor",
+    "url": "https://www.meindirektlabor.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "vitamin_mineral_panels",
+      "hormonal_testing",
+      "inflammation_panels",
+      "cancer_screening",
+      "stool_tests",
+      "urine_tests"
+    ],
+    "collectionMethod": [
+      "visit_required"
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Meinlabtest",
+    "url": "https://meinlabtest.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests",
+      "saliva_tests",
+      "genetic_testing",
+      "microbiome_analysis",
+      "vitamin_mineral_panels",
+      "inflammation_panels",
+      "longevity_screening"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Lykon",
+    "url": "https://www.lykon.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "saliva_tests"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "ForYourHealth",
+    "url": "https://www.foryouehealth.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "longevity_screening",
+      "microbiome_analysis",
+      "vitamin_mineral_panels",
+      "biological_age_test"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Medivere",
+    "url": "https://www.medivere.de/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "urine_tests",
+      "stool_tests",
+      "microbiome_analysis",
+      "saliva_tests",
+      "hormonal_testing",
+      "vitamin_mineral_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 12,
+    "name": "MyBody",
+    "url": "https://mybody-x.com/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "microbiome_analysis",
+      "genetic_testing",
+      "hormonal_testing",
+      "vitamin_mineral_panels",
+      "longevity_screening",
+      "inflammation_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Moleqlar",
+    "url": "https://moleqlar.com/",
+    "logo": "",
+    "serviceTypes": [
+      "saliva_tests",
+      "longevity_screening",
+      "biological_age_test",
+      "blood_tests",
+      "vitamin_mineral_panels"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 14,
+    "name": "epigenics",
+    "url": "https://epigenics.eu/",
+    "logo": "",
+    "serviceTypes": [
+      "saliva_tests",
+      "longevity_screening"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Gesundheits Manufaktur",
+    "url": "https://www.gesundheitsmanufaktur.de/",
+    "logo": "",
+    "serviceTypes": [
+      "urine_tests",
+      "stool_tests",
+      "blood_tests",
+      "microbiome_analysis",
+      "vitamin_mineral_panels",
+      "biological_age_test"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Lifetime",
+    "url": "https://lifetime-health.com/",
+    "logo": "",
+    "serviceTypes": [
+      "saliva_tests",
+      "biological_age_test"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 17,
+    "name": "adntro",
+    "url": "https://adntro.com/\nhttps://www.reddit.com/r/AncestryDNA/comments/kov2zr/anyone_tried_adntrocom_with_their_ancestry_dna/?tl=de",
+    "logo": "",
+    "serviceTypes": [
+      "saliva_tests",
+      "longevity_screening"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 18,
+    "name": "24genetics",
+    "url": "https://24genetics.de/",
+    "logo": "",
+    "serviceTypes": [
+      "saliva_tests",
+      "genetic_testing",
+      "genetic_testing"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 19,
+    "name": "Vivatura",
+    "url": "https://www.vivatura.care/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "stool_tests",
+      "cancer_screening",
+      "fertility_tests",
+      "longevity_screening"
+    ],
+    "collectionMethod": [
+      "at-home_kit"
+    ]
+  },
+  {
+    "id": 20,
+    "name": "Cabocheck",
+    "url": "https://cabocheck.com/",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests"
+    ],
+    "collectionMethod": [
+      "pharmacy_pickup"
+    ]
+  },
+  {
+    "id": 21,
+    "name": "Randox Health",
+    "url": "https://randoxhealth.com",
+    "logo": "",
+    "serviceTypes": [
+      "blood_tests",
+      "hormone_tests",
+      "fertility_tests",
+      "digestive_health",
+      "genetic_risk",
+      "metabolic_health",
+      "cardiac_health"
+    ],
+    "collectionMethod": [
+      "at-home_kit",
+      "tasso_plus"
+    ]
+  }
+]

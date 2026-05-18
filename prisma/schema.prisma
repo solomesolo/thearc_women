@@ -350,6 +350,8 @@ model HealthUpload {
   storagePath        String                  @map("storage_path")
   uploadTimestamp    DateTime                @default(now()) @map("upload_timestamp")
   processingStatus   String                  @default("pending") @map("processing_status") // pending | queued | processing | completed | failed
+  /** lab (default) | screening — health-wallet sync uses OCR text for screenings. */
+  intakeKind         String?                 @map("intake_kind")
   pageCount          Int?                    @map("page_count")
   ocrJob             OcrJob?
   ocrResult          OcrResult?
@@ -1738,6 +1740,25 @@ model UserPathwaySchedule {
   @@map("user_pathway_schedule")
 }
 
+// ─── Connected Calendars ─────────────────────────────────────────────────────
+
+model ConnectedCalendar {
+  id            String    @id @default(cuid())
+  userEmail     String    @map("user_email")
+  provider      String    // "google" | "outlook" | "ical"
+  label         String?
+  accessToken   String?   @map("access_token")
+  refreshToken  String?   @map("refresh_token")
+  tokenExpiry   DateTime? @map("token_expiry") @db.Timestamptz
+  icalFeedToken String?   @unique @map("ical_feed_token")
+  calendarId    String?   @map("calendar_id")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([userEmail])
+  @@map("connected_calendars")
+}
+
 // ─── Settings, Access Codes, Consent, Deletion ───────────────────────────────
 
 model UserSettings {
@@ -1758,6 +1779,7 @@ model AccessCode {
   id          String    @id @default(cuid())
   ownerEmail  String    @map("owner_email")
   code        String    @unique
+  token       String?   @unique
   status      String    @default("available")
   usedByEmail String?   @map("used_by_email")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -1786,4 +1808,43 @@ model DeletionRequest {
   status      String   @default("pending")
 
   @@map("deletion_requests")
+}
+
+// ─── Early Access, Invite Codes, Nominations ─────────────────────────────────
+
+model EarlyAccessApplicant {
+  id           String   @id @default(cuid())
+  firstName    String   @map("first_name")
+  email        String   @unique
+  healthAnswer String   @map("health_answer") @db.Text
+  userState    String   @default("applicant") @map("user_state")
+  nominatedBy  String?  @map("nominated_by")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("early_access_applicants")
+}
+
+model InviteCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  status      String    @default("available")
+  createdFor  String?   @map("created_for")
+  usedByEmail String?   @map("used_by_email")
+  createdBy   String?   @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  usedAt      DateTime? @map("used_at") @db.Timestamptz
+
+  @@map("invite_codes")
+}
+
+model Nomination {
+  id          String   @id @default(cuid())
+  nominatorId String   @map("nominator_id")
+  friendName  String   @map("friend_name")
+  friendEmail String   @map("friend_email")
+  inviteCode  String?  @unique @map("invite_code")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([nominatorId])
+  @@map("nominations")
 }
