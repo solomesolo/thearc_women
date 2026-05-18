@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     qualities: [75, 90],
     remotePatterns: [],
   },
-  webpack(config, { dev, isServer }) {
+  webpack(config, { dev, isServer, webpack }) {
     // Filesystem cache speeds up dev rebuilds. Do not set `buildDependencies.config`
     // to `__filename` here: Next compiles `next.config.ts` to a non-disk
     // `next.config.compiled.js` path, which breaks PackFileCacheStrategy and can
@@ -120,11 +120,10 @@ const nextConfig: NextConfig = {
     }
 
     if (process.env.WEBPACK_PROGRESS === "1") {
-      const webpack = require("webpack") as typeof import("webpack");
       let lastPct = -1;
       config.plugins = [
         ...(config.plugins ?? []),
-        new webpack.ProgressPlugin((pct, msg, ...args) => {
+        new webpack.ProgressPlugin((pct: number, msg: string, ...args: string[]) => {
           const p = Math.floor(pct * 100);
           if (p >= lastPct + 5 || pct >= 1) {
             lastPct = p;
