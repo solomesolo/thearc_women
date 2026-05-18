@@ -18,7 +18,7 @@ export async function GET() {
     prisma.userCheckStatus.findMany({ where: { userEmail: email } }),
     prisma.userCheckResult.findMany({ where: { userEmail: email }, select: { id: true, checkKey: true, fileName: true, fileType: true, source: true, testDate: true, uploadedAt: true, notes: true } }),
     prisma.userCheckReminder.findMany({ where: { userEmail: email } }),
-    prisma.healthUpload.findMany({ where: { userEmail: email }, select: { documentId: true, fileName: true, mimeType: true, status: true, createdAt: true } }),
+    prisma.healthUpload.findMany({ where: { userEmail: email }, select: { documentId: true, fileName: true, mimeType: true, processingStatus: true, uploadTimestamp: true } }),
     prisma.healthObservation.findMany({ where: { userEmail: email }, select: { id: true, documentId: true, canonicalMetricName: true, displayName: true, numericValue: true, valueText: true, unit: true, flag: true, referenceRange: true, observationDate: true, bin: true } }),
     prisma.accessCode.findMany({ where: { ownerEmail: email }, select: { id: true, code: true, status: true, createdAt: true, usedAt: true, expiresAt: true } }),
   ]);
