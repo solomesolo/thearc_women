@@ -73,16 +73,69 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   return (result?.text ?? "") as string;
 }
 
-async function extractTextFromImage(buffer: Buffer): Promise<string> {
-  const { createWorker } = await import("tesseract.js");
-  // Try German + English for European lab reports
-  const worker = await createWorker(["eng", "deu"]);
+async function preprocessImageForOcr(buffer: Buffer): Promise<Buffer> {
   try {
-    const { data } = await worker.recognize(buffer);
-    return data.text ?? "";
-  } finally {
-    await worker.terminate();
+    const sharp = (await import("sharp")).default;
+    // Resize to max 2000px wide, convert to greyscale PNG — reduces OCR time from
+    // minutes to ~15s on large camera photos and avoids memory exhaustion.
+    return await sharp(buffer)
+      .resize({ width: 2000, withoutEnlargement: true })
+      .grayscale()
+      .png({ compressionLevel: 1 })
+      .toBuffer();
+  } catch {
+    // sharp unavailable or failed — pass original buffer
+    return buffer;
   }
+}
+
+async function runTesseract(imageBuffer: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const done = (val: string | Error) => {
+      if (settled) return;
+      settled = true;
+      val instanceof Error ? reject(val) : resolve(val);
+    };
+
+    // Tesseract.js v7 can throw via process.nextTick bypassing try/catch —
+    // capture uncaught exceptions for the duration of this call.
+    const uncaughtHandler = (err: Error) => done(err);
+    process.once("uncaughtException", uncaughtHandler);
+
+    const timeout = setTimeout(() => {
+      process.removeListener("uncaughtException", uncaughtHandler);
+      done(new Error("Tesseract OCR timed out after 120 seconds"));
+    }, 120_000);
+
+    import("tesseract.js").then(({ createWorker }) =>
+      createWorker("eng", 1, {
+        cachePath: "/tmp",
+        logger: () => {},
+      })
+    ).then((worker) =>
+      worker.recognize(imageBuffer).then(({ data }) => {
+        clearTimeout(timeout);
+        process.removeListener("uncaughtException", uncaughtHandler);
+        worker.terminate().catch(() => {});
+        done(data.text ?? "");
+      }).catch((err: Error) => {
+        clearTimeout(timeout);
+        process.removeListener("uncaughtException", uncaughtHandler);
+        worker.terminate().catch(() => {});
+        done(err);
+      })
+    ).catch((err: Error) => {
+      clearTimeout(timeout);
+      process.removeListener("uncaughtException", uncaughtHandler);
+      done(err);
+    });
+  });
+}
+
+async function extractTextFromImage(buffer: Buffer): Promise<string> {
+  const preprocessed = await preprocessImageForOcr(buffer);
+  return runTesseract(preprocessed);
 }
 
 async function extractText(buffer: Buffer, mimeType: string): Promise<string> {
