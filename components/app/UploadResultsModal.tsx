@@ -552,6 +552,9 @@ export function UploadResultsModal({
       setDocumentId(docId);
       setStep("processing");
       startPolling(docId, documentKind ?? "lab", file.name);
+      // Trigger the Claude-based processing pipeline (works on Vercel + local)
+      fetch(`/api/upload/${encodeURIComponent(docId)}/process`, { method: "POST" })
+        .catch(() => {}); // fire-and-forget; polling handles completion/failure
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
