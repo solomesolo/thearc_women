@@ -217,6 +217,14 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (job.status === "completed") return NextResponse.json({ ok: true, alreadyComplete: true });
   if (job.status === "processing") return NextResponse.json({ ok: true, alreadyProcessing: true });
 
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    // No API key — let the local Python pipeline handle it.
+    // Do NOT touch job status so polling continues waiting for Python.
+    console.warn("[upload/process] ANTHROPIC_API_KEY not set — skipping TypeScript pipeline, Python pipeline will run");
+    return NextResponse.json({ ok: true, skipped: true, reason: "no_api_key" });
+  }
+
   // Mark as processing
   await prisma.ocrJob.update({
     where: { documentId },
@@ -230,8 +238,6 @@ export async function POST(_req: NextRequest, { params }: Params) {
   let completedSteps: string[] = [];
 
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const supabase = getEngineSupabaseClient();
 
