@@ -474,7 +474,9 @@ export function UploadResultsModal({
   const [syncError, setSyncError] = useState<string | null>(null);
   const [snapshotCount, setSnapshotCount] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingStartRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const POLLING_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes max wait
 
   // Reset when modal opens; snapshot existing wallet size
   useEffect(() => {
@@ -559,6 +561,7 @@ export function UploadResultsModal({
 
   // ── Pipeline polling ───────────────────────────────────────────────────────
   function startPolling(docId: string, uploadKind: UploadDocumentKind, sourceFileName: string) {
+    pollingStartRef.current = Date.now();
     const poll = async () => {
       try {
         const res = await fetch(`/api/health-data/upload/${docId}/status`);
@@ -570,24 +573,28 @@ export function UploadResultsModal({
         const completedSteps: string[] = data.completedSteps ?? [];
         const currentStep: string | null = data.currentStep ?? null;
         const errorMessage: string | null = data.errorMessage ?? null;
+        const timedOut = Date.now() - pollingStartRef.current > POLLING_TIMEOUT_MS;
 
         setPipelineStatus({
-          isComplete,
-          hasError,
-          errorMessage,
+          isComplete: isComplete || timedOut,
+          hasError: hasError || timedOut,
+          errorMessage: timedOut ? "Processing timed out — you can still review any extracted results." : errorMessage,
           completedSteps,
           currentStep,
           fileName: data.fileName ?? fileName,
         });
 
-        if (isComplete || hasError) {
-          // Move to review (even if there's an error — may have partial results)
+        if (isComplete || hasError || timedOut) {
           await loadWalletEntries(docId, uploadKind, sourceFileName);
         } else {
           pollingRef.current = setTimeout(poll, 2500);
         }
       } catch {
-        pollingRef.current = setTimeout(poll, 4000);
+        if (Date.now() - pollingStartRef.current > POLLING_TIMEOUT_MS) {
+          await loadWalletEntries(docId, uploadKind, sourceFileName);
+        } else {
+          pollingRef.current = setTimeout(poll, 4000);
+        }
       }
     };
     poll();

@@ -6,21 +6,41 @@ import { getPrisma } from "@/lib/db";
 import { spawn } from "child_process";
 import path from "path";
 
-const PYTHON =
-  "/opt/homebrew/opt/python@3.10/Frameworks/Python.framework/Versions/3.10/bin/python3.10";
+// Resolve Python binary — prefer PYTHON_PATH env var, then common macOS/Linux locations.
+function resolvePython(): string | null {
+  if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+  const candidates = [
+    "/opt/homebrew/opt/python@3.10/bin/python3.10",
+    "/opt/homebrew/bin/python3.10",
+    "/usr/local/bin/python3.10",
+    "/usr/bin/python3.10",
+    "/usr/bin/python3",
+  ];
+  const fs = require("fs") as typeof import("fs");
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) return p; } catch { /* skip */ }
+  }
+  return null;
+}
 
 /** Fire-and-forget: spawn pipeline_runner.py detached so the HTTP response
  *  returns immediately while processing continues in the background. */
 function spawnPipeline(documentId: string): void {
+  const python = resolvePython();
+  if (!python) {
+    console.error("[upload] pipeline spawn skipped: no Python binary found (set PYTHON_PATH env var)");
+    return;
+  }
   const projectRoot = path.resolve(process.cwd());
   const script = path.join(projectRoot, "workers", "pipeline_runner.py");
 
-  const child = spawn(PYTHON, [script, documentId], {
+  const child = spawn(python, [script, documentId], {
     detached: true,
     stdio:    "ignore",
     cwd:      projectRoot,
     env:      { ...process.env },
   });
+  child.on("error", (err) => console.error("[upload] pipeline spawn error:", err.message));
   child.unref();
 }
 
