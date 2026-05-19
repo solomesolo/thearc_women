@@ -6,16 +6,20 @@
  *
  * PDF  → pdf-parse extracts text directly (free, pure JS)
  * Image → tesseract.js OCR (free, pure JS Tesseract port)
- * Text  → regex lab-value extractor + TEST_MAP normalisation
+ *
+ * Lab reports  → regex lab-value extractor (TEST_MAP normalisation)
+ * Screening /
+ * Imaging docs → screening score extractor (BI-RADS, DEXA T-score, PHQ-9, etc.)
+ *                raw text stored in OcrResult for sync route to serve screening drafts
  *
  * Steps (mirrors Python pipeline step keys for UI compatibility):
  *   ocr          → download file, extract text
- *   classify     → identify document type (heuristic)
- *   extract      → regex lab value extraction
+ *   classify     → identify document type
+ *   extract      → regex extraction (lab or screening depending on type)
  *   bin_map      → assign health category bins
  *   normalize    → already done in extraction step
  *   longitudinal → persist HealthObservations to DB
- *   interventions→ mark job complete
+ *   interventions→ compute care gaps, mark job complete
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +28,9 @@ import { authOptions } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { getEngineSupabaseClient } from "@/lib/repositories/supabaseEngine";
 import { extractLabValues } from "@/lib/lab-ocr/extractLabValues";
+import { extractScreeningScores } from "@/lib/lab-ocr/extractScreeningScores";
+import { classifyDocument } from "@/lib/lab-ocr/classifyDocument";
+import { planInterventions } from "@/lib/health-wallet/interventionPlanner";
 import crypto from "crypto";
 
 export const maxDuration = 300; // Vercel Pro: 5 minutes
@@ -68,7 +75,8 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
 
 async function extractTextFromImage(buffer: Buffer): Promise<string> {
   const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker("eng");
+  // Try German + English for European lab reports
+  const worker = await createWorker(["eng", "deu"]);
   try {
     const { data } = await worker.recognize(buffer);
     return data.text ?? "";
@@ -146,22 +154,54 @@ export async function POST(_req: NextRequest, { params }: Params) {
     const rawText = await extractText(fileBuffer, upload.mimeType);
     completedSteps = await markStep(prisma, documentId, "ocr", completedSteps);
 
-    // ── Step: classify ────────────────────────────────────────────────────────
+    // ── Step: classify — document type detection ──────────────────────────────
     await prisma.ocrJob.update({ where: { documentId }, data: { currentStep: "classify" } });
-    // Heuristic classification
-    const textLower = rawText.toLowerCase();
-    const documentType =
-      textLower.includes("radiology") || textLower.includes("imaging") ? "imaging"
-      : textLower.includes("assessment") || textLower.includes("clinical notes") ? "clinical_notes"
-      : "lab_report";
-
+    const classification = classifyDocument(rawText);
+    const documentType = classification.documentType;
+    const isLabReport = documentType === "lab_report";
     completedSteps = await markStep(prisma, documentId, "classify", completedSteps);
 
-    // ── Step: extract — regex lab value extraction ────────────────────────────
+    // ── Step: extract — type-aware extraction ─────────────────────────────────
     await prisma.ocrJob.update({ where: { documentId }, data: { currentStep: "extract" } });
-    const extraction = extractLabValues(rawText);
 
-    // Store raw OCR result
+    // Always extract lab values (many documents have both)
+    const labExtraction = extractLabValues(rawText);
+
+    // For imaging/screening documents, also extract scores
+    const screeningScores =
+      !isLabReport || labExtraction.results.length === 0
+        ? extractScreeningScores(rawText)
+        : [];
+
+    // Merge: lab values take priority; add screening scores not already captured
+    const labKeys = new Set(labExtraction.results.map((r) => r.canonical_name));
+    const uniqueScreeningScores = screeningScores.filter((s) => !labKeys.has(s.canonical_name));
+
+    const allResults = [
+      ...labExtraction.results,
+      ...uniqueScreeningScores.map((s) => ({
+        test_name: s.display_name,
+        canonical_name: s.canonical_name,
+        display_name: s.display_name,
+        category: s.category,
+        bin: s.bin,
+        value: s.value,
+        numeric_value: s.numeric_value,
+        unit: s.unit,
+        reference_range: null as string | null,
+        flag: null as string | null,
+        report_date: s.report_date,
+        confidence: s.confidence,
+      })),
+    ];
+
+    const reportDate = labExtraction.report_date;
+    const avgConfidence =
+      allResults.length > 0
+        ? Math.round((allResults.reduce((s, r) => s + r.confidence, 0) / allResults.length) * 100)
+        : 50;
+
+    // Store raw OCR result (rawText is essential for screening sync route)
     await prisma.ocrResult.upsert({
       where: { documentId },
       create: {
@@ -169,24 +209,20 @@ export async function POST(_req: NextRequest, { params }: Params) {
         ocrStatus: "success",
         rawText,
         pageCount: 1,
-        avgConfidence: extraction.results.length > 0
-          ? Math.round((extraction.results.reduce((s, r) => s + r.confidence, 0) / extraction.results.length) * 100)
-          : 50,
+        avgConfidence,
         processedAt: new Date(),
       },
       update: {
         ocrStatus: "success",
         rawText,
-        avgConfidence: extraction.results.length > 0
-          ? Math.round((extraction.results.reduce((s, r) => s + r.confidence, 0) / extraction.results.length) * 100)
-          : 50,
+        avgConfidence,
         processedAt: new Date(),
       },
     });
 
     completedSteps = await markStep(prisma, documentId, "extract", completedSteps);
 
-    // ── Step: bin_map + normalize (done during extraction) ────────────────────
+    // ── Step: bin_map + normalize ─────────────────────────────────────────────
     await prisma.ocrJob.update({ where: { documentId }, data: { currentStep: "bin_map" } });
     completedSteps = await markStep(prisma, documentId, "bin_map", completedSteps);
     completedSteps = await markStep(prisma, documentId, "normalize", completedSteps);
@@ -194,9 +230,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
     // ── Step: longitudinal — write HealthObservations ─────────────────────────
     await prisma.ocrJob.update({ where: { documentId }, data: { currentStep: "longitudinal" } });
 
-    const observations = extraction.results.filter((r) => r.value !== null);
+    const observations = allResults.filter((r) => r.value !== null);
     const userEmail = session.user.email;
-    const reportDate = extraction.report_date;
 
     for (let i = 0; i < observations.length; i++) {
       const r = observations[i]!;
@@ -248,7 +283,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
         activeObservations: observations.length,
         supersededCount: 0,
         conversionCount: 0,
-        missingCanonical: extraction.warnings.length > 0 ? 1 : 0,
+        missingCanonical: labExtraction.warnings.length > 0 ? 1 : 0,
       },
       update: {
         normalizedObservations: observations as any,
@@ -260,7 +295,14 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
     completedSteps = await markStep(prisma, documentId, "longitudinal", completedSteps);
 
-    // ── Step: interventions — finalise ────────────────────────────────────────
+    // ── Step: interventions — compute care gaps + finalise ────────────────────
+    await prisma.ocrJob.update({ where: { documentId }, data: { currentStep: "interventions" } });
+
+    // Compute care gaps in the background (non-blocking — don't fail the job if this errors)
+    planInterventions(userEmail).catch((err) =>
+      console.warn("[upload/process] care gap computation failed (non-critical):", err)
+    );
+
     completedSteps = await markStep(prisma, documentId, "interventions", completedSteps);
 
     await prisma.ocrJob.update({
@@ -275,8 +317,11 @@ export async function POST(_req: NextRequest, { params }: Params) {
     return NextResponse.json({
       ok: true,
       documentType,
+      classificationConfidence: classification.confidence,
       observationsExtracted: observations.length,
-      warnings: extraction.warnings,
+      labValues: labExtraction.results.length,
+      screeningScores: uniqueScreeningScores.length,
+      warnings: labExtraction.warnings,
     });
 
   } catch (err: unknown) {

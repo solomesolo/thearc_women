@@ -16,30 +16,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
-import { spawn } from "child_process";
-import path from "path";
-
-const PYTHON =
-  "/opt/homebrew/opt/python@3.10/Frameworks/Python.framework/Versions/3.10/bin/python3.10";
+import { planInterventions } from "@/lib/health-wallet/interventionPlanner";
 
 async function runPlanner(userEmail: string): Promise<{ ok: boolean; error?: string }> {
-  const projectRoot = path.resolve(process.cwd());
-  const script = path.join(projectRoot, "workers", "intervention_planner.py");
-
-  return new Promise((resolve) => {
-    const child = spawn(PYTHON, [script, userEmail], {
-      cwd: projectRoot,
-      env: { ...process.env },
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let stderr = "";
-    child.stderr.on("data", (c: Buffer) => { stderr += c.toString(); });
-    child.on("close", (code) => {
-      resolve(code === 0 ? { ok: true } : { ok: false, error: stderr.trim() });
-    });
-    child.on("error", (err) => resolve({ ok: false, error: err.message }));
-    setTimeout(() => { child.kill(); resolve({ ok: false, error: "Planner timed out" }); }, 60_000);
-  });
+  try {
+    await planInterventions(userEmail);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, surveillance: 1, routine: 2 };
